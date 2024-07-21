@@ -26,10 +26,88 @@
 #define dll_remove_NP(f,l,n,next,prev) dll_remove_NPZ(0,f,l,n,next,prev)
 #define dll_remove(f,l,n) dll_remove_NP(f,l,n,next,prev)
 
-//typedef struct TestNode TestNode;
-//struct TestNode {TestNode*next;TestNode*prev;int data;};
-//static void print_ll(TestNode *firstn) {printf("{");for(TestNode*n=firstn;n!=NULL;n=n->next){printf("%i,",n->data);}printf("}\n");}
-//static void ll_test() { ArenaTemp temp = arena_get_scratch(NULL); printf("--Linked-List test!--\n"); printf("---------------------\n"); TestNode *ll_first = NULL; printf("SLL_STACK_PUSH: "); for (int i = 0; i < 10; ++i) { TestNode *n = push_array(temp.arena, TestNode, 1); n->data = i; sll_stack_push(ll_first, n); } print_ll(ll_first); printf("SLL_STACK_POP3E_I7:  "); sll_stack_pop(ll_first); sll_stack_pop(ll_first); sll_stack_pop(ll_first); TestNode *g0 = push_array(temp.arena, TestNode, 1); g0->data = 7; sll_stack_push(ll_first,g0); print_ll(ll_first); ll_first = NULL; TestNode *ll_last = NULL; printf("SLL_QUEUE_PUSH: "); for (int i = 0; i < 10; ++i) { TestNode *n = push_array(temp.arena, TestNode, 1); n->data = i; sll_queue_push(ll_first,ll_last, n); } print_ll(ll_first); printf("SLL_QUEUE_POP3E_I7:  "); sll_queue_pop(ll_first,ll_last); sll_queue_pop(ll_first,ll_last); sll_queue_pop(ll_first,ll_last); TestNode *g1 = push_array(temp.arena, TestNode, 1); g1->data = 7; sll_queue_push(ll_first,ll_last, g1); print_ll(ll_first); ll_first = NULL; ll_last = NULL; printf("DLL_PUSH_BACK:  "); for (int i = 0; i < 10; ++i) { TestNode *n = push_array(temp.arena, TestNode, 1); n->data = i; dll_push_back(ll_first,ll_last, n); } print_ll(ll_first); printf("DLL_REMOVE_ODD: "); for (TestNode *n = ll_first;n != NULL;n=n->next){ if (n->data % 2 == 0) { dll_remove(ll_first,ll_last,n); } } print_ll(ll_first); ll_first = NULL; ll_last = NULL; printf("DLL_PUSH_FRONT: "); for (int i = 0; i < 10; ++i) { TestNode *n = push_array(temp.arena, TestNode, 1); n->data = i; dll_push_front(ll_first,ll_last, n); } print_ll(ll_first); printf("DLL_REMOVE_ODD: "); for (TestNode *n = ll_first;n != NULL;n=n->next){ if (n->data % 2 == 0) { dll_remove(ll_first,ll_last,n); } } print_ll(ll_first); printf("---------------------\n"); arena_end_temp(&temp); }
+typedef struct TestNode TestNode;
+struct TestNode {TestNode*next;TestNode*prev;int data;};
+u64 get_ll_sum(TestNode *node) { u64 sum = 0;for (;node!=NULL;node=node->next){sum+=node->data;} return sum; }
+
+static void sll_stack_test() {
+    ArenaTemp temp = arena_get_scratch(0);
+	u32 sum = 0;
+	u32 last_prime=0;
+
+	TestNode *head=NULL; 
+
+	for (u32 i = 0; i < 10; ++i){
+		TestNode *node = push_array(temp.arena, TestNode, 1);
+		node->data = i;
+		if (i%2==0){
+			sll_stack_push(head,node);
+			sum+=i;
+			last_prime=i;
+		}
+	}
+	assert(get_ll_sum(head) == sum);
+	sll_stack_pop(head);
+	assert(get_ll_sum(head) == sum-last_prime);
+
+	printf("SLL stack test finished succesfully\n");
+    arena_end_temp(&temp);
+}
+
+static void sll_queue_test() {
+    ArenaTemp temp = arena_get_scratch(0);
+	u32 sum = 0;
+	u32 first_prime = 0;
+
+	TestNode *first=NULL; 
+	TestNode *last=NULL; 
+
+	for (u32 i = 0; i < 10; ++i){
+		TestNode *node = push_array(temp.arena, TestNode, 1);
+		node->data = i;
+		if (i%2==0){
+			sll_queue_push(first,last,node);
+			sum+=i;
+		}
+	}
+	assert(get_ll_sum(first) == sum);
+	sll_queue_pop(first,last);
+	assert(get_ll_sum(first) == (sum-first_prime));
+
+	printf("SLL queue test finished succesfully\n");
+    arena_end_temp(&temp);
+}
+
+static void dll_test() {
+    ArenaTemp temp = arena_get_scratch(0);
+	u32 sum = 0;
+
+	u32 prime_to_delete = 4;
+	TestNode *prime_to_delete_node=NULL;
+
+	TestNode *first=NULL; 
+	TestNode *last=NULL; 
+
+	for (u32 i = 0; i < 10; ++i){
+		TestNode *node = push_array(temp.arena, TestNode, 1);
+		node->data = i;
+		if (i%2==0){
+			dll_push_back(first,last,node);
+			sum+=i;
+			if (i == 4){
+				prime_to_delete_node = node;
+			}
+		}
+	}
+	assert(get_ll_sum(first) == sum);
+	dll_remove(prime_to_delete_node->prev,prime_to_delete_node->next,prime_to_delete_node);
+	assert(get_ll_sum(first) == (sum-prime_to_delete));
+
+	printf("DLL test finished succesfully\n");
+    arena_end_temp(&temp);
+}
+
+
 
 
 #endif

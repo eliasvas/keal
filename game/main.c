@@ -4,6 +4,10 @@
 int main() {
     arena_test();
     arena_scratch_test();
+    sll_stack_test();
+    sll_queue_test();
+    dll_test();
+
     // platform_init();
     // vec4 color = (vec4){1,1,1,1};
     // InstanceData data[2];

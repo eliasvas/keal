@@ -50,9 +50,11 @@ static Arena* arena_alloc_reserve(u64 reserve_size) {
 	assert(arena != NULL);
 	return arena;
 }
+
 static Arena* arena_alloc() {
 	return arena_alloc_reserve(M_ARENA_DEFAULT_RESERVE_SIZE);
 }
+
 static void arena_release(Arena *arena) {
 	Arena *curr = arena->curr;
 	for(;curr != NULL;) {
@@ -111,7 +113,7 @@ static void* arena_push_nz(Arena *arena, u64 size) {
 		}
 	}
 
-	// if allocation successful, return the pointer
+	// if allocation succesful, return the pointer
 	if (next_chunk_pos <= curr->chunk_commit_pos) {
         //unpoison the memory before returning it
         AsanUnpoison((u8*)curr + curr->chunk_pos, next_chunk_pos - curr->chunk_pos);
@@ -121,6 +123,7 @@ static void* arena_push_nz(Arena *arena, u64 size) {
 
 	return res;
 }
+
 static void* arena_push(Arena *arena, u64 size) {
 	Arena *curr = arena->curr;
 	void *res = arena_push_nz(curr, size);
@@ -140,6 +143,7 @@ static void arena_align(Arena *arena, u64 p)
 		arena_push(curr, needed_space);
 	}
 }
+
 static u64 arena_current_pos(Arena *arena){
 	Arena *curr = arena->curr;
 	u64 pos = curr->base_pos + curr->chunk_pos;
@@ -169,6 +173,7 @@ static void arena_pop_to_pos(Arena *arena, u64 pos) {
 		curr->chunk_pos = clamped_chunk_pos;
 	}
 }
+
 static void arena_pop_amount(Arena *arena, u64 amount) {
 	Arena *curr = arena->curr;
 	u64 total_pos = arena_current_pos(curr);
@@ -187,9 +192,11 @@ static ArenaTemp arena_begin_temp(Arena *arena) {
 	ArenaTemp t = {arena, pos};
 	return t;
 }
+
 static void arena_end_temp(ArenaTemp *t) {
 	arena_pop_to_pos(t->arena, t->pos);
 }
+
 #define push_array_nz(arena, type, count) (type *)arena_push_nz((arena), sizeof(type)*(count))
 #define push_array(arena, type, count) (type *)arena_push((arena), sizeof(type)*(count))
 
@@ -239,7 +246,7 @@ static void arena_test(void) {
     assert(mem2[9] == 666);
     // release our arena
     arena_release(a);
-    printf("arena test finished successfully\n");
+    printf("arena test finished succesfully\n");
 }
 
 // This!! is why we need to pass a conflict arena to arena_get_scratch,
@@ -260,37 +267,7 @@ static void arena_scratch_test() {
     sprintf(mem, "Hello scratch_test");
     assert(strcmp(mem_from_helper, mem) != 0);
     arena_end_temp(&temp);
-    printf("arena scratch test finished successfully\n");
+    printf("arena scratch test finished succesfully\n");
 }
-
-/*
-// EXPLANATION: WHY we need to pass conflict arena in arena_get_scratch(..);
-void* bar(Arena *arena){
-    // this should be arena_get_scratch(arena) to get the other scratch arena, and not foo's
-    ArenaTemp temp = arena_get_scratch(0);
-    // we allocate memory on 'arena' allocator which is the same as foo's
-    u8 *mem = arena_push(arena, kilobytes(1));
-    memcpy(mem, "Hello bar\n", strlen("Hello bar\n"));
-    // some BS allocation we need to do with temp
-    void *bs_allocation = arena_push(temp.arena, megabytes(2));
-    // This will free temp, but ALSO, because temp == arena, arena will be freed and our data (Hello bar) will be invalid
-    arena_end_temp(&temp);
-    return mem;
-}
-void foo(){
-    ArenaTemp temp = arena_get_scratch(0);
-    void *mem_old = bar(temp.arena);
-
-    u8 *mem = arena_push(temp.arena, kilobytes(1));
-    memcpy(mem, "Hello foo\n", strlen("Hello foo\n"));
-
-    // Because our bar() function popped temp allocator, 'Hello foo' will OVERWRITE 'Hello bar'
-    // And it will be the output of this printf, thats why we need to pass conflict arenas in bar
-    printf("%s", mem_old);
-
-    arena_end_temp(&temp);
-}
-*/
-
 
 #endif
