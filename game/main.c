@@ -2,6 +2,8 @@
 #include "engine.h"
 
 int main() {
+    arena_test();
+    arena_scratch_test();
     // platform_init();
     // vec4 color = (vec4){1,1,1,1};
     // InstanceData data[2];
@@ -13,7 +15,4 @@ int main() {
     //     platform_update();
     //     platform_render(data, 2);
     // }
-    if (arena_test()){
-        printf("arena test passes!\n");
-    }
 }

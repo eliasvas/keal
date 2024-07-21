@@ -23,7 +23,7 @@ struct ArenaTemp {
 	u64 pos;
 };
 
-#define M_ARENA_INITIAL_COMMIT KB(4)
+#define M_ARENA_INITIAL_COMMIT_SIZE KB(4)
 #define M_ARENA_MAX_ALIGN 64
 #define M_ARENA_DEFAULT_RESERVE_SIZE GB(1)
 #define M_ARENA_COMMIT_BLOCK_SIZE MB(64)
@@ -31,9 +31,11 @@ struct ArenaTemp {
 
 static Arena* arena_alloc_reserve(u64 reserve_size) {
 	Arena *arena = NULL;
-	if (reserve_size >= M_ARENA_INITIAL_COMMIT) {
+	if (reserve_size >= M_ARENA_INITIAL_COMMIT_SIZE) {
 		void *mem = M_RESERVE(reserve_size);
-		if (M_COMMIT(mem, M_ARENA_INITIAL_COMMIT)) {
+		if (M_COMMIT(mem, M_ARENA_INITIAL_COMMIT_SIZE)) {
+            AsanPoison(mem, M_ARENA_INITIAL_COMMIT_SIZE);
+            AsanUnpoison(mem, M_ARENA_INTERNAL_MIN_SIZE);
 			arena = (Arena*)mem;
 			arena->curr = arena;
 			arena->prev = 0;
@@ -42,7 +44,7 @@ static Arena* arena_alloc_reserve(u64 reserve_size) {
 			arena->growable = 1;
 			arena->chunk_cap = reserve_size;
 			arena->chunk_pos = M_ARENA_INTERNAL_MIN_SIZE;
-			arena->chunk_commit_pos = M_ARENA_INITIAL_COMMIT;
+			arena->chunk_commit_pos = M_ARENA_INITIAL_COMMIT_SIZE;
 		}
 	}
 	assert(arena != NULL);
@@ -52,12 +54,15 @@ static Arena* arena_alloc() {
 	return arena_alloc_reserve(M_ARENA_DEFAULT_RESERVE_SIZE);
 }
 static void arena_release(Arena *arena) {
-	//M_RELEASE(arena, arena->chunk_cap);
-	//Arena *curr = arena->curr;
-	for(Arena *curr = arena->curr; curr != NULL; curr = curr->prev) {
+	Arena *curr = arena->curr;
+	for(;curr != NULL;) {
+        void *prev = curr->prev;
+        // TODO -- for some reason, THIS gives us a use-after-poison
+        //AsanPoison(curr, curr->chunk_cap);
 		M_RELEASE(curr, curr->chunk_cap);
+        curr = prev;
 	}
-	M_ZERO_STRUCT(arena);
+	//M_ZERO_STRUCT(arena);
 }
 
 static void* arena_push_nz(Arena *arena, u64 size) {
@@ -72,17 +77,19 @@ static void* arena_push_nz(Arena *arena, u64 size) {
 			u64 least_size = M_ARENA_INTERNAL_MIN_SIZE + size;
 			if (new_reserved_size < least_size) {
 				// because 4KB is recommended page size for most currect Architectures
-				new_reserved_size = align_pow2(least_size, MB(4));
+				new_reserved_size = align_pow2(least_size, KB(4));
 			}
 			void *mem = M_RESERVE(new_reserved_size);
-			if (M_COMMIT(mem, M_ARENA_INITIAL_COMMIT)) {
+			if (M_COMMIT(mem, M_ARENA_INITIAL_COMMIT_SIZE)) {
+                AsanPoison(mem, new_reserved_size);
+                AsanUnpoison(mem, M_ARENA_INTERNAL_MIN_SIZE);
 				Arena *new_chunk_arena = (Arena*)mem;
 				new_chunk_arena->curr = new_chunk_arena;
 				new_chunk_arena->prev = curr;
 				new_chunk_arena->base_pos = curr->base_pos + curr->chunk_cap;
 				new_chunk_arena->chunk_cap = new_reserved_size;
 				new_chunk_arena->chunk_pos = M_ARENA_INTERNAL_MIN_SIZE;
-				new_chunk_arena->chunk_commit_pos = M_ARENA_INITIAL_COMMIT;
+				new_chunk_arena->chunk_commit_pos = M_ARENA_INITIAL_COMMIT_SIZE;
 				curr = new_chunk_arena;
 				arena->curr = new_chunk_arena;
 			}
@@ -93,6 +100,7 @@ static void* arena_push_nz(Arena *arena, u64 size) {
 	u64 result_pos = align_pow2(curr->chunk_pos, arena->alignment);
 	u64 next_chunk_pos = result_pos + size;
 	if (next_chunk_pos <= curr->chunk_cap) {
+        // if we need memory for next_chunk_pos that isn't already commited, commit it
 		if (next_chunk_pos > curr->chunk_commit_pos) {
 			u64 next_commit_pos_aligned = align_pow2(next_chunk_pos, M_ARENA_COMMIT_BLOCK_SIZE);
 			u64 next_commit_pos = minimum(next_commit_pos_aligned,curr->chunk_cap);
@@ -105,6 +113,8 @@ static void* arena_push_nz(Arena *arena, u64 size) {
 
 	// if allocation successful, return the pointer
 	if (next_chunk_pos <= curr->chunk_commit_pos) {
+        //unpoison the memory before returning it
+        AsanUnpoison((u8*)curr + curr->chunk_pos, next_chunk_pos - curr->chunk_pos);
 		res = (u8*)curr + result_pos;
 		curr->chunk_pos = next_chunk_pos;
 	}
@@ -136,34 +146,36 @@ static u64 arena_current_pos(Arena *arena){
 	return(pos);
 }
 
-static void* arena_pop_to_pos(Arena *arena, u64 pos) {
+static void arena_pop_to_pos(Arena *arena, u64 pos) {
 	Arena *curr = arena->curr;
 	u64 total_pos = arena_current_pos(curr);
 	// release chunks that BEGIN after this pos
 	if (pos < total_pos) {
 		// We need at least M_ARENA_INTERNAL_MIN_SIZE of allocation in our arena (for the Arena* at least)
 		u64 clamped_total_pos = maximum(pos, M_ARENA_INTERNAL_MIN_SIZE);
-		for(;clamped_total_pos < pos;) {
+		for(;clamped_total_pos < curr->base_pos;) {
 			Arena *prev = curr->prev;
+            AsanPoison(curr, curr->chunk_cap);
 			M_RELEASE(curr, curr->chunk_cap);
 			curr = prev;
 		}
+        // arena's curr will become the last arena to have its memory released
 		arena->curr = curr;
+
+        // update arena's chunk_pos to only contain up to pop pos
 		u64 chunk_pos = clamped_total_pos - curr->base_pos;
 		u64 clamped_chunk_pos = maximum(chunk_pos, M_ARENA_INTERNAL_MIN_SIZE);
+        AsanPoison((u8*)curr + clamped_chunk_pos, curr->chunk_pos - clamped_chunk_pos);
 		curr->chunk_pos = clamped_chunk_pos;
 	}
-	return NULL;
 }
-static void* arena_pop_amount(Arena *arena, u64 amount) {
+static void arena_pop_amount(Arena *arena, u64 amount) {
 	Arena *curr = arena->curr;
 	u64 total_pos = arena_current_pos(curr);
 	if (amount <= total_pos) {
 		u64 new_pos = total_pos - amount;
 		arena_pop_to_pos(arena, new_pos);
 	}
-	// FIXME -- WHY do we return NULL here?????????
-	return NULL;
 }
 
 static void arena_clear(Arena *arena) {
@@ -181,34 +193,78 @@ static void arena_end_temp(ArenaTemp *t) {
 #define push_array_nz(arena, type, count) (type *)arena_push_nz((arena), sizeof(type)*(count))
 #define push_array(arena, type, count) (type *)arena_push((arena), sizeof(type)*(count))
 
-// static thread_loc Arena *m__scratch_pool[2] = {0};
+static thread_loc Arena *m__scratch_pool[2] = {0};
 
-// static ArenaTemp arena_get_scratch(Arena *conflict) {
+static ArenaTemp arena_get_scratch(Arena *conflict) {
 
-// 	// init the scratch pool at the first time
-// 	if (m__scratch_pool[0] == 0) {
-// 		Arena **scratch_slot = m__scratch_pool;
-// 		for (u32 i = 0; i < 2; i+=1, scratch_slot+=1) {
-// 			*scratch_slot = arena_alloc();
-// 		}
-// 	}
+	// init the scratch pool at the first time
+	if (m__scratch_pool[0] == 0) {
+		Arena **scratch_slot = m__scratch_pool;
+		for (u32 i = 0; i < 2; i+=1, scratch_slot+=1) {
+			*scratch_slot = arena_alloc();
+		}
+	}
 
-// 	// return the non conflicting arena from pool
-// 	ArenaTemp res = {0};
-// 	Arena **scratch_slot = m__scratch_pool;
-// 	for (u32 i = 0; i < 2; i+=1, scratch_slot+=1) {
-// 		if (*scratch_slot == conflict){
-// 			continue;
-// 		}
-// 		res = arena_begin_temp(*scratch_slot);
-// 	}
+	// return the non conflicting arena from pool
+	ArenaTemp res = {0};
+	Arena **scratch_slot = m__scratch_pool;
+	for (u32 i = 0; i < 2; i+=1, scratch_slot+=1) {
+		if (*scratch_slot == conflict){
+			continue;
+		}
+		res = arena_begin_temp(*scratch_slot);
+	}
 
-// 	return res;
-// }
+	return res;
+}
 
-//static void arena_test() { printf("------Arena test!-----\n"); printf("---------------------\n"); ArenaTemp temp = arena_get_scratch(NULL); Arena *arena = arena_alloc(); u8 arr[5560]; u8 *mem = arena_push_nz(arena, kilobytes(1)); memcpy(mem, arr, 2560); mem = arena_push(arena, gigabytes(0.1)); printf("arena_current_pos=[%lud]", arena_current_pos(arena)); ArenaTemp t = arena_begin_temp(arena); void *large_mem = arena_push(arena, gigabytes(1)); printf("\nafter [10GB] arena_current_pos=[%lud]", arena_current_pos(arena)); printf("\nafter [10GB] temp_arena_current_pos=[%lud]", arena_current_pos(t.arena)); arena_end_temp(&t); printf("\nafter [POP] arena_current_pos=[%lud]\n", arena_current_pos(arena)); for (int i = 0; i < 9; ++i) { mem[i] = '0'+(9 - i); } printf("%s\n", &mem[0]); arena_end_temp(&temp); printf("---------------------\n"); }
+static void arena_test(void) {
+    Arena *a = arena_alloc();
+    // allocate small amount of elements and try to access (hopefully no Asan use-after-poison)
+    u32 *mem = push_array(a,u32,10);
+    u32 *mem2 = mem;
+    assert(mem);
+    // set LAST u32 to 666
+    mem[9] = 666;
+    // allocate medium amount of elements and try to access > INITIAL_COMMIT
+    mem = push_array(a,u32,M_ARENA_INITIAL_COMMIT_SIZE * 2);
+    assert(mem);
+    mem[M_ARENA_INITIAL_COMMIT_SIZE*2-1] = 555;
+    arena_pop_amount(a, M_ARENA_INITIAL_COMMIT_SIZE*2);
+    // assert that previous element is actually the 666 we written earlier
+    mem = push_array_nz(a,u32,M_ARENA_DEFAULT_RESERVE_SIZE*2);
+    assert(mem);
+    arena_pop_amount(a, M_ARENA_DEFAULT_RESERVE_SIZE*2);
+    // assert that the first allocation hasn't moved
+    assert(mem2[9] == 666);
+    // release our arena
+    arena_release(a);
+    printf("arena test finished successfully\n");
+}
+
+// This!! is why we need to pass a conflict arena to arena_get_scratch,
+// problem is that arena is the same as temp.arena! so all helper's memory will be cleared
+static u8 *arena_scratch_test_helper(Arena *arena) {
+    ArenaTemp temp = arena_get_scratch(arena);
+    u8 *mem_to_return = arena_push(arena, KB(1));
+    sprintf(mem_to_return, "Hello1234");
+    u8 *extra_mem = arena_push(temp.arena, KB(1));
+    sprintf(extra_mem, "test_helper");
+    arena_end_temp(&temp);
+    return mem_to_return;
+}
+static void arena_scratch_test() {
+    ArenaTemp temp = arena_get_scratch(0);
+    u8 *mem_from_helper = arena_scratch_test_helper(temp.arena);
+    u8 *mem = arena_push(temp.arena, KB(1));
+    sprintf(mem, "Hello scratch_test");
+    assert(strcmp(mem_from_helper, mem) != 0);
+    arena_end_temp(&temp);
+    printf("arena scratch test finished successfully\n");
+}
+
 /*
-// WHY we need to pass conflict arena in arena_get_scratch(..);
+// EXPLANATION: WHY we need to pass conflict arena in arena_get_scratch(..);
 void* bar(Arena *arena){
     // this should be arena_get_scratch(arena) to get the other scratch arena, and not foo's
     ArenaTemp temp = arena_get_scratch(0);
@@ -236,15 +292,5 @@ void foo(){
 }
 */
 
-b32 arena_test(void) {
-    Arena *a = arena_alloc();
-    u32 *mem = push_array(a,u32,100000);
-    assert(mem);
-    AsanPoison(mem, 100);
-    //This will cause a crash I think
-    mem[0] = 5;
-
-    return 1;
-}
 
 #endif
