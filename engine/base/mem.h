@@ -1,8 +1,7 @@
 #ifndef MEM_H_
 #define MEM_H_
 
-#include "core_inc.h"
-#include <string.h>
+#include "base_inc.h"
 
 #if defined(OS_WINDOWS)
     #define M_RESERVE(bytes) VirtualAlloc(NULL, bytes, MEM_RESERVE, PAGE_NOACCESS)

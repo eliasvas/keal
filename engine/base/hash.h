@@ -1,7 +1,7 @@
 #ifndef HASH_H_
 #define HASH_H_
 
-#include "core_inc.h"
+#include "base_inc.h"
 
 INLINE u64 djb2_hash(u8 *str) {
 	if (!str) return 0;

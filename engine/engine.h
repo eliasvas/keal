@@ -3,7 +3,8 @@
 
 #define ENABLE_SANITIZER 1
 
-#include "base/core_inc.h"
+#include "base/base_inc.h"
+#include "core/core_inc.h"
 #include "gfx/glb.h"
 
 /*

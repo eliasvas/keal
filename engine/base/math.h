@@ -1,7 +1,7 @@
 #ifndef MATH_H_ 
 #define MATH_H_
 
-#include "core_inc.h"
+#include "base_inc.h"
 
 typedef union vec2
 {

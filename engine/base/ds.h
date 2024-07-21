@@ -1,7 +1,7 @@
 #ifndef DS_H_
 #define DS_H_
 
-#include "core_inc.h"
+#include "base_inc.h"
 
 #define sll_stack_push_N(f,n,next) ((n)->next=(f), (f)=(n))
 #define sll_stack_pop_N(f,next) ((f==0)?((f)=(f)):((f)=(f)->next))
@@ -28,7 +28,7 @@
 
 typedef struct TestNode TestNode;
 struct TestNode {TestNode*next;TestNode*prev;int data;};
-u64 get_ll_sum(TestNode *node) { u64 sum = 0;for (;node!=NULL;node=node->next){sum+=node->data;} return sum; }
+static u64 get_ll_sum(TestNode *node) { u64 sum = 0;for (;node!=NULL;node=node->next){sum+=node->data;} return sum; }
 
 static void sll_stack_test() {
     ArenaTemp temp = arena_get_scratch(0);

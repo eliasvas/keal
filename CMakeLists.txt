@@ -25,7 +25,7 @@ endif()
 
 # build the engine, linking SDL2 and GLEW if necessary
 # TODO -- shouldn't this statically link SDL/GLEW and be a .dll
-add_library(engine STATIC engine/gfx/glb.c)
+add_library(engine STATIC engine/gfx/glb.c engine/core/global_state.c)
 include_directories(engine ${SDL2_INCLUDE_DIRS})
 include_directories(engine engine)
 target_link_libraries(engine SDL2::SDL2-static)

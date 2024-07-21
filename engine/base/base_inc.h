@@ -1,5 +1,5 @@
-#ifndef CORE_INC_H_
-#define CORE_INC_H_
+#ifndef BASE_INC_H_
+#define BASE_INC_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,5 +13,6 @@
 #include "arena.h"
 #include "ds.h"
 #include "hash.h"
+#include "time_util.h"
 
 #endif

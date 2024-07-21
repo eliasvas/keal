@@ -1,7 +1,7 @@
 #ifndef ARENA_H_
 #define ARENA_H_
 // ref: https://git.mr4th.com/mr4th-public/mr4th/src/branch/main/src/base/base_big_functions.c
-#include "core_inc.h"
+#include "base_inc.h"
 
 typedef struct Arena Arena;
 struct Arena {
@@ -78,7 +78,7 @@ static void* arena_push_nz(Arena *arena, u64 size) {
 			u64 new_reserved_size = M_ARENA_DEFAULT_RESERVE_SIZE;
 			u64 least_size = M_ARENA_INTERNAL_MIN_SIZE + size;
 			if (new_reserved_size < least_size) {
-				// because 4KB is recommended page size for most currect Architectures
+				// because 4KB is recommended page size for most current Architectures
 				new_reserved_size = align_pow2(least_size, KB(4));
 			}
 			void *mem = M_RESERVE(new_reserved_size);

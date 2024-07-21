@@ -1,7 +1,7 @@
 #ifndef FILE_IO_H_
 #define FILE_IO_H_
 
-#include "core_inc.h"
+#include "base_inc.h"
 
 static u8 *fio_read_all(const char *src_filepath, u32 *byte_count) {
 	u8 *buffer = NULL;

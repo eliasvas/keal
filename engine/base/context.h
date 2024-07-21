@@ -136,7 +136,6 @@
 #if defined(OS_WINDOWS)
 #include <windows.h>
 #endif
-#include "core_inc.h"
 
 #define INLINE static inline
 
