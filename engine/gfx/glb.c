@@ -322,7 +322,7 @@ void platform_init(void) {
     }
     SDL_GL_MakeCurrent(window,glcontext);
 
-    #if defined(OS_WINDOWS)
+    #if (OS_WINDOWS)
         glewInit();
         assert(GLEW_ARB_ES3_compatibility);
         glEnable(GL_FRAMEBUFFER_SRGB);

@@ -3,8 +3,6 @@
 
 #include "core_inc.h"
 
-
-//MATH LIB
 typedef union vec2
 {
     struct { f32 x,y; };

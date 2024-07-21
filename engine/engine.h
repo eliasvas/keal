@@ -1,7 +1,9 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 
-#include "core/core_inc.h"
+#define ENABLE_SANITIZER 1
+
+#include "base/core_inc.h"
 #include "gfx/glb.h"
 
 /*

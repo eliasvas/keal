@@ -6,13 +6,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 # prevent installing to system directories.
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE INTERNAL "")
-# set module path to find FindSDL2.cmake
 
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 
-project(TestGame VERSION 1.0 LANGUAGES C)
+project(TestGame VERSION 1.0.0 LANGUAGES C)
 
 # build engine dependencies
 include(FetchContent)
@@ -42,3 +41,7 @@ endif()
 add_executable(game game/main.c)
 target_include_directories(game PUBLIC engine)
 target_link_libraries(game PUBLIC engine SDL2::SDL2main)
+
+# use Address Sanitizer (TODO -- check if this works on linux, i think it should be -fsanitize)
+target_compile_options(game PUBLIC /fsanitize=address)
+target_link_options(game PUBLIC /fsanitize=address)

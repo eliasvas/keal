@@ -9,6 +9,18 @@
 #define ENABLE_SANITIZER 0
 #endif
 
+#if COMPILER_CLANG && ENABLE_SANITIZER
+#include <sanitizer/asan_interface.h>
+#endif
+
+#if ENABLE_SANITIZER
+# define AsanPoison(p,z)   __asan_poison_memory_region((p),(z))
+# define AsanUnpoison(p,z) __asan_unpoison_memory_region((p),(z))
+#else
+# define AsanPoison(p,z)
+# define AsanUnpoison(p,z)
+#endif
+
 
 #if defined(__clang__)
 #define COMPILER_CLANG 1

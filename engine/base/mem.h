@@ -23,6 +23,7 @@
 #define M_ZERO_STRUCT(p)  M_ZERO((p), sizeof(*(p)))
 #define M_ZERO_ARRAY(a)  M_ZERO((a), sizeof(a))
 
+// TODO -- Do more memory stuff like M_COPY, M_COPY_STRUCT, M_COPY_ARRAY and stuff 
 
 #define ALLOC malloc
 #define REALLOC realloc
