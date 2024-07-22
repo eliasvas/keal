@@ -1,5 +1,5 @@
-#ifndef GLB_H_
-#define GLB_H_
+#ifndef GLB_H
+#define GLB_H
 
 typedef struct InstanceData {
     float pos0[2];

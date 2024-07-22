@@ -7,7 +7,7 @@ void engine_global_state_init() {
     global_state.engine_start_ts = get_current_timestamp();
     // Initialize the frame arena
     global_state.frame_arena = arena_alloc();
-    // Initialize default FPS to 0.0 (uncapped)
+    // Initialize default FPS to 0.1 (uncapped)
     global_state.target_fps = 0.1;
 }
 

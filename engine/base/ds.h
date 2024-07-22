@@ -1,5 +1,5 @@
-#ifndef DS_H_
-#define DS_H_
+#ifndef DS_H
+#define DS_H
 
 #include "base_inc.h"
 

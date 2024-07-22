@@ -1,5 +1,5 @@
-#ifndef CORE_INC_H_
-#define CORE_INC_H_
+#ifndef CORE_INC_H
+#define CORE_INC_H
 
 #include "global_state.h"
 

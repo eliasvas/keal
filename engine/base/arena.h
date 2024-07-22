@@ -1,5 +1,5 @@
-#ifndef ARENA_H_
-#define ARENA_H_
+#ifndef ARENA_H
+#define ARENA_H
 // ref: https://git.mr4th.com/mr4th-public/mr4th/src/branch/main/src/base/base_big_functions.c
 #include "base_inc.h"
 

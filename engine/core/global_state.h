@@ -1,5 +1,5 @@
-#ifndef ENGINE_GLOBAL_STATE_H_
-#define ENGINE_GLOBAL_STATE_H_
+#ifndef ENGINE_GLOBAL_STATE_H
+#define ENGINE_GLOBAL_STATE_H
 
 #include "base/base_inc.h"
 

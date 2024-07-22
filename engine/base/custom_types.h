@@ -1,5 +1,5 @@
-#ifndef CUSTOM_TYPES_H_
-#define CUSTOM_TYPES_H_
+#ifndef CUSTOM_TYPES_H
+#define CUSTOM_TYPES_H
 
 #include <stdint.h>
 #include <time.h>

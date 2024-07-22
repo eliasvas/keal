@@ -1,5 +1,5 @@
-#ifndef FILE_IO_H_
-#define FILE_IO_H_
+#ifndef FILE_IO_H
+#define FILE_IO_H
 
 #include "base_inc.h"
 

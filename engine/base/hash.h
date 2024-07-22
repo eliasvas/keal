@@ -1,5 +1,5 @@
-#ifndef HASH_H_
-#define HASH_H_
+#ifndef HASH_H
+#define HASH_H
 
 #include "base_inc.h"
 

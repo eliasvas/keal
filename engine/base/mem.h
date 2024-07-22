@@ -1,5 +1,5 @@
-#ifndef MEM_H_
-#define MEM_H_
+#ifndef MEM_H
+#define MEM_H
 
 #include "base_inc.h"
 

@@ -1,5 +1,5 @@
-#ifndef GFX_H_
-#define GFX_H_
+#ifndef GFX_H
+#define GFX_H
 #include "engine.h"
 
 

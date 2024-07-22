@@ -1,5 +1,5 @@
-#ifndef ENGINE_H_
-#define ENGINE_H_
+#ifndef ENGINE_H
+#define ENGINE_H
 
 #define ENABLE_SANITIZER 1
 

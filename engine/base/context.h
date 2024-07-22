@@ -1,5 +1,5 @@
-#ifndef CONTEXT_H_ 
-#define CONTEXT_H_
+#ifndef CONTEXT_H
+#define CONTEXT_H
 
 #if !defined(ENABLE_ASSERT)
 #define ENABLE_ASSERT 0

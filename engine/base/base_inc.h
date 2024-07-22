@@ -1,5 +1,5 @@
-#ifndef BASE_INC_H_
-#define BASE_INC_H_
+#ifndef BASE_INC_H
+#define BASE_INC_H
 
 #include <stdio.h>
 #include <stdlib.h>
