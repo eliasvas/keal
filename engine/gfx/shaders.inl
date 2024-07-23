@@ -109,20 +109,27 @@ static const char *vs_ogl=
 "#version 300 es\n"
 "precision mediump float;\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec2 aTexCoord;\n"
 "uniform vec3 color;\n"
+"out vec2 tc;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"   tc = aTexCoord;\n"
 "}\0";
 
 static const char *fs_ogl= 
 "#version 300 es\n"
 "precision mediump float;\n"
 "uniform vec3 color;\n"
+"uniform sampler2D Tex;\n"
+"in vec2 tc;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(color.x, color.y, color.z, 1.0f);\n"
+"   vec4 tex_col = texture(Tex, tc);\n"
+"   FragColor = vec4(tex_col.xyz * color,1.0);\n"
+"   FragColor.a = 1.0;\n"
 "}\n\0";
 
 #endif

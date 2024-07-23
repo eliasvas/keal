@@ -38,6 +38,7 @@ struct oglContext {
 };
 b32 ogl_ctx_init(oglContext *ctx);
 b32 ogl_ctx_deinit(oglContext *ctx);
+void ogl_set_viewport(f32 x, f32 y, f32 w, f32 h);
 // This can be called by the user between draw_arrays, to mitigate global state stuff a bit
 void ogl_clear_all_state(oglContext *ctx);
 
@@ -107,5 +108,36 @@ enum oglPrimitive {
 void ogl_draw(oglPrimitive prim, u32 first, u32 count);
 void ogl_draw_instanced(oglPrimitive prim, u32 first, s32 count, u32 instance_count);
 void ogl_draw_indexed(oglPrimitive prim, u32 count);
+
+typedef enum oglImageKind oglImageKind;
+enum oglImageKind {
+    OGL_IMAGE_KIND_TEXTURE,
+    OGL_IMAGE_KIND_RT,
+};
+
+typedef enum oglImageFormat oglImageFormat;
+enum oglImageFortmat {
+    OGL_IMAGE_FORMAT_RGBA8U,
+    OGL_IMAGE_FORMAT_RGBA32F,
+};
+
+typedef struct oglImage oglImage;
+struct oglImage {
+    u32 width;
+    u32 height;
+    oglImageFormat format;
+    oglImageKind kind;
+
+    GLuint handle;
+    //optional: only configured for RTs (RT_COL -> colors) (RT_DS -> rbo) 
+    GLuint attachments[4];
+};
+
+void ogl_rt_bind(oglImage *img);
+void ogl_image_clear(oglImage *img);
+b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt, b32 is_font);
+void ogl_image_deinit(oglImage *img);
+void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment);
+
 
 #endif

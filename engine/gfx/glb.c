@@ -121,8 +121,8 @@ GLuint create_atlas_tex_and_sampler(const GLubyte* pixels, GLsizei width, GLsize
     #else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
     #endif
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -132,7 +132,7 @@ GLuint create_atlas_tex_and_sampler(const GLubyte* pixels, GLsizei width, GLsize
     // Create and configure sampler
     // glGenSamplers(1, sampler);
     // glSamplerParameteri(*sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    // glSamplerParameteri(*sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glSamplerParameteri(*sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // glSamplerParameteri(*sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
     // glSamplerParameteri(*sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
 

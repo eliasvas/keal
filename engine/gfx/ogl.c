@@ -17,6 +17,10 @@ b32 ogl_ctx_deinit(oglContext *ctx) {
     return 1;
 }
 
+void ogl_set_viewport(f32 x, f32 y, f32 w, f32 h) {
+    glViewport(x,y,w,h);
+}
+
 void ogl_clear_all_state(oglContext *ctx) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindVertexArray(0);
@@ -143,6 +147,9 @@ GLuint gl_make_sp(const char *vs_source, const char *fs_source) {
     glAttachShader(sp, fs);
     glLinkProgram(sp);
     assert(0 == gl_check_gl_shader_compile_errors(sp));
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
 
     return sp;
 }
@@ -282,4 +289,122 @@ void ogl_draw_instanced(oglPrimitive prim, u32 first, s32 count, u32 instance_co
 
 void ogl_draw_indexed(oglPrimitive prim, u32 count) {
     glDrawElements(ogl_prim_to_gl_prim(prim), count, GL_UNSIGNED_INT, 0);
+}
+
+////////////////////////////////
+// OGL image API
+////////////////////////////////
+
+void ogl_rt_bind(oglImage *img) { 
+    if (img == NULL) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, img->handle);
+    }
+}
+
+//TODO: in case of RT, should we bind it first
+void ogl_image_clear(oglImage *img) {
+    ogl_rt_bind(img);
+    //glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(0.2 * cos(get_current_timestamp()/4000.0),0.2 * sin(get_current_timestamp()/3000.0),0.3 * cos(get_current_timestamp()/1000.0),1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ogl_rt_bind(NULL);
+}
+
+//TODO: should a 'type' be introduced, switching on the format is wrong
+b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt, b32 is_font) {
+    img->width = tex_w;
+    img->height = tex_h;
+    img->format = fmt;
+    switch (img->format) {
+        case (OGL_IMAGE_FORMAT_RGBA8U): // normal textures
+            img->kind = OGL_IMAGE_KIND_TEXTURE;
+            glGenTextures(1, &img->handle);
+            glBindTexture(GL_TEXTURE_2D, img->handle);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
+            if (is_font) {
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data);
+                glGenerateMipmap(GL_TEXTURE_2D);
+            } else  {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
+            break;
+        case (OGL_IMAGE_FORMAT_RGBA32F): // framebuffers
+            img->kind = OGL_IMAGE_KIND_RT;
+            glGenFramebuffers(1, &img->handle);
+            glBindFramebuffer(GL_FRAMEBUFFER, img->handle);
+            
+            // - position color buffer
+            glGenTextures(1, &img->attachments[0]);
+            glBindTexture(GL_TEXTURE_2D, img->attachments[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, img->attachments[0], 0);
+            
+            // - normal color buffer
+            glGenTextures(1, &img->attachments[1]);
+            glBindTexture(GL_TEXTURE_2D, img->attachments[1]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, img->attachments[1], 0);
+            
+            // - color + specular color buffer
+            glGenTextures(1, &img->attachments[2]);
+            glBindTexture(GL_TEXTURE_2D, img->attachments[2]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, img->attachments[2], 0);
+
+            u32 attachments_gl[3]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+            glDrawBuffers(3, &attachments_gl[0]);
+
+            GLuint rbo;
+            glGenRenderbuffers(1, &rbo);
+            glBindRenderbuffer(GL_RENDERBUFFER, rbo); 
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tex_w, tex_h);  
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+            assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+        default:
+            assert(0);
+            break;
+    }
+    return (img->handle != 0);
+}
+
+void ogl_image_deinit(oglImage *img) {
+    if (img->kind == OGL_IMAGE_KIND_RT){
+        glDeleteFramebuffers(1,&img->handle);
+    }else {
+        glDeleteTextures(1,&img->handle);
+    }
+}
+
+
+void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment) {
+    glActiveTexture(GL_TEXTURE0 + tex_slot);
+    if (img->kind == OGL_IMAGE_KIND_RT) {
+            glBindTexture(GL_TEXTURE_2D, img->attachments[attachment]);
+    } else {
+            glBindTexture(GL_TEXTURE_2D, img->handle);
+    }
 }
