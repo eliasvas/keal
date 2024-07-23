@@ -5,7 +5,7 @@
 // TODO -- in the far future, we can use standard GLSL, and depending on 
 //backend (desktop/ES3/ES2/?) to transpile, shouldn't be hard 
 
-const char* gui_vs =
+static const char* gui_vs =
 "#version 300 es\n"
 "precision mediump float;\n"
 "layout(location = 0) in vec2 inPos0;\n"
@@ -57,7 +57,7 @@ const char* gui_vs =
 "    fragHalfSize = dstHalfSize;\n"
 "}\n";
 
-const char* gui_fs =
+static const char* gui_fs =
 "#version 300 es\n"
 "precision mediump float;\n"
 "in vec2 fragUV;\n"
@@ -104,5 +104,25 @@ const char* gui_fs =
 "    outColor = fragColor * tex * sdfFactor * borderFactor;\n"
 "    if (outColor.a < 0.05) discard;\n"
 "}\n";
+
+static const char *vs_ogl= 
+"#version 300 es\n"
+"precision mediump float;\n"
+"layout (location = 0) in vec3 aPos;\n"
+"uniform vec3 color;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+static const char *fs_ogl= 
+"#version 300 es\n"
+"precision mediump float;\n"
+"uniform vec3 color;\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(color.x, color.y, color.z, 1.0f);\n"
+"}\n\0";
 
 #endif

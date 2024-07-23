@@ -5,7 +5,7 @@
 
 #include "base/base_inc.h"
 #include "core/core_inc.h"
-#include "gfx/glb.h"
+#include "gfx/gfx_inc.h"
 
 /*
 #include <GL/glew.h>

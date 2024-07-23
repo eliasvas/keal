@@ -1,6 +1,24 @@
 #include <stdio.h>
 #include "engine.h"
 
+#define SDL_MAIN_NOIMPL
+
+#include <SDL.h>
+#include <SDL_main.h>
+
+#if defined(OS_WINDOWS)
+    #include <GL/glew.h>
+    #include <GL/wglew.h>
+#elif defined(OS_LINUX)
+    #include <SDL_syswm.h>
+    #include <GLES3/gl3.h>
+    #include <GLES/egl.h>
+#elif defined(__EMSCRIPTEN)
+    #include <emscripten.h>
+	#include <emscripten/html5.h>
+	#include <GLES3/gl3.h>
+#endif
+
 int main() {
     // arena_test();
     // arena_scratch_test();
@@ -8,22 +26,34 @@ int main() {
     // sll_queue_test();
     // dll_test();
 
-    engine_global_state_init();
-    engine_global_state_set_target_fps(12.0);
     platform_init();
-    vec4 color = (vec4){1,1,1,1};
-    InstanceData data[2];
-    b32 flicker_val = 0;
+    engine_global_state_init();
+    engine_global_state_set_target_fps(60.0);
+    f32 vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f,  0.5f, 0.0f,
+    };
+    oglContext ogl_ctx;
+    ogl_ctx_init(&ogl_ctx);
+    oglBuf vbo = ogl_buf_make(OGL_BUF_KIND_VERTEX, vertices, 3, sizeof(vec3));
+    oglSP sp;
+    ogl_sp_init(&sp, vs_ogl, fs_ogl);
+    ogl_sp_add_attrib(&sp, ogl_make_attrib(0,OGL_SHADER_DATA_TYPE_VEC3,0,0,0));
     while(1) {
+        ogl_clear_all_state(&ogl_ctx);
+        glDisable(GL_DEPTH_TEST);
         engine_global_state_frame_begin();
-
-        //----
-        data[0] = (InstanceData){100,100,200,200,0,0,0,0,color.x, color.y,color.z,color.w,0,0,flicker_val & 1};
-        data[1] = (InstanceData){200,200,300,300,0,0,0,0,color.x, color.y,color.z,color.w,0,0,!(flicker_val & 1)};
-        flicker_val += 1;
+        glClearColor(0.2 * cos(get_current_timestamp()/4000.0),0.2 * sin(get_current_timestamp()/3000.0),0.3 * cos(get_current_timestamp()/1000.0),1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         platform_update();
-        platform_render(data, 2);
-        //----
+        ogl_bind_vertex_buffer(&vbo);
+        ogl_bind_sp(&sp);
+        vec3 c = v3(1.0,0.0,0.0);
+        ogl_sp_set_uniform(&sp, "color", OGL_SHADER_DATA_TYPE_VEC3, &c);
+        glViewport(0,0,800,600);
+        ogl_draw(OGL_PRIM_TRIANGLES, 0, 3);
+        platform_swap();
 
         engine_global_state_frame_end();
     }

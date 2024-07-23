@@ -25,7 +25,7 @@ endif()
 
 # build the engine, linking SDL2 and GLEW if necessary
 # TODO -- shouldn't this statically link SDL/GLEW and be a .dll
-add_library(engine STATIC engine/gfx/glb.c engine/core/global_state.c)
+add_library(engine STATIC engine/gfx/glb.c engine/core/global_state.c engine/gfx/ogl.c)
 include_directories(engine ${SDL2_INCLUDE_DIRS})
 include_directories(engine engine)
 target_link_libraries(engine SDL2::SDL2-static)
@@ -43,5 +43,19 @@ target_include_directories(game PUBLIC engine)
 target_link_libraries(game PUBLIC engine SDL2::SDL2main)
 
 # use Address Sanitizer (TODO -- check if this works on linux, i think it should be -fsanitize)
-target_compile_options(game PUBLIC /fsanitize=address)
-target_link_options(game PUBLIC /fsanitize=address)
+if (WIN32)
+    target_compile_options(game PUBLIC /fsanitize=address)
+    target_link_options(game PUBLIC /fsanitize=address)
+    # why is all this ASAN bullshit needed
+    find_program(ASAN_DLL clang_rt.asan_dynamic-x86_64.dll HINTS "${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES}")
+    if (ASAN_DLL)
+        add_custom_command(TARGET game POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${ASAN_DLL}" $<TARGET_FILE_DIR:game>)
+    else()
+        message(WARNING "AddressSanitizer runtime DLL not found!")
+    endif()
+else()
+    target_compile_options(game PUBLIC -fsanitize=address)
+    target_link_options(game PUBLIC -fsanitize=address)
+endif()

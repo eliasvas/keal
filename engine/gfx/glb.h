@@ -17,5 +17,6 @@ void platform_deinit(void);
 void platform_update(void);
 void platform_render(InstanceData *data, u32 instance_count);
 void platform_init(void);
+void platform_swap(void);
 
 #endif

@@ -201,14 +201,14 @@ void platform_init(void) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+        // SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+        // SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+        // SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+        // SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+        // SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+        // SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        // SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 8);
+        // SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
     #else
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -288,9 +288,12 @@ void platform_update() {
         }
     }
     vec2 windim = platform_get_windim();
-    glViewport(0,0,windim.x,windim.y);
+    //glViewport(0,0,windim.x,windim.y);
 }
 
+void platform_swap(){
+    SDL_GL_SwapWindow(window);
+}
 void platform_render(InstanceData *data, u32 instance_count)
 {
     //printf("instance count: %d\n", command_count);
@@ -306,7 +309,7 @@ void platform_render(InstanceData *data, u32 instance_count)
     glBindTexture(GL_TEXTURE_2D, 0);
     //glBindSampler(0, 0);
     glBindVertexArray(0);
-    SDL_GL_SwapWindow(window);
+    platform_swap();
 }
 
 
