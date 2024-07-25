@@ -41,6 +41,9 @@ int main(int argc, char **argv) {
 
     while(1) {
         ninput_manager_consume_events_from_window(&win);
+        if (ninput_mkey_down(NKEY_MMB)){
+            printf("MMB down!\n");
+        }
         ogl_clear_all_state(&ogl_ctx);
         engine_global_state_frame_begin();
         ogl_image_clear(NULL);

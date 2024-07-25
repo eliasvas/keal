@@ -113,13 +113,13 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
                 exit(1);
             case SDL_KEYUP:
                 node->kind = N_WINDOW_EVENT_KIND_KEYBOARD_EVENT;
-                node->ke.key = event.key.keysym.sym;
+                node->ke.key = event.key.keysym.scancode;
                 node->ke.state = 0;
                 sll_queue_push(first, last, node);
                 break;
             case SDL_KEYDOWN:
                 node->kind = N_WINDOW_EVENT_KIND_KEYBOARD_EVENT;
-                node->ke.key = event.key.keysym.sym;
+                node->ke.key = event.key.keysym.scancode;
                 node->ke.state = 1;
                 sll_queue_push(first, last, node);
                 break;
@@ -149,3 +149,4 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
 
     return first;
 }
+
