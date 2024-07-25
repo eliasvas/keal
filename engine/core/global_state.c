@@ -2,6 +2,18 @@
 
 static EngineGlobalState global_state;
 
+EngineGlobalState* get_engine_global_state() {
+    return &global_state;
+}
+
+Arena* get_frame_arena() {
+    return (global_state.frame_arena);
+}
+
+Arena* get_global_arena() {
+    return (global_state.global_arena);
+}
+
 void engine_global_state_init() {
     // Track engine start time
     global_state.engine_start_ts = get_current_timestamp();

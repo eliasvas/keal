@@ -20,14 +20,9 @@
 #endif
 
 int main() {
-    // arena_test();
-    // arena_scratch_test();
-    // sll_stack_test();
-    // sll_queue_test();
-    // dll_test();
-
-    platform_init();
+    nWindow win;
     engine_global_state_init();
+    nwindow_init(&win, "gudGame", 600, 400, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
     engine_global_state_set_target_fps(60.0);
     f32 vertices[] = {
         -0.5f, -0.5f, 0.0f,0.0,0.0,
@@ -58,21 +53,25 @@ int main() {
     ogl_sp_add_attrib(&sp, ogl_make_attrib(0,OGL_SHADER_DATA_TYPE_VEC3,sizeof(vec3)+sizeof(vec2),0,0));
     ogl_sp_add_attrib(&sp, ogl_make_attrib(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(vec3)+sizeof(vec2),sizeof(vec3),0));
     while(1) {
+        nwindow_capture_events(&win);
         ogl_clear_all_state(&ogl_ctx);
-        glDisable(GL_DEPTH_TEST);
         engine_global_state_frame_begin();
         ogl_image_clear(NULL);
-        platform_update();
         ogl_bind_vertex_buffer(&vbo);
         ogl_bind_index_buffer(&ibo);
         ogl_bind_image_to_texture_slot(&img, 0, 0);
         ogl_bind_sp(&sp);
         vec3 c = v3(1.0,0.0,1.0);
         ogl_sp_set_uniform(&sp, "color", OGL_SHADER_DATA_TYPE_VEC3, &c);
-        ogl_set_viewport(0,0,800,600);
+
+        vec2 dim = nwindow_get_dim(&win);
+        ogl_set_viewport(0,0,dim.x,dim.y);
+
         ogl_draw_indexed(OGL_PRIM_TRIANGLES, 6); 
-        platform_swap();
+        nwindow_swap(&win);
 
         engine_global_state_frame_end();
     }
+    nwindow_deinit(&win);
 }
+
