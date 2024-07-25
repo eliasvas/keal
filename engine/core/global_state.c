@@ -14,6 +14,10 @@ Arena* get_global_arena() {
     return (global_state.global_arena);
 }
 
+u64 get_global_frame_count() {
+    return (global_state.frame_count);
+}
+
 void engine_global_state_init() {
     // Track engine start time
     global_state.engine_start_ts = get_current_timestamp();
@@ -21,6 +25,8 @@ void engine_global_state_init() {
     global_state.frame_arena = arena_alloc();
     // Initialize default FPS to 0.1 (uncapped)
     global_state.target_fps = 0.1;
+    // Initialize frame counter to 0
+    global_state.frame_count = 0;
 }
 
 void engine_global_state_frame_begin() {
@@ -35,6 +41,7 @@ void engine_global_state_frame_end() {
     global_state.frame_end_ts = get_current_timestamp();
     global_state.dt = global_state.frame_end_ts - global_state.frame_start_ts;
     arena_clear(global_state.frame_arena);
+    global_state.frame_count+=1;
 }
 
 void engine_global_state_set_target_fps(f64 target_fps) {

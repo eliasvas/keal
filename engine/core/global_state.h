@@ -6,12 +6,13 @@
 typedef struct EngineGlobalState EngineGlobalState;
 struct EngineGlobalState {
     // TODO -- should we have TWO arenas and swap them out?
-    Arena *frame_arena; // this is cleaned every frame
+    Arena *frame_arena; // this is cleared every frame
     Arena *global_arena; // this is NOT
 
     u64 engine_start_ts;
     f64 target_fps;
 
+    u64 frame_count;
     u64 frame_start_ts, frame_end_ts;
     f64 dt;
 };
@@ -19,6 +20,7 @@ struct EngineGlobalState {
 EngineGlobalState* get_engine_global_state();
 Arena* get_global_arena();
 Arena* get_frame_arena();
+u64 get_global_frame_count();
 
 void engine_global_state_init();
 void engine_global_state_frame_begin();

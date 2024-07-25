@@ -73,7 +73,7 @@ b32 nwindow_impl_create(nWindow *win) {
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorv);
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorv);
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profilem);
-        SDL_Log("OpenGL ES [%s] [%d.%d]\n", (SDL_GL_CONTEXT_PROFILE_ES == profilem) ? "true" : "false", majorv, minorv);
+        SDL_Log("OpenGL %d.%d (ES=%s)", majorv, minorv, (SDL_GL_CONTEXT_PROFILE_ES == profilem) ? "true" : "compatibility");
     }
 
     SDL_ShowWindow(window);
@@ -82,7 +82,7 @@ b32 nwindow_impl_create(nWindow *win) {
         SDL_GetWindowSize(window, &width, &height);
         SDL_Log("Window size: %ix%i", width, height);
     }
-    SDL_Log("SDL window [%s] : [%dX%d] created succesfully!", win->name, (s32)win->ww, (s32)win->wh);
+    SDL_Log("SDL window [%s] created succesfully!", win->name);
     return 1;
 }
 
