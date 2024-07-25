@@ -111,10 +111,12 @@ static const char *vs_ogl=
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec2 aTexCoord;\n"
 "uniform vec3 color;\n"
+"uniform mat4 view;\n"
+"uniform mat4 proj;\n"
 "out vec2 tc;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"   gl_Position = proj * view * vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
 "   tc = aTexCoord;\n"
 "}\0";
 

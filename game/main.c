@@ -7,10 +7,10 @@ int main() {
     nwindow_init(&win, "gudGame", 600, 400, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
     engine_global_state_set_target_fps(60.0);
     f32 vertices[] = {
-        -0.5f, -0.5f, 0.0f,0.0,0.0,
-        -0.5f, 0.5f, 0.0f,0.0,1.0,
-        0.5f, 0.5f, 0.0f,1.0,1.0,
-        0.5f,  -0.5f, 0.0f,1.0,0.0,
+        -77, -77, 0.0f,0.0,0.0,
+        77,  -77, 0.0f,1.0,0.0,
+        77, 77, 0.0f,1.0,1.0,
+        -77, 77, 0.0f,0.0,1.0,
     };
     u32 indices[] = {0,1,2,2,3,0};
     oglContext ogl_ctx;
@@ -43,11 +43,18 @@ int main() {
         ogl_bind_index_buffer(&ibo);
         ogl_bind_image_to_texture_slot(&img, 0, 0);
         ogl_bind_sp(&sp);
-        vec3 c = v3(1.0,0.0,1.0);
-        ogl_sp_set_uniform(&sp, "color", OGL_SHADER_DATA_TYPE_VEC3, &c);
 
         vec2 dim = nwindow_get_dim(&win);
         ogl_set_viewport(0,0,dim.x,dim.y);
+
+
+        vec3 c = v3(1.0,0.0,1.0);
+        ogl_sp_set_uniform(&sp, "color", OGL_SHADER_DATA_TYPE_VEC3, &c);
+        vec2 camera = v2(-77,-77);
+        mat4 view = mat4_translate(v3(-camera.x,-camera.y,0));
+        ogl_sp_set_uniform(&sp, "view", OGL_SHADER_DATA_TYPE_MAT4, &view);
+        mat4 proj = mat4_ortho(0,dim.x,0,dim.y,-1.0,1.0);
+        ogl_sp_set_uniform(&sp, "proj", OGL_SHADER_DATA_TYPE_MAT4, &proj);
 
         ogl_draw_indexed(OGL_PRIM_TRIANGLES, 6); 
         nwindow_swap(&win);

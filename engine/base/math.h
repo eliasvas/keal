@@ -18,8 +18,8 @@ INLINE vec2 vec2_multf(vec2 a, f32 b)        {return v2(a.x*b,a.y*b);};
 INLINE vec2 vec2_div(vec2 a, vec2 b)         {return v2(a.x/b.x,a.y/b.y);};
 INLINE vec2 vec2_divf(vec2 a, f32 b)         {return v2(a.x/b,a.y/b);};
 INLINE vec2 vec2_lerp(vec2 a, vec2 b, f32 x) {return v2(a.x*(1.0-x) + b.x*x,a.y*(1.0-x) + b.y*x);};
-INLINE f32 vec2_dot(vec2 a, vec2 b)          {return (a.x*b.x)+(a.y*b.y);}
-INLINE f32 vec2_len(vec2 a)                  {return sqrtf(vec2_dot(a,a));}
+INLINE f32  vec2_dot(vec2 a, vec2 b)         {return (a.x*b.x)+(a.y*b.y);}
+INLINE f32  vec2_len(vec2 a)                 {return sqrtf(vec2_dot(a,a));}
 INLINE vec2 vec2_norm(vec2 a)                {f32 vl=vec2_len(a);assert(!equalf(vl,0.0,0.01));return vec2_multf(a,vl);}
 
 
@@ -38,8 +38,8 @@ INLINE vec3 vec3_multf(vec3 a, f32 b)        {return v3(a.x*b,a.y*b,a.z*b);};
 INLINE vec3 vec3_div(vec3 a, vec3 b)         {return v3(a.x/b.x,a.y/b.y,a.z/b.z);};
 INLINE vec3 vec3_divf(vec3 a, f32 b)         {return v3(a.x/b,a.y/b,a.z/b);};
 INLINE vec3 vec3_lerp(vec3 a, vec3 b, f32 x) {return v3(a.x*(1.0-x) + b.x*x,a.y*(1.0-x) + b.y*x,a.z*(1.0-x)+b.z*x);};
-INLINE f32 vec3_dot(vec3 a, vec3 b)          {return (a.x*b.x)+(a.y*b.y)+(a.z*b.z);}
-INLINE f32 vec3_len(vec3 a)                  {return sqrtf(vec3_dot(a,a));}
+INLINE f32  vec3_dot(vec3 a, vec3 b)         {return (a.x*b.x)+(a.y*b.y)+(a.z*b.z);}
+INLINE f32  vec3_len(vec3 a)                 {return sqrtf(vec3_dot(a,a));}
 INLINE vec3 vec3_norm(vec3 a)                {f32 vl=vec3_len(a);assert(!equalf(vl,0.0,0.01));return vec3_multf(a,vl);}
 INLINE vec3 vec3_cross(vec3 a,vec3 b)        {vec3 res; res.x=(a.y*b.z)-(a.z*b.y); res.y=(a.z*b.x)-(a.x*b.z); res.z=(a.x*b.y)-(a.y*b.x); return (res);} 
 
@@ -57,8 +57,8 @@ INLINE vec4 vec4_multf(vec4 a, f32 b)        {return v4(a.x*b,a.y*b,a.z*b,a.w*b)
 INLINE vec4 vec4_div(vec4 a, vec4 b)         {return v4(a.x/b.x,a.y/b.y,a.z/b.z,a.w/b.w);};
 INLINE vec4 vec4_divf(vec4 a, f32 b)         {return v4(a.x/b,a.y/b,a.z/b,a.w/b);};
 INLINE vec4 vec4_lerp(vec4 a, vec4 b, f32 x) {return v4(a.x*(1.0-x) + b.x*x,a.y*(1.0-x) + b.y*x,a.z*(1.0-x)+b.z*x,a.w*(1.0-x)+b.w*x);};
-INLINE f32 vec4_dot(vec4 a, vec4 b)          {return (a.x*b.x)+(a.y*b.y)+(a.z*b.z)+(a.w*b.w);}
-INLINE f32 vec4_len(vec4 a)                  {return sqrtf(vec4_dot(a,a));}
+INLINE f32  vec4_dot(vec4 a, vec4 b)         {return (a.x*b.x)+(a.y*b.y)+(a.z*b.z)+(a.w*b.w);}
+INLINE f32  vec4_len(vec4 a)                 {return sqrtf(vec4_dot(a,a));}
 INLINE vec4 vec4_norm(vec4 a)                {f32 vl=vec4_len(a);assert(!equalf(vl,0.0,0.01));return vec4_multf(a,vl);}
 
 
@@ -73,6 +73,42 @@ typedef union mat4
     f32 col[4][4];//{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1} 
     f32 raw[16]; //{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1} 
 }mat4;
+
+INLINE mat4 m4(void)
+{
+    mat4 res = {0};
+    return res;
+}
+
+INLINE mat4 m4d(f32 d)
+{
+    mat4 res = m4();
+    res.col[0][0] = d;
+    res.col[1][1] = d;
+    res.col[2][2] = d;
+    res.col[3][3] = d;
+    return res;
+}
+INLINE mat4 mat4_ortho(f32 l, f32 r, f32 b, f32 t, f32 n, f32 f)
+{
+    mat4 res = m4();
+    res.col[0][0] = 2.0f / (r - l);
+    res.col[1][1] = 2.0f / (t - b);
+    res.col[2][2] = 2.0f / (n - f);
+    res.col[3][3] = 1.0f;
+    res.col[3][0] = (l + r) / (l - r);
+    res.col[3][1] = (b + t) / (b - t);
+    res.col[3][2] = (f + n) / (n - f);
+    return res;
+}
+
+INLINE mat4 mat4_translate(vec3 t) {
+    mat4 res = m4d(1.0f);
+    res.col[3][0] = t.x;
+    res.col[3][1] = t.y;
+    res.col[3][2] = t.z;
+    return res;
+}
 
 
 typedef union ivec3
