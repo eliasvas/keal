@@ -103,16 +103,43 @@ void nwindow_impl_update_size(nWindow *win) {
 }
 
 nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
+    nWindowEventNode *first = NULL;
+    nWindowEventNode *last = NULL;
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        nWindowEventNode *node = push_array(get_frame_arena(), nWindowEventNode, 1);
         switch (event.type) {
             case SDL_QUIT:
                 exit(1);
+            case SDL_KEYUP:
+                node->kind = N_WINDOW_EVENT_KIND_KEYBOARD_EVENT;
+                node->ke.key = event.key.keysym.sym;
+                node->ke.state = 0;
+                sll_queue_push(first, last, node);
+                break;
+            case SDL_KEYDOWN:
+                node->kind = N_WINDOW_EVENT_KIND_KEYBOARD_EVENT;
+                node->ke.key = event.key.keysym.sym;
+                node->ke.state = 1;
+                sll_queue_push(first, last, node);
+                break;
             case SDL_MOUSEMOTION:
+                node->kind = N_WINDOW_EVENT_KIND_MOUSE_MOTION_EVENT;
+                node->mme.x = event.motion.x;
+                node->mme.y = event.motion.y;
+                sll_queue_push(first, last, node);
                 break;
             case SDL_MOUSEBUTTONDOWN:
+                node->kind = N_WINDOW_EVENT_KIND_MOUSE_EVENT;
+                node->me.key = event.button.button - SDL_BUTTON_LEFT;
+                node->ke.state = 1;
+                sll_queue_push(first, last, node);
                 break;
             case SDL_MOUSEBUTTONUP:
+                node->kind = N_WINDOW_EVENT_KIND_MOUSE_EVENT;
+                node->me.key = event.button.button - SDL_BUTTON_LEFT;
+                node->ke.state = 0;
+                sll_queue_push(first, last, node);
                 break;
             default:
                 break;
@@ -120,6 +147,5 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
     }
     nwindow_impl_update_size(win);
 
-    // To be implemented!
-    return NULL;
+    return first;
 }

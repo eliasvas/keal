@@ -1,24 +1,6 @@
 #include <stdio.h>
 #include "engine.h"
 
-#define SDL_MAIN_NOIMPL
-
-#include <SDL.h>
-#include <SDL_main.h>
-
-#if defined(OS_WINDOWS)
-    #include <GL/glew.h>
-    #include <GL/wglew.h>
-#elif defined(OS_LINUX)
-    #include <SDL_syswm.h>
-    #include <GLES3/gl3.h>
-    #include <GLES/egl.h>
-#elif defined(__EMSCRIPTEN)
-    #include <emscripten.h>
-	#include <emscripten/html5.h>
-	#include <GLES3/gl3.h>
-#endif
-
 int main() {
     nWindow win;
     engine_global_state_init();

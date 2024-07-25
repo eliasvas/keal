@@ -25,6 +25,7 @@ void nwindow_swap(nWindow *win) {
 }
 
 
+extern nWindowEventNode* nwindow_impl_capture_events(nWindow *win);
 nWindowEventNode* nwindow_capture_events(nWindow *win) {
     return nwindow_impl_capture_events(win);
 }

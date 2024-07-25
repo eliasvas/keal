@@ -1,6 +1,11 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 #include "base/base_inc.h"
+#include "core/global_state.h"
+
+////////////////////////////////
+// Window
+////////////////////////////////
 
 typedef enum nWindowOptions nWindowOptions;
 enum nWindowOptions {
@@ -19,19 +24,45 @@ struct nWindow {
     void *impl_state;
 };
 
+////////////////////////////////
+// Window Events
+////////////////////////////////
+
 typedef enum nWindowEventKind nWindowEventKind;
 enum nWindowEventKind {
     N_WINDOW_EVENT_KIND_NONE,
-    N_WINDOW_EVENT_KIND_KEYBOARD_ACTION,
-    N_WINDOW_EVENT_KIND_MOUSE_ACTION,
+    N_WINDOW_EVENT_KIND_KEYBOARD_EVENT,
+    N_WINDOW_EVENT_KIND_MOUSE_EVENT,
+    N_WINDOW_EVENT_KIND_MOUSE_MOTION_EVENT,
+};
+
+typedef struct nWindowKeyboardEvent nWindowKeyboardEvent;
+struct nWindowKeyboardEvent {
+    u32 key;
+    b32 state;
+};
+
+typedef struct nWindowMouseEvent nWindowMouseEvent;
+struct nWindowMouseEvent {
+    u32 key; // 0 = LMB, 1 = MMB, 2 = RMB
+    b32 state;
+};
+
+typedef struct nWindowMouseMotionEvent nWindowMouseMotionEvent;
+struct nWindowMouseMotionEvent {
+    f32 x;
+    f32 y;
 };
 
 typedef struct nWindowEventNode nWindowEventNode;
 struct nWindowEventNode {
-    nWindowEventKind kind;
-    s32 param0;
-    s32 param1;
     nWindowEventNode *next;
+    union {
+        nWindowKeyboardEvent ke;
+        nWindowMouseEvent me;
+        nWindowMouseMotionEvent mme;
+    };
+    nWindowEventKind kind;
 };
 
 
