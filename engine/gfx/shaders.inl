@@ -108,16 +108,16 @@ static const char* gui_fs =
 static const char *vs_ogl= 
 "#version 300 es\n"
 "precision mediump float;\n"
-"layout (location = 0) in vec2 aPos;\n"
-"layout (location = 1) in vec2 aTexCoord;\n"
+"layout (location = 0) in vec2 in_pos;\n"
+"layout (location = 1) in vec2 in_texcoord;\n"
 "uniform vec3 color;\n"
 "uniform mat4 view;\n"
 "uniform mat4 proj;\n"
 "out vec2 tc;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = proj * view * vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
-"   tc = aTexCoord;\n"
+"   gl_Position = proj * view * vec4(in_pos.x, in_pos.y, 0.0, 1.0);\n"
+"   tc = in_texcoord;\n"
 "}\0";
 
 static const char *fs_ogl= 

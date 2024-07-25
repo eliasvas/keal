@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     ogl_sp_add_attrib(&sp, ogl_make_attrib(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(vec2)+sizeof(vec2),sizeof(vec2),0));
 
     while(1) {
-        nwindow_capture_events(&win);
+        ninput_manager_consume_events_from_window(&win);
         ogl_clear_all_state(&ogl_ctx);
         engine_global_state_frame_begin();
         ogl_image_clear(NULL);

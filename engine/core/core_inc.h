@@ -3,5 +3,6 @@
 
 #include "global_state.h"
 #include "window.h"
+#include "input.h"
 
 #endif
