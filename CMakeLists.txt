@@ -59,3 +59,12 @@ else()
     target_compile_options(game PUBLIC -fsanitize=address)
     target_link_options(game PUBLIC -fsanitize=address)
 endif()
+
+# do asset stuff
+set(ASSET_DIR "${CMAKE_SOURCE_DIR}/assets")
+add_custom_target(copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${ASSET_DIR} $<TARGET_FILE_DIR:game>/assets
+)
+add_dependencies(game copy_assets)
+target_compile_definitions(game PRIVATE ASSET_DIR="assets")

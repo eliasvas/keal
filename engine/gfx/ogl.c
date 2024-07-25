@@ -321,6 +321,8 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
     img->format = fmt;
     switch (img->format) {
         case (OGL_IMAGE_FORMAT_RGBA8U): // normal textures
+        case (OGL_IMAGE_FORMAT_RGB8U):
+            GLuint tex_format = (img->format == OGL_IMAGE_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
             img->kind = OGL_IMAGE_KIND_TEXTURE;
             glGenTextures(1, &img->handle);
             glBindTexture(GL_TEXTURE_2D, img->handle);
@@ -340,9 +342,9 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             } else  {
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, tex_format, GL_UNSIGNED_BYTE, tex_data);
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
             break;

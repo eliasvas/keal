@@ -118,6 +118,7 @@ enum oglImageKind {
 typedef enum oglImageFormat oglImageFormat;
 enum oglImageFortmat {
     OGL_IMAGE_FORMAT_RGBA8U,
+    OGL_IMAGE_FORMAT_RGB8U,
     OGL_IMAGE_FORMAT_RGBA32F,
 };
 

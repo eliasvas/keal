@@ -108,7 +108,7 @@ static const char* gui_fs =
 static const char *vs_ogl= 
 "#version 300 es\n"
 "precision mediump float;\n"
-"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 0) in vec2 aPos;\n"
 "layout (location = 1) in vec2 aTexCoord;\n"
 "uniform vec3 color;\n"
 "uniform mat4 view;\n"
