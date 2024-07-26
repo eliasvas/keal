@@ -13,13 +13,19 @@ struct nBatch2DVertex {
     vec4 col;
 };
 
-typedef struct nBatch2DQuadNode nBatch2DQuadNode;
-struct nBatch2DQuadNode {
-    nBatch2DQuadNode *next;
+typedef struct nBatch2DQuad nBatch2DQuad;
+struct nBatch2DQuad {
     vec2 pos; // in pixels
     vec2 dim; // in pixels
     vec4 tc; // in pixels
     vec4 color;
+};
+
+
+typedef struct nBatch2DQuadNode nBatch2DQuadNode;
+struct nBatch2DQuadNode {
+    nBatch2DQuadNode *next;
+    nBatch2DQuad quad;
 };
 
 typedef struct nBatch2DRenderer nBatch2DRenderer;
@@ -29,13 +35,11 @@ struct nBatch2DRenderer {
 
     oglSP sp;
     nWindow *win_ref;
-    u64 current_tex_id;
+    oglImage *current_bound_image_ref;
 };
 
 void nbatch2d_rend_begin(nBatch2DRenderer *rend, nWindow *win);
+void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglImage *tex);
 void nbatch2d_rend_end(nBatch2DRenderer *rend);
-void nbatch2d_rend_flush(nBatch2DRenderer *rend);
-// TODO -- maybe in the API we expose a Quad type and make the QuadNode internally!
-void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuadNode quad, oglImage *tex);
 
 #endif

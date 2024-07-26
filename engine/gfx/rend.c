@@ -5,28 +5,16 @@
 void nbatch2d_rend_begin(nBatch2DRenderer *rend, nWindow *win) {
     rend->win_ref = win;
     rend->first = rend->last = 0;
-    rend->current_tex_id = 0;
+    rend->current_bound_image_ref = 0;
 
     // initialize the Shader Program if its not already
-    if (!rend->sp.sp) {
+    if (!rend->sp.impl_state) {
         ogl_sp_init(&rend->sp, batch_vert, batch_frag);
         ogl_sp_add_attrib(&rend->sp, ogl_make_attrib(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, pos),0));
         ogl_sp_add_attrib(&rend->sp, ogl_make_attrib(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, tc),0));
         ogl_sp_add_attrib(&rend->sp, ogl_make_attrib(2,OGL_SHADER_DATA_TYPE_VEC4,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, col),0));
     }
 
-}
-
-void nbatch2d_rend_end(nBatch2DRenderer *rend) {
-    nbatch2d_rend_flush(rend);
-}
-
-u32 nbatch2d_rend_count_quads(nBatch2DRenderer *rend) {
-    u32 count = 0;
-    for (nBatch2DQuadNode *quad = rend->first; quad != 0; quad=quad->next) {
-        count += 1;
-    }
-    return count;
 }
 
 void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
@@ -37,7 +25,8 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
 
     // fill the vertex array
     u32 quad_index = 0;
-    for (nBatch2DQuadNode *quad = rend->first; quad != 0; quad=quad->next) {
+    for (nBatch2DQuadNode *node= rend->first; node != 0; node = node ->next) {
+        nBatch2DQuad *quad = &node->quad;
         vertices[quad_index * 6 + 0] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y),v2(quad->tc.x, quad->tc.y),quad->color};
         vertices[quad_index * 6 + 1] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y),v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
         vertices[quad_index * 6 + 2] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y + quad->dim.y),v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
@@ -55,10 +44,9 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     ogl_bind_sp(&rend->sp);
 
     // FIXME -- this is ULTRA hacky//////////
-    oglImage img = (oglImage) {0,0,OGL_IMAGE_FORMAT_RGB8U,OGL_IMAGE_KIND_TEXTURE,rend->current_tex_id};
     ////////////////////////////////////////
 
-    ogl_bind_image_to_texture_slot(&img, 0, 0);
+    ogl_bind_image_to_texture_slot(rend->current_bound_image_ref, 0, 0);
     vec2 dim = nwindow_get_dim(rend->win_ref);
     ogl_set_viewport(0,0,dim.x,dim.y);
     vec2 camera = v2(0,0);
@@ -76,9 +64,25 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
 }
 
 
-void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuadNode quad, oglImage *tex) {
+void nbatch2d_rend_end(nBatch2DRenderer *rend) {
+    nbatch2d_rend_flush(rend);
+}
+
+u32 nbatch2d_rend_count_quads(nBatch2DRenderer *rend) {
+    u32 count = 0;
+    for (nBatch2DQuadNode *quad = rend->first; quad != 0; quad=quad->next) {
+        count += 1;
+    }
+    return count;
+}
+
+void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglImage *tex) {
+    // TODO -- there should be some safety for when the current bound image is destroyed?? currently we should crash :(
+    if (rend->current_bound_image_ref != NULL && tex->impl_state != rend->current_bound_image_ref->impl_state) {
+        nbatch2d_rend_flush(rend);
+    }
     nBatch2DQuadNode *node = push_array(get_frame_arena(),nBatch2DQuadNode, 1);
-    *node = quad;
+    node->quad = quad;
     sll_queue_push(rend->first, rend->last, node);
-    rend->current_tex_id = tex->handle;
+    rend->current_bound_image_ref = tex;
 }

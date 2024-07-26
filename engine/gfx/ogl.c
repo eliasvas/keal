@@ -1,5 +1,7 @@
 #include "base/base_inc.h"
 #include "ogl.h"
+#define OGL_CAST_GLUINT(x) ((GLuint)((u64)(x)))
+#define OGL_CAST_PTR(x) ((void*)((u64)(x)))
 //TODO -- multiple vertex buffers not supported https://stackoverflow.com/questions/14249634/opengl-vaos-and-multiple-buffers
 
 ////////////////////////////////
@@ -85,8 +87,8 @@ oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size) 
 
     GLuint buffer_kind = (kind == OGL_BUF_KIND_VERTEX) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
 
-    glGenBuffers(1, &buf.handle);
-    glBindBuffer(buffer_kind, buf.handle);
+    glGenBuffers(1, &OGL_CAST_GLUINT(buf.impl_state));
+    glBindBuffer(buffer_kind, OGL_CAST_GLUINT(buf.impl_state));
     ogl_buf_update(&buf, data,data_count,data_size);
     glBindBuffer(buffer_kind, 0);
     ogl_check_error();
@@ -94,7 +96,7 @@ oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size) 
 }
 
 b32 ogl_buf_deinit(oglBuf *b) {
-    glDeleteBuffers(1, &b->handle);
+    glDeleteBuffers(1, &OGL_CAST_GLUINT(b->impl_state));
     return 1;
 }
 void ogl_buf_update(oglBuf *buf, void *data, u32 data_count, u32 data_size) {
@@ -109,11 +111,11 @@ void ogl_buf_update(oglBuf *buf, void *data, u32 data_count, u32 data_size) {
 }
 
 void ogl_bind_index_buffer(oglBuf *b) {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->handle);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OGL_CAST_GLUINT(b->impl_state));
 }
 
 void ogl_bind_vertex_buffer(oglBuf *b) {
-    glBindBuffer(GL_ARRAY_BUFFER, b->handle);
+    glBindBuffer(GL_ARRAY_BUFFER, OGL_CAST_GLUINT(b->impl_state));
 }
 
 
@@ -234,14 +236,14 @@ void ogl_bind_attrib(oglShaderAttrib *attrib) {
 }
 
 b32 ogl_sp_init(oglSP *shader, const char *vs_source, const char *fs_source) {
-    shader->sp = gl_make_sp(vs_source, fs_source);
+    shader->impl_state = OGL_CAST_PTR(gl_make_sp(vs_source, fs_source));
     shader->attrib_count = 0;
     ogl_check_error();
-    return (shader->sp != 0);
+    return (OGL_CAST_GLUINT(shader->impl_state) != 0);
 }
 
 b32 ogl_sp_deinit(oglSP *shader) {
-    glDeleteProgram(shader->sp);
+    glDeleteProgram(OGL_CAST_GLUINT(shader->impl_state));
     return 1;
 }
 
@@ -258,26 +260,26 @@ void ogl_sp_bind_attribs(oglSP *sp){
 }
 
 void ogl_bind_sp(oglSP *sp){
-    glUseProgram(sp->sp);
+    glUseProgram(OGL_CAST_GLUINT(sp->impl_state));
     ogl_sp_bind_attribs(sp);
 }
 
 void ogl_sp_set_uniform(oglSP *sp, const char *uniform_name, oglShaderDataType type, void * val){
     switch (type) {
         case(OGL_SHADER_DATA_TYPE_FLOAT):
-            glUniform1fv(glGetUniformLocation(sp->sp, uniform_name), 1, (f32*)val);
+            glUniform1fv(glGetUniformLocation(OGL_CAST_GLUINT(sp->impl_state), uniform_name), 1, (f32*)val);
             break;
         case(OGL_SHADER_DATA_TYPE_VEC2):
-            glUniform2fv(glGetUniformLocation(sp->sp, uniform_name), 1, (f32*)val);
+            glUniform2fv(glGetUniformLocation(OGL_CAST_GLUINT(sp->impl_state), uniform_name), 1, (f32*)val);
             break;
         case(OGL_SHADER_DATA_TYPE_VEC3):
-            glUniform3fv(glGetUniformLocation(sp->sp, uniform_name), 1, (f32*)val);
+            glUniform3fv(glGetUniformLocation(OGL_CAST_GLUINT(sp->impl_state), uniform_name), 1, (f32*)val);
             break;
         case(OGL_SHADER_DATA_TYPE_VEC4):
-            glUniform4fv(glGetUniformLocation(sp->sp, uniform_name), 1, (f32*)val);
+            glUniform4fv(glGetUniformLocation(OGL_CAST_GLUINT(sp->impl_state), uniform_name), 1, (f32*)val);
             break;
         case(OGL_SHADER_DATA_TYPE_MAT4):
-            glUniformMatrix4fv(glGetUniformLocation(sp->sp, uniform_name), 1, GL_FALSE, (f32*)val);
+            glUniformMatrix4fv(glGetUniformLocation(OGL_CAST_GLUINT(sp->impl_state), uniform_name), 1, GL_FALSE, (f32*)val);
             break;
         default:
             assert(0);
@@ -329,7 +331,7 @@ void ogl_rt_bind(oglImage *img) {
     if (img == NULL) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, img->handle);
+        glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(img->impl_state));
     }
 }
 
@@ -352,8 +354,8 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
         case (OGL_IMAGE_FORMAT_RGB8U):
             GLuint tex_format = (img->format == OGL_IMAGE_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
             img->kind = OGL_IMAGE_KIND_TEXTURE;
-            glGenTextures(1, &img->handle);
-            glBindTexture(GL_TEXTURE_2D, img->handle);
+            glGenTextures(1, &OGL_CAST_GLUINT(img->impl_state));
+            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
             if (is_font) {
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
@@ -378,8 +380,8 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             break;
         case (OGL_IMAGE_FORMAT_RGBA32F): // framebuffers
             img->kind = OGL_IMAGE_KIND_RT;
-            glGenFramebuffers(1, &img->handle);
-            glBindFramebuffer(GL_FRAMEBUFFER, img->handle);
+            glGenFramebuffers(1, &OGL_CAST_GLUINT(img->impl_state));
+            glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(img->impl_state));
             
             // - position color buffer
             glGenTextures(1, &img->attachments[0]);
@@ -420,14 +422,14 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             assert(0);
             break;
     }
-    return (img->handle != 0);
+    return (OGL_CAST_GLUINT(img->impl_state) != 0);
 }
 
 void ogl_image_deinit(oglImage *img) {
     if (img->kind == OGL_IMAGE_KIND_RT){
-        glDeleteFramebuffers(1,&img->handle);
+        glDeleteFramebuffers(1,&OGL_CAST_GLUINT(img->impl_state));
     }else {
-        glDeleteTextures(1,&img->handle);
+        glDeleteTextures(1,&OGL_CAST_GLUINT(img->impl_state));
     }
 }
 
@@ -437,6 +439,6 @@ void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment)
     if (img->kind == OGL_IMAGE_KIND_RT) {
             glBindTexture(GL_TEXTURE_2D, img->attachments[attachment]);
     } else {
-            glBindTexture(GL_TEXTURE_2D, img->handle);
+            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
     }
 }

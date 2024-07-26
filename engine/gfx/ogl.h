@@ -56,8 +56,7 @@ struct oglBuf {
     s64 size; //in bytes
     oglBufKind kind;
 
-    // OpenGL state 
-    GLuint handle;
+    void *impl_state;
 };
 oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size);
 void ogl_buf_update(oglBuf *buf, void *data, u32 data_count, u32 data_size);
@@ -89,8 +88,8 @@ struct oglSP {
     // TODO -- maybe attribs need to be managed somehow (dynamic array)
     oglShaderAttrib attribs[OGL_CTX_MAX_ATTRIBS];
     u32 attrib_count;
-    // OpenGL state
-    GLuint sp; // the shader program
+
+    void *impl_state; // the shader program
 };
 oglShaderAttrib ogl_make_attrib(u32 vbo_idx, oglShaderDataType type, u32 stride, u32 offset, b32 instanced);
 b32 ogl_sp_init(oglSP *shader, const char *vs_source, const char *fs_source);
@@ -129,7 +128,7 @@ struct oglImage {
     oglImageFormat format;
     oglImageKind kind;
 
-    GLuint handle;
+    void *impl_state;
     //optional: only configured for RTs (RT_COL -> colors) (RT_DS -> rbo) 
     GLuint attachments[4];
 };
