@@ -101,6 +101,7 @@ enum nKeyScanCode {
     NKEY_SCANCODE_LEFT = 80,
     NKEY_SCANCODE_DOWN = 81,
     NKEY_SCANCODE_UP = 82,
+    NKEY_SCANCODE_COUNT,
 };
 
 typedef enum nInputKeyState nInputKeyState;

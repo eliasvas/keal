@@ -8,10 +8,4 @@
 #include "gfx/gfx_inc.h"
 #include "ext/stb/stb_image.h"
 
-/*
-#include <GL/glew.h>
-#define SDL_MAIN_NOIMPL
-#include <SDL.h>
-#include <SDL_main.h>
-*/
 #endif

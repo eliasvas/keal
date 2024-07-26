@@ -2,7 +2,7 @@
 #define GFX_INC_H
 
 #include "shaders.inl"
-#include "gfx/glb.h"
 #include "gfx/ogl.h"
+#include "gfx/rend.h"
 
 #endif

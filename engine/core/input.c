@@ -8,7 +8,7 @@ void ninput_manager_consume_events_from_window(nWindow *win) {
     for (nWindowEventNode *n = event_queue; n != 0; n = n->next) {
         switch(n->kind) {
             case(N_WINDOW_EVENT_KIND_KEYBOARD_EVENT):
-                if (n->ke.key > 128)break;
+                if (n->ke.key > NKEY_SCANCODE_COUNT)break;
                 global_input_manager.keyboard_state[n->ke.key].last_state = n->ke.state;
                 global_input_manager.keyboard_state[n->ke.key].frame = frame_idx;
                 break;

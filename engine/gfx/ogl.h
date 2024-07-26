@@ -140,5 +140,4 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
 void ogl_image_deinit(oglImage *img);
 void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment);
 
-
 #endif

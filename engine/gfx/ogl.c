@@ -47,6 +47,29 @@ void ogl_clear_all_state(oglContext *ctx) {
     glCullFace(GL_BACK);
 }
 
+GLenum gl_check_err(const char *file, int line) {
+    GLenum last_ec = GL_NO_ERROR;
+    GLenum ec;
+    while ((ec = glGetError()) != GL_NO_ERROR)
+    {
+        char *error;
+        switch (ec)
+        {
+            case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
+            case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
+            case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
+            case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
+            case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
+            case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+        }
+        printf("GL ERROR: %s | %s | %d\n", error, file, line);
+        last_ec = ec;
+    }
+    return last_ec;
+}
+#define ogl_check_error() gl_check_err(__FILE__, __LINE__) 
+
 
 
 ////////////////////////////////
@@ -66,6 +89,7 @@ oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size) 
     glBindBuffer(buffer_kind, buf.handle);
     ogl_buf_update(&buf, data,data_count,data_size);
     glBindBuffer(buffer_kind, 0);
+    ogl_check_error();
     return buf;
 }
 
@@ -115,14 +139,14 @@ b32 gl_check_gl_shader_link_errors(GLuint sp_handle) {
 
 b32 gl_check_gl_shader_compile_errors(GLuint sp_handle) {
     s32 success;
-    glGetProgramiv(sp_handle, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(sp_handle, GL_COMPILE_STATUS, &success);
     if (!success) {
         s32 info_len;
-        glGetProgramiv (sp_handle, GL_INFO_LOG_LENGTH, &info_len);
+        glGetShaderiv (sp_handle, GL_INFO_LOG_LENGTH, &info_len);
         //info_data := cast (*u8) alloc (info_len);
         //defer free(info_data);
         u8 info_data[256] = {0};
-        glGetProgramInfoLog (sp_handle, info_len, &info_len, info_data);
+        glGetShaderInfoLog (sp_handle, info_len, &info_len, info_data);
         printf("Shader compilation error: %s\n", info_data);
     }
     return (success == 0);
@@ -137,18 +161,21 @@ GLuint gl_make_sp(const char *vs_source, const char *fs_source) {
     glCompileShader(vs);
     assert(vs);
     assert(0 == gl_check_gl_shader_compile_errors(vs));
+    ogl_check_error();
 
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs, 1, &fs_source, NULL);
     glCompileShader(fs);
     assert(fs);
     assert(0 == gl_check_gl_shader_compile_errors(fs));
+    ogl_check_error();
 
     sp = glCreateProgram();
     glAttachShader(sp, vs);
     glAttachShader(sp, fs);
     glLinkProgram(sp);
-    assert(0 == gl_check_gl_shader_compile_errors(sp));
+    assert(0 == gl_check_gl_shader_link_errors(sp));
+    ogl_check_error();
 
     glDeleteShader(vs);
     glDeleteShader(fs);
@@ -209,6 +236,7 @@ void ogl_bind_attrib(oglShaderAttrib *attrib) {
 b32 ogl_sp_init(oglSP *shader, const char *vs_source, const char *fs_source) {
     shader->sp = gl_make_sp(vs_source, fs_source);
     shader->attrib_count = 0;
+    ogl_check_error();
     return (shader->sp != 0);
 }
 
