@@ -338,8 +338,8 @@ void ogl_rt_bind(oglImage *img) {
 //TODO: in case of RT, should we bind it first
 void ogl_image_clear(oglImage *img) {
     ogl_rt_bind(img);
-    //glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClearColor(0.2 * cos(get_current_timestamp()/4000.0),0.2 * sin(get_current_timestamp()/3000.0),0.3 * cos(get_current_timestamp()/1000.0),1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    //glClearColor(0.2 * cos(get_current_timestamp()/4000.0),0.2 * sin(get_current_timestamp()/3000.0),0.3 * cos(get_current_timestamp()/1000.0),1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     ogl_rt_bind(NULL);
 }

@@ -28,10 +28,10 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     for (nBatch2DQuadNode *node= rend->first; node != 0; node = node ->next) {
         nBatch2DQuad *quad = &node->quad;
         vertices[quad_index * 6 + 0] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y),v2(quad->tc.x, quad->tc.y),quad->color};
-        vertices[quad_index * 6 + 1] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y),v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
+        vertices[quad_index * 6 + 1] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y + quad->dim.y),v2(quad->tc.x, quad->tc.y + quad->tc.w),quad->color};
         vertices[quad_index * 6 + 2] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y + quad->dim.y),v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
         vertices[quad_index * 6 + 3] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y + quad->dim.y),v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 4] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y + quad->dim.y),v2(quad->tc.x, quad->tc.y + quad->tc.w),quad->color};
+        vertices[quad_index * 6 + 4] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y),v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
         vertices[quad_index * 6 + 5] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y),v2(quad->tc.x, quad->tc.y),quad->color};
         quad_index += 1;
     }
@@ -52,7 +52,7 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     vec2 camera = v2(0,0);
     mat4 view = mat4_translate(v3(-camera.x,-camera.y,0));
     ogl_sp_set_uniform(&rend->sp, "view", OGL_SHADER_DATA_TYPE_MAT4, &view);
-    mat4 proj = mat4_ortho(0,dim.x,0,dim.y,-1.0,1.0);
+    mat4 proj = mat4_ortho(0,dim.x,dim.y,0,-1.0,1.0);
     ogl_sp_set_uniform(&rend->sp, "proj", OGL_SHADER_DATA_TYPE_MAT4, &proj);
 
     ogl_draw(OGL_PRIM_TRIANGLES, 0, vertex_count); 
