@@ -25,7 +25,7 @@ endif()
 
 # build the engine, linking SDL2 and GLEW if necessary
 # TODO -- shouldn't this statically link SDL/GLEW and be a .dll
-add_library(engine STATIC engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
+add_library(engine STATIC engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
 include_directories(engine ${SDL2_INCLUDE_DIRS})
 include_directories(engine engine)
 target_link_libraries(engine SDL2::SDL2-static)
@@ -38,7 +38,7 @@ endif()
 
 
 #build the game executable
-add_executable(game game/main.c)
+add_executable(game game/main.c game/game_state.c)
 target_include_directories(game PUBLIC engine)
 target_link_libraries(game PUBLIC engine SDL2::SDL2main)
 
