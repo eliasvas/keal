@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     nEntityManager em;
     nentity_manager_init(&em);
     nEntity e;
-    for (u32 i = 0 ; i < 1026; ++i) {
+    for (u32 i = 0 ; i < 4050; ++i) {
         e = nentity_create(&em);
         assert(nentity_alive(&em, e));
         nentity_destroy(&em, e);
