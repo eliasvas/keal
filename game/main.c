@@ -14,12 +14,21 @@ int main(int argc, char **argv) {
 
     nEntityManager em;
     nentity_manager_init(&em);
+    nDebugNameCM dcm;
+    ndebug_name_cm_init(&dcm, &em);
     nEntity e;
-    for (u32 i = 0 ; i < 4050; ++i) {
+    for (u32 i = 0; i < 2000; ++i) {
         e = nentity_create(&em);
         assert(nentity_alive(&em, e));
+        nDebugNameComponent *c = ndebug_name_cm_add_entity(&dcm, e);
+        sprintf(c->name, "name_%d", i);
         nentity_destroy(&em, e);
+        nDebugNameComponent lc = ndebug_name_cm_lookup_entity(&dcm, e);
+        assert(!nentity_alive(&em, e));
+        assert(strcmp(lc.name, c->name) == 0);
     }
+    ndebug_name_cm_del_entity(&dcm, 1024);
+    ndebug_name_cm_update(&dcm);
     nentity_manager_destroy(&em);
 
     while(1) {

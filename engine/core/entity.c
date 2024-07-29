@@ -7,6 +7,8 @@ void nentity_manager_init(nEntityManager *em) {
 
     nGenArrayChunk *new_chunk = push_array(em->arena, nGenArrayChunk, 1);
     new_chunk->generation = push_array(em->arena, u8, NGEN_CHUNK_COUNT);
+    // This is because id == 0 is a special case, it is the INVALID entity
+    new_chunk->gen_count = 1;
     sll_queue_push(em->first, em->last, new_chunk);
 }
 
@@ -101,4 +103,67 @@ void nentity_destroy(nEntityManager *em, nEntity e) {
     free_idx->index = idx;
     sll_queue_push(em->free_indices_first, em->free_indices_last, free_idx);
     em->free_indices_count+=1;
+}
+
+
+
+void ndebug_name_cm_init(nDebugNameCM *cm, nEntityManager *em) {
+    M_ZERO_STRUCT(cm);
+    cm->debug_table_size = 4096;
+    cm->debug_table = push_array(em->arena, nDebugNameComponentHashSlot, cm->debug_table_size);
+    cm->em_ref = em;
+}
+
+void ndebug_name_cm_destroy(nDebugNameCM *cm, nEntityManager *em) {
+    // Nothing?
+}
+
+nDebugNameComponent ndebug_name_cm_lookup_entity(nDebugNameCM *cm, nEntity e) {
+    nDebugNameComponent c = {0};
+    u32 slot = e%cm->debug_table_size;
+    for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node!=0; node = node->next) {
+        if (node->entity == e){
+            c = node->debug_name;
+            break;
+        }
+    }
+    return c;
+}
+
+nDebugNameComponent *ndebug_name_cm_add_entity(nDebugNameCM *cm, nEntity e) {
+    //if(ndebug_name_cm_lookup_entity(e).entity)
+    u32 slot = e%cm->debug_table_size;
+    nDebugNameComponentNode *node = cm->free_nodes;
+    if (node) {
+        sll_stack_pop(cm->free_nodes);
+    } else {
+        node = push_array(cm->em_ref->arena, nDebugNameComponentNode, 1);
+    }
+    M_ZERO_STRUCT(node);
+    node->entity = e;
+    dll_push_back(cm->debug_table[slot].hash_first, cm->debug_table[slot].hash_last, node);
+    return &(node->debug_name);
+}
+
+// FIXME -- WHY?
+void ndebug_name_cm_del_entity(nDebugNameCM *cm, nEntity e) {
+    u32 slot = e%cm->debug_table_size;
+    for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node != 0; node = node->next) {
+        if (node->entity == e) {
+            dll_remove(cm->debug_table[slot].hash_first, cm->debug_table[slot].hash_last, node);
+            //dll_remove(node->prev, node->next, node);
+            sll_stack_push(cm->free_nodes, node);
+            break;
+        }
+    }
+}
+
+void ndebug_name_cm_update(nDebugNameCM *cm) {
+    // For now we just print stuff
+    nDebugNameComponent c = {0};
+    for (u32 slot = 0; slot < cm->debug_table_size; slot+=1){
+        for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node!=0; node = node->next) {
+            printf("entity [%d] has debug name [%s]\n", node->entity, node->debug_name.name);
+        }
+    }
 }

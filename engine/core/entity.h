@@ -3,6 +3,10 @@
 #include "engine.h"
 // TODO -- we have an allocation problem here.. can we bypass having ANOTHER arena somehow?
 
+////////////////////////////////
+// Entity Manager
+////////////////////////////////
+
 typedef u32 nEntity;
 
 #define NENTITY_INDEX_BITS (22)
@@ -49,5 +53,48 @@ void nentity_manager_increment_generation_for_index(nEntityManager *em, u32 inde
 nEntity nentity_create(nEntityManager *em);
 b32 nentity_alive(nEntityManager *em, nEntity e);
 void nentity_destroy(nEntityManager *em, nEntity e);
+
+////////////////////////////////
+// Debug-Name component manager
+////////////////////////////////
+
+
+// TODO -- Should all this type stuff be macros (prb YES)
+typedef struct nDebugNameComponent nDebugNameComponent;
+struct nDebugNameComponent {
+    u8 name[64];
+};
+
+typedef struct nDebugNameComponentNode nDebugNameComponentNode;
+struct nDebugNameComponentNode {
+    nDebugNameComponentNode *next;
+    nDebugNameComponentNode *prev;
+
+    nDebugNameComponent debug_name;
+    // The entity that owns this component (used in hash-map collision resolution)
+    nEntity entity;
+};
+
+typedef struct nDebugNameComponentHashSlot nDebugNameComponentHashSlot;
+struct nDebugNameComponentHashSlot {
+    nDebugNameComponentNode *hash_first;
+    nDebugNameComponentNode *hash_last;
+};
+
+// CM = ComponentManager
+typedef struct nDebugNameCM nDebugNameCM;
+struct nDebugNameCM {
+    u32 debug_table_size;
+    nDebugNameComponentHashSlot *debug_table;
+    nDebugNameComponentNode *free_nodes;
+    nEntityManager *em_ref;
+};
+
+void ndebug_name_cm_init(nDebugNameCM *cm, nEntityManager *em);
+void ndebug_name_cm_destroy(nDebugNameCM *cm, nEntityManager *em);
+void ndebug_name_cm_update(nDebugNameCM *cm);
+nDebugNameComponent *ndebug_name_cm_add_entity(nDebugNameCM *cm, nEntity e);
+void ndebug_name_cm_del_entity(nDebugNameCM *cm, nEntity e);
+nDebugNameComponent ndebug_name_cm_lookup_entity(nDebugNameCM *cm, nEntity e);
 
 #endif
