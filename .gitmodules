@@ -1,0 +1,10 @@
+[submodule "ext/gui"]
+	path = ext/gui
+	url = https://github.com/eliasvas/gui
+[submodule "ext/SDL"]
+	path = ext/SDL
+	url = https://github.com/libsdl-org/SDL
+	branch = SDL2
+[submodule "ext/glew-cmake"]
+	path = ext/glew-cmake
+	url = https://github.com/Perlmint/glew-cmake
