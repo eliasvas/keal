@@ -14,24 +14,23 @@ set(CMAKE_C_STANDARD_REQUIRED TRUE)
 project(TestGame VERSION 1.0.0 LANGUAGES C)
 
 # build engine dependencies
-include(FetchContent)
-Set(FETCHCONTENT_QUIET FALSE)
-FetchContent_Declare( SDL2 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git GIT_TAG release-2.26.3 GIT_SHALLOW TRUE GIT_PROGRESS TRUE)
-FetchContent_MakeAvailable(SDL2)
+add_subdirectory(ext/gui)
+add_subdirectory(ext/SDL)
 if (WIN32)
-    FetchContent_Declare( GLEW GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git GIT_TAG glew-cmake-2.1.0)
-    FetchContent_MakeAvailable(GLEW)
+    add_subdirectory(ext/glew-cmake)
 endif()
 
-# build the engine, linking SDL2 and GLEW if necessary
-# TODO -- shouldn't this statically link SDL/GLEW and be a .dll
+# build the engine
 add_library(engine STATIC engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
 include_directories(engine ${SDL2_INCLUDE_DIRS})
 include_directories(engine engine)
-target_link_libraries(engine SDL2::SDL2-static)
+target_link_libraries(engine SDL2-static)
+target_link_libraries(engine guiLib)
 if (WIN32)
     target_link_libraries(engine libglew_static)
 endif()
+
+include_directories(engine ext/gui/gui/include)
 
 
 
