@@ -145,20 +145,32 @@ nDebugNameComponent *ndebug_name_cm_add_entity(nDebugNameCM *cm, nEntity e) {
     return &(node->debug_name);
 }
 
-// FIXME -- WHY?
 void ndebug_name_cm_del_entity(nDebugNameCM *cm, nEntity e) {
     u32 slot = e%cm->debug_table_size;
     for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node != 0; node = node->next) {
         if (node->entity == e) {
             dll_remove(cm->debug_table[slot].hash_first, cm->debug_table[slot].hash_last, node);
-            //dll_remove(node->prev, node->next, node);
             sll_stack_push(cm->free_nodes, node);
             break;
         }
     }
 }
 
+void ndebug_name_cm_prune_destroyed_entities(nDebugNameCM *cm) {
+    for (u32 slot = 0; slot < cm->debug_table_size; slot+=1){
+        for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node!=0; ) {
+            nDebugNameComponentNode *next_node = node->next;
+            if (!nentity_alive(cm->em_ref, node->entity)) {
+                dll_remove(cm->debug_table[slot].hash_first, cm->debug_table[slot].hash_last, node);
+                sll_stack_push(cm->free_nodes, node);
+            }
+            node = next_node;
+        }
+    }
+}
+
 void ndebug_name_cm_update(nDebugNameCM *cm) {
+    ndebug_name_cm_prune_destroyed_entities(cm);
     // For now we just print stuff
     nDebugNameComponent c = {0};
     for (u32 slot = 0; slot < cm->debug_table_size; slot+=1){
@@ -166,4 +178,85 @@ void ndebug_name_cm_update(nDebugNameCM *cm) {
             printf("entity [%d] has debug name [%s]\n", node->entity, node->debug_name.name);
         }
     }
+}
+
+
+
+
+
+
+
+
+
+void ntransform_cm_init(nTransformCM *cm, nEntityManager *em) {
+    M_ZERO_STRUCT(cm);
+    cm->transform_table_size = 4096;
+    cm->transform_table = push_array(em->arena, nTransformComponentHashSlot, cm->transform_table_size);
+    cm->em_ref = em;
+}
+
+void ntransform_cm_destroy(nTransformCM *cm, nEntityManager *em) {
+    // Nothing?
+}
+
+nTransformComponent ntransform_cm_lookup_entity(nTransformCM *cm, nEntity e) {
+    nTransformComponent c = {0};
+    u32 slot = e%cm->transform_table_size;
+    for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node!=0; node = node->next) {
+        if (node->entity == e){
+            c = node->transform;
+            break;
+        }
+    }
+    return c;
+}
+
+nTransformComponent *ntransform_cm_add_entity(nTransformCM *cm, nEntity e) {
+    //if(ntransform_cm_lookup_entity(e).entity)
+    u32 slot = e%cm->transform_table_size;
+    nTransformComponentNode *node = cm->free_nodes;
+    if (node) {
+        sll_stack_pop(cm->free_nodes);
+    } else {
+        node = push_array(cm->em_ref->arena, nTransformComponentNode, 1);
+    }
+    M_ZERO_STRUCT(node);
+    node->entity = e;
+    dll_push_back(cm->transform_table[slot].hash_first, cm->transform_table[slot].hash_last, node);
+    return &(node->transform);
+}
+
+void ntransform_cm_del_entity(nTransformCM *cm, nEntity e) {
+    u32 slot = e%cm->transform_table_size;
+    for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node != 0; node = node->next) {
+        if (node->entity == e) {
+            dll_remove(cm->transform_table[slot].hash_first, cm->transform_table[slot].hash_last, node);
+            sll_stack_push(cm->free_nodes, node);
+            break;
+        }
+    }
+}
+
+void ntransform_cm_prune_destroyed_entities(nTransformCM *cm) {
+    for (u32 slot = 0; slot < cm->transform_table_size; slot+=1){
+        for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node!=0; ) {
+            nTransformComponentNode *next_node = node->next;
+            if (!nentity_alive(cm->em_ref, node->entity)) {
+                dll_remove(cm->transform_table[slot].hash_first, cm->transform_table[slot].hash_last, node);
+                sll_stack_push(cm->free_nodes, node);
+            }
+            node = next_node;
+        }
+    }
+}
+
+void ntransform_cm_update(nTransformCM *cm) {
+    ntransform_cm_prune_destroyed_entities(cm);
+    // For now we just print stuff
+    // nTransformComponent c = {0};
+    // for (u32 slot = 0; slot < cm->transform_table_size; slot+=1){
+    //     for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node!=0; node = node->next) {
+    //         printf("entity [%d] has debug name [%s]\n", node->entity, node->transform.name);
+    //     }
+    // }
 }

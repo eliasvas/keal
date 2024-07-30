@@ -23,18 +23,13 @@ endif()
 # build the engine
 add_library(engine STATIC engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
 include_directories(engine ${SDL2_INCLUDE_DIRS})
+include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
 target_link_libraries(engine SDL2-static)
 target_link_libraries(engine guiLib)
 if (WIN32)
     target_link_libraries(engine libglew_static)
 endif()
-
-include_directories(engine ext/gui/gui/include)
-
-
-
-
 
 #build the game executable
 add_executable(game game/main.c game/game_state.c)
@@ -59,7 +54,7 @@ else()
     target_link_options(game PUBLIC -fsanitize=address)
 endif()
 
-# do asset stuff
+# move assets to BUILD_DIR/assets
 set(ASSET_DIR "${CMAKE_SOURCE_DIR}/assets")
 add_custom_target(copy_assets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory

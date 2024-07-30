@@ -1,7 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 #include "engine.h"
-// TODO -- we have an allocation problem here.. can we bypass having ANOTHER arena somehow?
+// TODO -- We probably need an arena per component manager.. to have eveything nice and packed
 
 ////////////////////////////////
 // Entity Manager
@@ -55,7 +55,7 @@ b32 nentity_alive(nEntityManager *em, nEntity e);
 void nentity_destroy(nEntityManager *em, nEntity e);
 
 ////////////////////////////////
-// Debug-Name component manager
+// Debug-Name Component manager
 ////////////////////////////////
 
 
@@ -96,5 +96,60 @@ void ndebug_name_cm_update(nDebugNameCM *cm);
 nDebugNameComponent *ndebug_name_cm_add_entity(nDebugNameCM *cm, nEntity e);
 void ndebug_name_cm_del_entity(nDebugNameCM *cm, nEntity e);
 nDebugNameComponent ndebug_name_cm_lookup_entity(nDebugNameCM *cm, nEntity e);
+void ndebug_name_cm_prune_destroyed_entities(nDebugNameCM *cm);
+
+
+////////////////////////////////
+// Transform Component manager
+////////////////////////////////
+
+
+typedef struct nTransformComponent nTransformComponent;
+struct nTransformComponent {
+    mat4 world;
+    mat4 local;
+
+    nTransformComponent *parent;
+    nTransformComponent *first;
+    nTransformComponent *last;
+    nTransformComponent *next;
+    nTransformComponent *prev;
+};
+//dll_push_back_NPZ(&g_nil_box, parent->first, parent->last, box, next, prev);
+
+typedef struct nTransformComponentNode nTransformComponentNode;
+struct nTransformComponentNode {
+    nTransformComponentNode *next;
+    nTransformComponentNode *prev;
+
+    nTransformComponent transform;
+    // The entity that owns this component (used in hash-map collision resolution)
+    nEntity entity;
+};
+
+typedef struct nTransformComponentHashSlot nTransformComponentHashSlot;
+struct nTransformComponentHashSlot {
+    nTransformComponentNode *hash_first;
+    nTransformComponentNode *hash_last;
+};
+
+// CM = ComponentManager
+typedef struct nTransformCM nTransformCM;
+struct nTransformCM {
+    u32 transform_table_size;
+    nTransformComponentHashSlot *transform_table;
+    nTransformComponentNode *free_nodes;
+    nEntityManager *em_ref;
+};
+
+void ntransform_cm_init(nTransformCM *cm, nEntityManager *em);
+void ntransform_cm_destroy(nTransformCM *cm, nEntityManager *em);
+void ntransform_cm_update(nTransformCM *cm);
+nTransformComponent *ntransform_cm_add_entity(nTransformCM *cm, nEntity e);
+void ntransform_cm_del_entity(nTransformCM *cm, nEntity e);
+nTransformComponent ntransform_cm_lookup_entity(nTransformCM *cm, nEntity e);
+void ntransform_cm_prune_destroyed_entities(nTransformCM *cm);
+
+
 
 #endif
