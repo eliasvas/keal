@@ -23,4 +23,17 @@ typedef double    f64;
 typedef int32_t   b32;
 typedef char      b8;
 
+static s8  S8_MIN  = (s8)0x80;
+static s16 S16_MIN = (s16)0x8000;
+static s32 S32_MN  = (s32)0x80000000;
+static s64 S64_MIN = (s64)0x8000000000000000llu;
+static s8  S8_MAX  = (s8) 0x7f;
+static s16 S16_MAX = (s16)0x7fff;
+static s32 S32_MAX = (s32)0x7fffffff;
+static s64 S64_MAX = (s64)0x7fffffffffffffffllu;
+static u8  U8_MAX  = 0xff;
+static u16 U16_MAX = 0xffff;
+static u32 U32_MAX = 0xffffffff;
+static u64 U64_MAX = 0xffffffffffffffffllu;
+
 #endif

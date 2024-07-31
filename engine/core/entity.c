@@ -118,19 +118,19 @@ void ndebug_name_cm_destroy(nDebugNameCM *cm, nEntityManager *em) {
     // Nothing?
 }
 
-nDebugNameComponent ndebug_name_cm_lookup_entity(nDebugNameCM *cm, nEntity e) {
-    nDebugNameComponent c = {0};
+nDebugNameComponentNode *ndebug_name_cm_lookup(nDebugNameCM *cm, nEntity e) {
+    nDebugNameComponentNode *c = 0;
     u32 slot = e%cm->debug_table_size;
     for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node!=0; node = node->next) {
         if (node->entity == e){
-            c = node->debug_name;
+            c = node;
             break;
         }
     }
     return c;
 }
 
-nDebugNameComponent *ndebug_name_cm_add_entity(nDebugNameCM *cm, nEntity e) {
+nDebugNameComponent *ndebug_name_cm_add(nDebugNameCM *cm, nEntity e) {
     //if(ndebug_name_cm_lookup_entity(e).entity)
     u32 slot = e%cm->debug_table_size;
     nDebugNameComponentNode *node = cm->free_nodes;
@@ -150,6 +150,7 @@ void ndebug_name_cm_del_entity(nDebugNameCM *cm, nEntity e) {
     for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node != 0; node = node->next) {
         if (node->entity == e) {
             dll_remove(cm->debug_table[slot].hash_first, cm->debug_table[slot].hash_last, node);
+            M_ZERO_STRUCT(node);
             sll_stack_push(cm->free_nodes, node);
             break;
         }
@@ -162,6 +163,7 @@ void ndebug_name_cm_prune_destroyed_entities(nDebugNameCM *cm) {
             nDebugNameComponentNode *next_node = node->next;
             if (!nentity_alive(cm->em_ref, node->entity)) {
                 dll_remove(cm->debug_table[slot].hash_first, cm->debug_table[slot].hash_last, node);
+                M_ZERO_STRUCT(node);
                 sll_stack_push(cm->free_nodes, node);
             }
             node = next_node;
@@ -190,73 +192,109 @@ void ndebug_name_cm_update(nDebugNameCM *cm) {
 
 void ntransform_cm_init(nTransformCM *cm, nEntityManager *em) {
     M_ZERO_STRUCT(cm);
-    cm->transform_table_size = 4096;
-    cm->transform_table = push_array(em->arena, nTransformComponentHashSlot, cm->transform_table_size);
+    cm->cap = NTRANSFORM_CM_MAX_COMPONENTS;
+    cm->size = 0;
+    u32 size_of_data = sizeof(nTransformComponent) + sizeof(nEntity) + sizeof(u32)*4;
     cm->em_ref = em;
+    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap); 
+
+    cm->transform = cm->buf;
+    cm->entity = (nEntity*)((u8*)cm->transform + (u64)(sizeof(nTransformComponent)*cm->cap));
+    cm->parent = (u32*)((u8*)cm->entity + (u64)(sizeof(nEntity)*cm->cap));
+    cm->first = (u32*)((u8*)cm->parent + (u64)(sizeof(u32)*cm->cap));
+    cm->next = (u32*)((u8*)cm->first + (u64)(sizeof(u32)*cm->cap));
+    cm->prev = (u32*)((u8*)cm->next + (u64)(sizeof(u32)*cm->cap));
+
+    cm->lookup_table_size = NTRANSFORM_CM_MAX_COMPONENTS/2;
+    cm->lookup_table = push_array(cm->em_ref->arena, nEntityComponentIndexPairHashSlot, cm->lookup_table_size);
 }
 
-void ntransform_cm_destroy(nTransformCM *cm, nEntityManager *em) {
-    // Nothing?
+void ntransform_cm_deinit(nTransformCM *cm, nEntityManager *em) {
+    M_ZERO_STRUCT(cm);
 }
 
-nTransformComponent ntransform_cm_lookup_entity(nTransformCM *cm, nEntity e) {
-    nTransformComponent c = {0};
-    u32 slot = e%cm->transform_table_size;
-    for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node!=0; node = node->next) {
-        if (node->entity == e){
-            c = node->transform;
+void ntransform_cm_gc(nTransformCM *cm) {
+    // TBA
+}
+
+void ntransform_cm_simulate(nTransformCM *cm) {
+    // maybe lazily delete destroyed components/entities??
+    ntransform_cm_gc(cm);
+}
+
+nCompIndex ntransform_cm_make_new_index(nTransformCM *cm) {
+    // TODO -- MUTEX stuff
+    nCompIndex idx = cm->size;
+    M_ZERO_STRUCT(&cm->transform[idx]);
+    cm->size+=1;
+    return idx;
+}
+nCompIndex ntransform_cm_lookup(nTransformCM *cm, nEntity e) {
+    nCompIndex index = NCOMPONENT_INDEX_INVALID;
+    u32 slot = e%cm->lookup_table_size;
+    for (nEntityComponentIndexPairNode *node = cm->lookup_table[slot].hash_first; node != 0; node = node->next) {
+        if (node->e == e) {
+            index = node->comp_idx;
             break;
         }
     }
-    return c;
+    //assert(NCOMPONENT_INDEX_VALID(index));
+    return index;
 }
 
-nTransformComponent *ntransform_cm_add_entity(nTransformCM *cm, nEntity e) {
-    //if(ntransform_cm_lookup_entity(e).entity)
-    u32 slot = e%cm->transform_table_size;
-    nTransformComponentNode *node = cm->free_nodes;
-    if (node) {
-        sll_stack_pop(cm->free_nodes);
-    } else {
-        node = push_array(cm->em_ref->arena, nTransformComponentNode, 1);
-    }
-    M_ZERO_STRUCT(node);
-    node->entity = e;
-    dll_push_back(cm->transform_table[slot].hash_first, cm->transform_table[slot].hash_last, node);
-    return &(node->transform);
-}
+nTransformComponent *ntransform_cm_add(nTransformCM *cm, nEntity e, nEntity p) {
+    nCompIndex new_idx = ntransform_cm_make_new_index(cm);
+    cm->entity[new_idx] = e;
+    cm->parent[new_idx] = NCOMPONENT_INDEX_INVALID;
+    cm->next[new_idx] = NCOMPONENT_INDEX_INVALID;
+    cm->prev[new_idx] = NCOMPONENT_INDEX_INVALID;
+    cm->first[new_idx] = NCOMPONENT_INDEX_INVALID;
+    cm->transform[new_idx].local = m4d(1.0);
+    cm->transform[new_idx].world = m4d(1.0);
 
-void ntransform_cm_del_entity(nTransformCM *cm, nEntity e) {
-    u32 slot = e%cm->transform_table_size;
-    for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node != 0; node = node->next) {
-        if (node->entity == e) {
-            dll_remove(cm->transform_table[slot].hash_first, cm->transform_table[slot].hash_last, node);
-            sll_stack_push(cm->free_nodes, node);
-            break;
+    nCompIndex parent_idx = ntransform_cm_lookup(cm, p);
+    if (NCOMPONENT_INDEX_VALID(parent_idx)) {
+        cm->parent[new_idx] = parent_idx;
+        nCompIndex child_index = cm->first[parent_idx];
+        if (!NCOMPONENT_INDEX_VALID(child_index)) {
+            cm->first[parent_idx] = new_idx;
+        } else {
+            for(;NCOMPONENT_INDEX_VALID(cm->next[child_index]);child_index = cm->next[child_index]);
+            cm->next[child_index] = new_idx;
+            cm->prev[new_idx] = child_index;
         }
     }
+
+    // insert Pair in lookup table
+    u32 slot = e%cm->lookup_table_size;
+    nEntityComponentIndexPairNode *node = push_array(cm->em_ref->arena, nEntityComponentIndexPairNode, 1);
+    node->e = e;
+    node->comp_idx = new_idx;
+    dll_push_back(cm->lookup_table[slot].hash_first, cm->lookup_table[slot].hash_last, node);
+
+    return &(cm->transform[new_idx]);
 }
 
-void ntransform_cm_prune_destroyed_entities(nTransformCM *cm) {
-    for (u32 slot = 0; slot < cm->transform_table_size; slot+=1){
-        for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node!=0; ) {
-            nTransformComponentNode *next_node = node->next;
-            if (!nentity_alive(cm->em_ref, node->entity)) {
-                dll_remove(cm->transform_table[slot].hash_first, cm->transform_table[slot].hash_last, node);
-                sll_stack_push(cm->free_nodes, node);
-            }
-            node = next_node;
-        }
+void ntransform_cm_transform(nTransformCM *cm, mat4 pm, nCompIndex idx) {
+    assert(NCOMPONENT_INDEX_VALID(idx));
+    cm->transform[idx].world = mat4_mult(pm, cm->transform[idx].local);
+
+    for (nCompIndex child_idx = cm->first[idx];
+    NCOMPONENT_INDEX_VALID(child_idx);
+    child_idx = cm->next[child_idx]) {
+        ntransform_cm_transform(cm, cm->transform[idx].world, child_idx);
     }
 }
 
-void ntransform_cm_update(nTransformCM *cm) {
-    ntransform_cm_prune_destroyed_entities(cm);
-    // For now we just print stuff
-    // nTransformComponent c = {0};
-    // for (u32 slot = 0; slot < cm->transform_table_size; slot+=1){
-    //     for (nTransformComponentNode *node = cm->transform_table[slot].hash_first; node!=0; node = node->next) {
-    //         printf("entity [%d] has debug name [%s]\n", node->entity, node->transform.name);
-    //     }
-    // }
+void ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local) {
+    assert(NCOMPONENT_INDEX_VALID(idx));
+    cm->transform[idx].local = local;
+    nCompIndex parent_idx = cm->parent[idx];
+    mat4 parent_wm = NCOMPONENT_INDEX_VALID(parent_idx) ? cm->transform[parent_idx].world : m4d(1.0); 
+
+    ntransform_cm_transform(cm, parent_wm, idx);
+}
+
+nTransformComponent *ntransform_cm_del(nTransformCM *cm, nEntity e) {
+    // TBA
 }

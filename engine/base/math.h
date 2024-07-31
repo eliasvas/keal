@@ -110,6 +110,23 @@ INLINE mat4 mat4_translate(vec3 t) {
     return res;
 }
 
+INLINE mat4 mat4_mult(mat4 l, mat4 r) {
+    mat4 res = m4d(1.0f);
+    for (u32 col = 0; col < 4; col+=1)
+    {
+        for (u32 row = 0; row < 4; row+=1)
+        {
+            f32 sum = 0;
+            for (u32 current_index = 0; current_index < 4; ++current_index)
+            {
+                sum += (f32)l.col[current_index][row] * (f32)r.col[col][current_index];
+            }
+            res.col[col][row] = sum;
+        }
+    }
+    return res;
+}
+
 
 typedef union ivec3
 {

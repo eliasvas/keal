@@ -12,23 +12,20 @@ int main(int argc, char **argv) {
 
     game_state_init(&win);
 
-    nEntityManager em;
+    nEntityManager em = {0};
     nentity_manager_init(&em);
-    nDebugNameCM dcm;
-    ndebug_name_cm_init(&dcm, &em);
-    nEntity e;
-    for (u32 i = 0; i < 2000; ++i) {
-        e = nentity_create(&em);
-        assert(nentity_alive(&em, e));
-        nDebugNameComponent *c = ndebug_name_cm_add_entity(&dcm, e);
-        sprintf(c->name, "name_%d", i);
-        nentity_destroy(&em, e);
-        nDebugNameComponent lc = ndebug_name_cm_lookup_entity(&dcm, e);
-        assert(!nentity_alive(&em, e));
-        assert(strcmp(lc.name, c->name) == 0);
+    nTransformCM tcm = {0};
+    ntransform_cm_init(&tcm, &em);
+    {
+        nEntity parent = nentity_create(&em);
+        nEntity child = nentity_create(&em);
+        ntransform_cm_add(&tcm, parent, 0);
+        ntransform_cm_set_local(&tcm, ntransform_cm_lookup(&tcm, parent), m4d(6.0));
+        nTransformComponent *c = ntransform_cm_add(&tcm, child, parent);
+        ntransform_cm_set_local(&tcm, ntransform_cm_lookup(&tcm, child), m4d(2.0));
+        ntransform_cm_simulate(&tcm);
     }
-    ndebug_name_cm_del_entity(&dcm, 1024);
-    ndebug_name_cm_update(&dcm);
+    ntransform_cm_deinit(&tcm, &em);
     nentity_manager_destroy(&em);
 
     while(1) {

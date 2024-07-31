@@ -54,6 +54,7 @@ nEntity nentity_create(nEntityManager *em);
 b32 nentity_alive(nEntityManager *em, nEntity e);
 void nentity_destroy(nEntityManager *em, nEntity e);
 
+
 ////////////////////////////////
 // Debug-Name Component manager
 ////////////////////////////////
@@ -93,62 +94,70 @@ struct nDebugNameCM {
 void ndebug_name_cm_init(nDebugNameCM *cm, nEntityManager *em);
 void ndebug_name_cm_destroy(nDebugNameCM *cm, nEntityManager *em);
 void ndebug_name_cm_update(nDebugNameCM *cm);
-nDebugNameComponent *ndebug_name_cm_add_entity(nDebugNameCM *cm, nEntity e);
+nDebugNameComponent *ndebug_name_cm_add(nDebugNameCM *cm, nEntity e);
 void ndebug_name_cm_del_entity(nDebugNameCM *cm, nEntity e);
-nDebugNameComponent ndebug_name_cm_lookup_entity(nDebugNameCM *cm, nEntity e);
+nDebugNameComponentNode *ndebug_name_cm_lookup(nDebugNameCM *cm, nEntity e);
 void ndebug_name_cm_prune_destroyed_entities(nDebugNameCM *cm);
 
 
 ////////////////////////////////
 // Transform Component manager
 ////////////////////////////////
+typedef u32 nCompIndex;
+#define NCOMPONENT_INDEX_INVALID (U32_MAX)
+#define NCOMPONENT_INDEX_VALID(idx) (idx != NCOMPONENT_INDEX_INVALID)
 
+typedef struct nEntityComponentIndexPairNode nEntityComponentIndexPairNode;
+struct nEntityComponentIndexPairNode {
+    nEntity e;
+    nCompIndex comp_idx;
+    nEntityComponentIndexPairNode *next;
+    nEntityComponentIndexPairNode *prev;
+};
+
+typedef struct nEntityComponentIndexPairHashSlot nEntityComponentIndexPairHashSlot;
+struct nEntityComponentIndexPairHashSlot {
+    nEntityComponentIndexPairNode *hash_first;
+    nEntityComponentIndexPairNode *hash_last;
+};
 
 typedef struct nTransformComponent nTransformComponent;
 struct nTransformComponent {
     mat4 world;
     mat4 local;
-
-    nTransformComponent *parent;
-    nTransformComponent *first;
-    nTransformComponent *last;
-    nTransformComponent *next;
-    nTransformComponent *prev;
-};
-//dll_push_back_NPZ(&g_nil_box, parent->first, parent->last, box, next, prev);
-
-typedef struct nTransformComponentNode nTransformComponentNode;
-struct nTransformComponentNode {
-    nTransformComponentNode *next;
-    nTransformComponentNode *prev;
-
-    nTransformComponent transform;
-    // The entity that owns this component (used in hash-map collision resolution)
-    nEntity entity;
-};
-
-typedef struct nTransformComponentHashSlot nTransformComponentHashSlot;
-struct nTransformComponentHashSlot {
-    nTransformComponentNode *hash_first;
-    nTransformComponentNode *hash_last;
 };
 
 // CM = ComponentManager
+#define NTRANSFORM_CM_MAX_COMPONENTS 1024
 typedef struct nTransformCM nTransformCM;
 struct nTransformCM {
-    u32 transform_table_size;
-    nTransformComponentHashSlot *transform_table;
-    nTransformComponentNode *free_nodes;
+    // The internal, allocated space
+    u32 size, cap;
+    void *buf;
+
+    // The arrays assigned
+    nTransformComponent *transform;
+    nEntity *entity;
+    u32 *parent;
+    u32 *first;
+    u32 *next;
+    u32 *prev;
+
+    // lookup table
+    u32 lookup_table_size;
+    nEntityComponentIndexPairHashSlot *lookup_table;
+ 
+    // ref to parent nEntityManager (who does allocations for now)
     nEntityManager *em_ref;
 };
 
 void ntransform_cm_init(nTransformCM *cm, nEntityManager *em);
-void ntransform_cm_destroy(nTransformCM *cm, nEntityManager *em);
-void ntransform_cm_update(nTransformCM *cm);
-nTransformComponent *ntransform_cm_add_entity(nTransformCM *cm, nEntity e);
-void ntransform_cm_del_entity(nTransformCM *cm, nEntity e);
-nTransformComponent ntransform_cm_lookup_entity(nTransformCM *cm, nEntity e);
-void ntransform_cm_prune_destroyed_entities(nTransformCM *cm);
+void ntransform_cm_deinit(nTransformCM *cm, nEntityManager *em);
+void ntransform_cm_simulate(nTransformCM *cm);
+nCompIndex ntransform_cm_lookup(nTransformCM *cm, nEntity e);
+nTransformComponent *ntransform_cm_add(nTransformCM *cm, nEntity e, nEntity p);
+void ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local);
+
 
 
 
