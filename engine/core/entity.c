@@ -229,18 +229,24 @@ nCompIndex ntransform_cm_make_new_index(nTransformCM *cm) {
     cm->size+=1;
     return idx;
 }
-nCompIndex ntransform_cm_lookup(nTransformCM *cm, nEntity e) {
-    nCompIndex index = NCOMPONENT_INDEX_INVALID;
+
+nEntityComponentIndexPairNode *ntransform_cm_lookup_node(nTransformCM *cm, nEntity e) {
+    nEntityComponentIndexPairNode *n = 0;
     u32 slot = e%cm->lookup_table_size;
     for (nEntityComponentIndexPairNode *node = cm->lookup_table[slot].hash_first; node != 0; node = node->next) {
         if (node->e == e) {
-            index = node->comp_idx;
+            n = node;
             break;
         }
     }
-    //assert(NCOMPONENT_INDEX_VALID(index));
-    return index;
+    return n;
 }
+
+nCompIndex ntransform_cm_lookup(nTransformCM *cm, nEntity e) {
+    nEntityComponentIndexPairNode *n = ntransform_cm_lookup_node(cm, e);
+    return (n) ? n->comp_idx : NCOMPONENT_INDEX_INVALID;
+}
+
 
 nTransformComponent *ntransform_cm_add(nTransformCM *cm, nEntity e, nEntity p) {
     nCompIndex new_idx = ntransform_cm_make_new_index(cm);
@@ -279,9 +285,7 @@ void ntransform_cm_transform(nTransformCM *cm, mat4 pm, nCompIndex idx) {
     assert(NCOMPONENT_INDEX_VALID(idx));
     cm->transform[idx].world = mat4_mult(pm, cm->transform[idx].local);
 
-    for (nCompIndex child_idx = cm->first[idx];
-    NCOMPONENT_INDEX_VALID(child_idx);
-    child_idx = cm->next[child_idx]) {
+    for (nCompIndex child_idx = cm->first[idx]; NCOMPONENT_INDEX_VALID(child_idx); child_idx = cm->next[child_idx]) {
         ntransform_cm_transform(cm, cm->transform[idx].world, child_idx);
     }
 }
@@ -295,6 +299,68 @@ void ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local) {
     ntransform_cm_transform(cm, parent_wm, idx);
 }
 
-nTransformComponent *ntransform_cm_del(nTransformCM *cm, nEntity e) {
-    // TBA
+// Here we should swap the nCompIndex's while ALSO keeping the links intact
+void ntransform_move_index(nTransformCM *cm, nCompIndex src, nCompIndex dst) {
+    cm->transform[dst] = cm->transform[src];
+    cm->entity[dst] = cm->entity[src];
+    cm->parent[dst] = cm->parent[src];
+    cm->first[dst] = cm->first[src];
+    cm->next[dst] = cm->next[src];
+    cm->prev[dst] = cm->prev[src];
+
+    // Make prev sibling to point to dst
+    nCompIndex prev_sibling_index = cm->prev[dst];
+    if (NCOMPONENT_INDEX_VALID(prev_sibling_index)) {
+        cm->next[prev_sibling_index] = dst;
+    }
+
+    // Make children's parents dst
+    for (nCompIndex child_idx = cm->first[dst]; NCOMPONENT_INDEX_VALID(child_idx); child_idx = cm->next[child_idx]) {
+        cm->parent[child_idx] = dst;
+    }
+}
+void ntransform_swap_indices(nTransformCM *cm, nCompIndex a, nCompIndex b) {
+    // Move element at A (and references to it) to size.
+    //[size] <--- [A]
+    ntransform_move_index(cm, a, cm->size);
+
+    // Now nothing refers to A, so we can safely move element at B (and references
+    // to it) to A.
+    //[A] <--- [B]
+    ntransform_move_index(cm, b, a);
+
+    // And finally move the element at size to B.
+    //[B] <-- [size]
+    ntransform_move_index(cm, cm->size, b);
+
+    // Also swap lookup table entries
+    nEntityComponentIndexPairNode * a_node = ntransform_cm_lookup_node(cm, cm->entity[a]);
+    nCompIndex ai = a_node->comp_idx;
+    nEntityComponentIndexPairNode * b_node = ntransform_cm_lookup_node(cm, cm->entity[b]);
+    nEntity bi = b_node->comp_idx;
+    a_node->comp_idx = bi;
+    b_node->comp_idx = ai;
+}
+
+// TODO -- see which calls need nEntity and which the nCompIndex
+void ntransform_cm_del(nTransformCM *cm, nEntity e) {
+    nCompIndex idx = ntransform_cm_lookup(cm, e);
+    // first delete all children (post-order)
+    for (nCompIndex child_idx = cm->first[idx]; NCOMPONENT_INDEX_VALID(child_idx);) {
+        nCompIndex next_idx = cm->next[child_idx];
+        ntransform_cm_del(cm, cm->entity[child_idx]);
+        child_idx = next_idx;
+    }
+
+    // then delete entity e (the parent)
+    // swap with last index
+    if (cm->size) {
+        ntransform_swap_indices(cm, idx, cm->size-1); 
+        cm->size-=1;
+    }
+
+    // remove lookup table entry
+    nEntityComponentIndexPairNode * e_node = ntransform_cm_lookup_node(cm, e);
+    u32 slot = e%cm->lookup_table_size;
+    dll_remove(cm->lookup_table[slot].hash_first, cm->lookup_table[slot].hash_last, e_node);
 }

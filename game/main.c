@@ -24,6 +24,10 @@ int main(int argc, char **argv) {
         nTransformComponent *c = ntransform_cm_add(&tcm, child, parent);
         ntransform_cm_set_local(&tcm, ntransform_cm_lookup(&tcm, child), m4d(2.0));
         ntransform_cm_simulate(&tcm);
+
+        ntransform_cm_del(&tcm, parent);
+        assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&tcm, parent)));
+        assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&tcm, child)));
     }
     ntransform_cm_deinit(&tcm, &em);
     nentity_manager_destroy(&em);

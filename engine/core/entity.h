@@ -103,6 +103,7 @@ void ndebug_name_cm_prune_destroyed_entities(nDebugNameCM *cm);
 ////////////////////////////////
 // Transform Component manager
 ////////////////////////////////
+
 typedef u32 nCompIndex;
 #define NCOMPONENT_INDEX_INVALID (U32_MAX)
 #define NCOMPONENT_INDEX_VALID(idx) (idx != NCOMPONENT_INDEX_INVALID)
