@@ -2,6 +2,8 @@
 #include "engine.h"
 #include "game_state.h"
 
+guiSimpleWindowData wdata= {0};
+
 int main(int argc, char **argv) {
     nWindow win = {0};
     engine_global_state_init();
@@ -9,6 +11,7 @@ int main(int argc, char **argv) {
     engine_global_state_set_target_fps(60.0);
     oglContext ogl_ctx;
     ogl_ctx_init(&ogl_ctx);
+    gui_impl_init();
 
     game_state_init(&win);
 
@@ -32,14 +35,59 @@ int main(int argc, char **argv) {
     ntransform_cm_deinit(&tcm, &em);
     nentity_manager_destroy(&em);
 
+    // GUI window example
+    sprintf(wdata.name, "Debug");
+    wdata.dim = gv2(400,300);
+    wdata.pos = gv2(100,100);
+    wdata.active = 1;
+
     while(1) {
         ninput_manager_consume_events_from_window(&win);
+        gui_impl_update();
         
         ogl_clear_all_state(&ogl_ctx);
         engine_global_state_frame_begin();
         ogl_image_clear(NULL);
 
         game_state_update_and_render();
+        // GUI test
+        {
+            if (ninput_mkey_pressed(NKEY_MMB)){
+                wdata.active = (wdata.active) ? 0 : 1;
+            }
+            gui_build_begin();
+            guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
+            if (wdata.active){
+                gui_swindow_begin(&wdata);
+                gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+                gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+                gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+                gui_button("button329");
+
+
+                for (u32 i = 0; i < 4; ++i) {
+                    char panel_name[128];
+                    sprintf(panel_name,"panel_abc%d", i);
+                    gui_set_next_child_layout_axis(AXIS2_X);
+                    gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+                    gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,1.0});
+                    guiSignal s = gui_panel(panel_name);
+                    gui_push_parent(s.box);
+                    for (u32 j = i; j < 5; ++j) {
+                        char button_name[128];
+                        sprintf(button_name, "b%d%d", i, j);
+                        gui_set_next_bg_color(colors[i*(j-1)]);
+                        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,0.0});
+                        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+                        gui_button(button_name);
+                    }
+                    gui_pop_parent();
+                }
+                gui_swindow_end(&wdata);
+            }
+            gui_build_end();
+        }
+        gui_impl_render();
 
         nwindow_swap(&win);
         engine_global_state_frame_end();

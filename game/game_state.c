@@ -35,10 +35,6 @@ void game_state_init(nWindow *win) {
 
 
 void game_state_update_and_render() {
-    if (ninput_mkey_down(NKEY_MMB)){
-        printf("MMB down!\n");
-    }
-
     nbatch2d_rend_begin(&get_game_state()->batch_rend, get_game_state()->win_ref);
     nBatch2DQuad q = {0};
     q.color = v4(1,1,1,1);

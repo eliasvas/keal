@@ -72,6 +72,10 @@ b32 ninput_mkey_released(nKeyMouseKeycode key) {
     return ninput_is_mkey_in_state(key, N_INPUT_KEY_STATE_RELEASED);
 }
 
+vec2 ninput_get_mouse_pos(void) {
+    return global_input_manager.mouse_pos;
+}
+
 vec2 ninput_get_mouse_delta(void) {
     return vec2_sub(global_input_manager.mouse_pos, global_input_manager.prev_mouse_pos);
 }

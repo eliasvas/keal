@@ -42,9 +42,9 @@ void ogl_clear_all_state(oglContext *ctx) {
     //...
     //...
     glBindVertexArray(ctx->vao);
-    glEnable(GL_DEPTH_TEST);
-    //glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
+    //glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 }
@@ -208,6 +208,7 @@ u32 ogl_get_component_num_for_data_type(oglShaderDataType type) {
             break;
         default:
             comp_count = 0;
+            assert(0 && "Invalid OGL_SHADER_DATA_TYPE");
             break;
     }
     return comp_count;
@@ -356,13 +357,18 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             img->kind = OGL_IMAGE_KIND_TEXTURE;
             glGenTextures(1, &OGL_CAST_GLUINT(img->impl_state));
             glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
             if (is_font) {
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);

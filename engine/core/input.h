@@ -6,11 +6,13 @@
 #include "core/core_inc.h"
 
 
+// TODO -- maybe these should be called NMKEY_ for N<MOUSE>KEY_
 typedef enum nKeyMouseKeycode nKeyMouseKeycode;
 enum nKeyMouseKeycode {
     NKEY_LMB = 0,
     NKEY_MMB = 1,
     NKEY_RMB = 2,
+    NKEY_COUNT,
 };
 
 // This is equivalent to SDL_Scancode / USB keyboard spec's scancodes
@@ -142,5 +144,6 @@ b32 ninput_mkey_pressed(nKeyMouseKeycode key);
 b32 ninput_mkey_released(nKeyMouseKeycode key);
 
 vec2 ninput_get_mouse_delta(void);
+vec2 ninput_get_mouse_pos(void);
 
 #endif

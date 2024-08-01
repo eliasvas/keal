@@ -21,7 +21,7 @@ if (WIN32)
 endif()
 
 # build the engine
-add_library(engine STATIC engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
+add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
 include_directories(engine ${SDL2_INCLUDE_DIRS})
 include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
