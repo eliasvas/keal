@@ -54,7 +54,7 @@ void ogl_clear_all_state(oglContext *ctx) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
- 
+
 }
 
 GLenum gl_check_err(const char *file, int line) {

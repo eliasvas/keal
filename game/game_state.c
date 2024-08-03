@@ -5,37 +5,100 @@
 
 static GameState gs = {0};
 
-oglImage game_load_rgb_image_from_disk(const char *path) {
+guiSimpleWindowData wdata= {0};
+guiSliderData spin_data;
+
+void do_gui_test() {
+    if (ninput_mkey_pressed(NKEY_MMB)){
+        wdata.active = (wdata.active) ? 0 : 1;
+    }
+    gui_build_begin();
+    guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
+    if (wdata.active){
+        gui_swindow_begin(&wdata);
+        gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+        gui_spinner("spinner123", AXIS2_X, gv2(0,10), &spin_data);
+
+
+        for (u32 i = 0; i < 4; ++i) {
+            char panel_name[128];
+            sprintf(panel_name,"panel_abc%d", i);
+            gui_set_next_child_layout_axis(AXIS2_X);
+            gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+            gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,1.0});
+            guiSignal s = gui_panel(panel_name);
+            gui_push_parent(s.box);
+            for (u32 j = i; j < 5; ++j) {
+                char button_name[128];
+                sprintf(button_name, "b%d%d", i, j);
+                gui_set_next_bg_color(colors[i*(j-1)]);
+                gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,0.0});
+                gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+                gui_button(button_name);
+            }
+            gui_pop_parent();
+        }
+        gui_swindow_end(&wdata);
+    }
+    gui_build_end();
+}
+
+
+oglImage game_load_rgba_image_from_disk(const char *path) {
     oglImage img;
     s32 w,h,comp;
     stbi_set_flip_vertically_on_load(1);
-    unsigned char* image = stbi_load(path, &w, &h, &comp, STBI_rgb);
+    unsigned char* image = stbi_load(path, &w, &h, &comp, STBI_rgb_alpha);
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGB8U, 0));
+    assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGBA8U, 0));
     stbi_image_free(image);
     return img;
 }
 
-GameState *get_game_state() {
-    return &gs;
-}
-
 
 void game_state_init_images() {
-    get_game_state()->atlas = game_load_rgb_image_from_disk("assets/tileset4922.png");
+    gs.atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
     u32 white = 0xFFFF;
-    ogl_image_init(&get_game_state()->white, &((u8)white), 1, 1, OGL_IMAGE_FORMAT_RGB8U, 1);
+    ogl_image_init(&gs.white, &((u8)white), 1, 1, OGL_IMAGE_FORMAT_RGB8U, 1);
 }
 
-void game_state_init(nWindow *win) {
+void game_state_init() {
     game_state_init_images();
-    get_game_state()->win_ref = win;
-    M_ZERO_STRUCT(&get_game_state()->batch_rend);
+    nentity_manager_init(&gs.em);
+    ntransform_cm_init(&gs.tcm, &gs.em);
+
+    // ECS test
+    {
+        nEntity parent = nentity_create(&gs.em);
+        nEntity child = nentity_create(&gs.em);
+        ntransform_cm_add(&gs.tcm, parent, 0);
+        ntransform_cm_set_local(&gs.tcm, ntransform_cm_lookup(&gs.tcm, parent), m4d(6.0));
+        nTransformComponent *c = ntransform_cm_add(&gs.tcm, child, parent);
+        ntransform_cm_set_local(&gs.tcm, ntransform_cm_lookup(&gs.tcm, child), m4d(2.0));
+        ntransform_cm_simulate(&gs.tcm);
+
+        ntransform_cm_del(&gs.tcm, parent);
+        assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, parent)));
+        assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, child)));
+    }
+    // Init some GUI stuff
+    sprintf(wdata.name, "Debug");
+    wdata.dim = gv2(400,300);
+    wdata.pos = gv2(100,100);
+    wdata.active = 0;
+
+
 }
 
+void game_state_deinit() {
+    ntransform_cm_deinit(&gs.tcm, &gs.em);
+    nentity_manager_destroy(&gs.em);
+}
 
 void game_state_update_and_render() {
-    nbatch2d_rend_begin(&get_game_state()->batch_rend, get_game_state()->win_ref);
+    nbatch2d_rend_begin(&gs.batch_rend, &get_gs()->win);
     nBatch2DQuad q = {0};
     q.color = v4(1,1,1,1);
     q.pos.x = 0;
@@ -43,20 +106,27 @@ void game_state_update_and_render() {
     q.dim.x = 32;
     q.dim.y = 32;
     q.tc = TILESET_COW_SKULL_TILE;
-    nbatch2d_rend_add_quad(&get_game_state()->batch_rend, q, &get_game_state()->atlas);
+    nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
     nBatch2DQuad q2 = q;
     q2.pos.x = 32;
     q2.pos.y = 0;
     q2.color = v4(1,0.2,0.2,1);
-    nbatch2d_rend_add_quad(&get_game_state()->batch_rend, q2, &get_game_state()->white);
+    nbatch2d_rend_add_quad(&gs.batch_rend, q2, &gs.white);
     nBatch2DQuad q3 = q;
     q3.pos.x = 64;
     q3.pos.y = 0;
     q3.color = v4(1,0.0,0.0,1);
     q3.tc = TILESET_SKULL_TILE;
-    nbatch2d_rend_add_quad(&get_game_state()->batch_rend, q3, &get_game_state()->atlas);
+    nbatch2d_rend_add_quad(&gs.batch_rend, q3, &gs.atlas);
+    nBatch2DQuad q4 = q;
+    q4.pos.x = 96;
+    q4.pos.y = 0;
+    q4.color = v4(0.0,0.0,1.0,1);
+    q4.tc = TILESET_SKULL_TILE;
+    nbatch2d_rend_add_quad(&gs.batch_rend, q4, &gs.atlas);
 
 
-    nbatch2d_rend_end(&get_game_state()->batch_rend);
+    nbatch2d_rend_end(&gs.batch_rend);
 
+    do_gui_test();
 }
