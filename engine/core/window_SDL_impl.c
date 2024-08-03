@@ -65,7 +65,7 @@ b32 nwindow_impl_create(nWindow *win) {
     #if (OS_WINDOWS)
         glewInit();
         assert(GLEW_ARB_ES3_compatibility);
-        glEnable(GL_FRAMEBUFFER_SRGB);
+        //glEnable(GL_FRAMEBUFFER_SRGB);
     #endif
 
     {
