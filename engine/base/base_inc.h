@@ -14,5 +14,6 @@
 #include "ds.h"
 #include "hash.h"
 #include "time_util.h"
+#include "rand.h"
 
 #endif

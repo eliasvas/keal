@@ -2,9 +2,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "global_state.h"
 
-static EngineGlobalState global_state;
+static nGlobalState global_state = {0};
 
-EngineGlobalState* get_engine_global_state() {
+nGlobalState* get_gs() {
     return &global_state;
 }
 
@@ -20,7 +20,7 @@ u64 get_global_frame_count() {
     return (global_state.frame_count);
 }
 
-void engine_global_state_init() {
+void nglobal_state_init() {
     // Track engine start time
     global_state.engine_start_ts = get_current_timestamp();
     // Initialize the frame arena
@@ -31,14 +31,24 @@ void engine_global_state_init() {
     global_state.target_fps = 0.1;
     // Initialize frame counter to 0
     global_state.frame_count = 0;
+
+    // Init random generator
+    rand_init();
+
+    nwindow_init(&global_state.win, "gudGame", 800, 600, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
+    //nwindow_deinit(&get_gs()->win);
+    nglobal_state_set_target_fps(60.0);
+    ogl_ctx_init(&global_state.ogl_ctx);
+    gui_impl_init();
 }
 
-void engine_global_state_frame_begin() {
+void nglobal_state_frame_begin() {
     global_state.frame_start_ts = get_current_timestamp();
     //printf("current ts: %llu\n", global_state.frame_start_ts);
 }
 
-void engine_global_state_frame_end() {
+void nglobal_state_frame_end() {
+    nwindow_swap(&global_state.win);
     // FIXME: Why busy wait?
     while (((f64)(get_current_timestamp() - global_state.frame_start_ts))/1000.0 < (1.0/global_state.target_fps)){};
 
@@ -48,11 +58,11 @@ void engine_global_state_frame_end() {
     global_state.frame_count+=1;
 }
 
-void engine_global_state_set_target_fps(f64 target_fps) {
+void nglobal_state_set_target_fps(f64 target_fps) {
     global_state.target_fps = target_fps;
 }
 
-f64 engine_global_state_get_dt() {
+f64 nglobal_state_get_dt() {
     return global_state.dt;
 }
 

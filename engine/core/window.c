@@ -1,4 +1,5 @@
 #include "window.h"
+#include "core/global_state.h"
 
 vec2 nwindow_get_dim(nWindow *win) {
     return v2(win->ww, win->wh);

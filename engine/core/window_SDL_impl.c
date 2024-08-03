@@ -1,4 +1,5 @@
 #include "window.h"
+#include "core/global_state.h"
 
 // TODO -- we need some more SDL_Error logs I think
 // TODO -- Probably we want _SDL_nwindow_impl_xxx, and link with main implementation via function pointers

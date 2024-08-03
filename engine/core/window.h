@@ -1,7 +1,6 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 #include "base/base_inc.h"
-#include "core/global_state.h"
 
 ////////////////////////////////
 // Window
