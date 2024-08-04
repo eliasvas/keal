@@ -12,5 +12,5 @@ OpenGL ES 3.0 is used as the cross-platform gfx API right now, and SDL2 for ever
 sudo apt-get install build-essential libsdl2-dev libsdl2-2.0-0 libasan6 libgles2-mesa-dev -y
 git clone https://github.com/eliasvas/engine
 cd engine && git submodule update --init && mkdir build
-cd build && cmake --build .. && cmake . && cd ..
+cd build && cmake .. && make
 ```

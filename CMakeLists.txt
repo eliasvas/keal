@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.19...3.29)
+option(ENABLE_SANITIZER "Enable AddressSanitizer" ON)
 
 # set the output directory for built objects.
 # This makes sure that the dynamic library goes into the build directory automatically.
@@ -28,6 +29,18 @@ include_directories(engine engine)
 target_link_libraries(engine SDL2-static)
 target_link_libraries(engine guiLib)
 
+# use Address Sanitizer
+if(ENABLE_SANITIZER)
+    message(STATUS "AddressSanitizer enabled")
+    target_compile_options(engine PUBLIC -fsanitize=address)
+    target_link_options(engine PUBLIC -fsanitize=address)
+    target_compile_definitions(engine PUBLIC ENABLE_SANITIZER=1)
+else()
+    message(STATUS "AddressSanitizer disabled")
+    target_compile_definitions(engine PUBLIC ENABLE_SANITIZER=0)
+endif()
+
+
 # to load function definitions for OpenGL ES 3.0
 if (WIN32)
     target_link_libraries(engine libglew_static)
@@ -39,24 +52,6 @@ endif()
 add_executable(game game/main.c game/game_state.c)
 target_include_directories(game PUBLIC engine)
 target_link_libraries(game PUBLIC engine SDL2::SDL2main)
-
-# use Address Sanitizer (TODO -- check if this works on linux, i think it should be -fsanitize)
-if (WIN32)
-    target_compile_options(game PUBLIC /fsanitize=address)
-    target_link_options(game PUBLIC /fsanitize=address)
-    # why is all this ASAN bullshit needed
-    find_program(ASAN_DLL clang_rt.asan_dynamic-x86_64.dll HINTS "${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES}")
-    if (ASAN_DLL)
-        add_custom_command(TARGET game POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${ASAN_DLL}" $<TARGET_FILE_DIR:game>)
-    else()
-        message(WARNING "AddressSanitizer runtime DLL not found!")
-    endif()
-else()
-    target_compile_options(game PUBLIC -fsanitize=address)
-    target_link_options(game PUBLIC -fsanitize=address)
-endif()
 
 # move assets to BUILD_DIR/assets
 set(ASSET_DIR "${CMAKE_SOURCE_DIR}/assets")

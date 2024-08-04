@@ -1,8 +1,6 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
-#define __GNUC__ 13
-
 #if !defined(ENABLE_ASSERT)
     #define ENABLE_ASSERT 0
 #endif
@@ -11,7 +9,7 @@
     #define ENABLE_SANITIZER 0
 #endif
 
-#if COMPILER_CLANG && ENABLE_SANITIZER
+#if (ENABLE_SANITIZER)
     #include <sanitizer/asan_interface.h>
 #endif
 
