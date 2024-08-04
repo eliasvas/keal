@@ -27,8 +27,12 @@ include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
 target_link_libraries(engine SDL2-static)
 target_link_libraries(engine guiLib)
+
+# to load function definitions for OpenGL ES 3.0
 if (WIN32)
     target_link_libraries(engine libglew_static)
+else()
+    target_link_libraries(engine GLESv2)
 endif()
 
 #build the game executable

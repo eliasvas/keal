@@ -17,6 +17,14 @@ void nbatch2d_rend_begin(nBatch2DRenderer *rend, nWindow *win) {
 
 }
 
+u32 nbatch2d_rend_count_quads(nBatch2DRenderer *rend) {
+    u32 count = 0;
+    for (nBatch2DQuadNode *quad = rend->first; quad != 0; quad=quad->next) {
+        count += 1;
+    }
+    return count;
+}
+
 void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     // alloc the vertex array
     u32 quad_count = nbatch2d_rend_count_quads(rend);
@@ -66,14 +74,6 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
 
 void nbatch2d_rend_end(nBatch2DRenderer *rend) {
     nbatch2d_rend_flush(rend);
-}
-
-u32 nbatch2d_rend_count_quads(nBatch2DRenderer *rend) {
-    u32 count = 0;
-    for (nBatch2DQuadNode *quad = rend->first; quad != 0; quad=quad->next) {
-        count += 1;
-    }
-    return count;
 }
 
 void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglImage *tex) {

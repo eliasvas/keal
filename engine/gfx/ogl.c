@@ -1,5 +1,6 @@
 #include "base/base_inc.h"
 #include "ogl.h"
+#define OGL_CAST_GLUINTPTR(x) ((GLuint*)((u64)(&x)))
 #define OGL_CAST_GLUINT(x) ((GLuint)((u64)(x)))
 #define OGL_CAST_PTR(x) ((void*)((u64)(x)))
 //TODO -- multiple vertex buffers not supported https://stackoverflow.com/questions/14249634/opengl-vaos-and-multiple-buffers
@@ -95,7 +96,7 @@ oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size) 
 
     GLuint buffer_kind = (kind == OGL_BUF_KIND_VERTEX) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
 
-    glGenBuffers(1, &OGL_CAST_GLUINT(buf.impl_state));
+    glGenBuffers(1, OGL_CAST_GLUINTPTR(buf.impl_state));
     glBindBuffer(buffer_kind, OGL_CAST_GLUINT(buf.impl_state));
     ogl_buf_update(&buf, data,data_count,data_size);
     glBindBuffer(buffer_kind, 0);
@@ -104,7 +105,7 @@ oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size) 
 }
 
 b32 ogl_buf_deinit(oglBuf *b) {
-    glDeleteBuffers(1, &OGL_CAST_GLUINT(b->impl_state));
+    glDeleteBuffers(1, OGL_CAST_GLUINTPTR(b->impl_state));
     return 1;
 }
 void ogl_buf_update(oglBuf *buf, void *data, u32 data_count, u32 data_size) {
@@ -363,7 +364,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
         case (OGL_IMAGE_FORMAT_RGB8U):
             GLuint tex_format = (img->format == OGL_IMAGE_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
             img->kind = OGL_IMAGE_KIND_TEXTURE;
-            glGenTextures(1, &OGL_CAST_GLUINT(img->impl_state));
+            glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
             glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
             if (is_font) {
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
@@ -394,7 +395,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             break;
         case (OGL_IMAGE_FORMAT_RGBA32F): // framebuffers
             img->kind = OGL_IMAGE_KIND_RT;
-            glGenFramebuffers(1, &OGL_CAST_GLUINT(img->impl_state));
+            glGenFramebuffers(1, OGL_CAST_GLUINTPTR(img->impl_state));
             glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(img->impl_state));
             
             // - position color buffer
@@ -441,9 +442,9 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
 
 void ogl_image_deinit(oglImage *img) {
     if (img->kind == OGL_IMAGE_KIND_RT){
-        glDeleteFramebuffers(1,&OGL_CAST_GLUINT(img->impl_state));
+        glDeleteFramebuffers(1,OGL_CAST_GLUINTPTR(img->impl_state));
     }else {
-        glDeleteTextures(1,&OGL_CAST_GLUINT(img->impl_state));
+        glDeleteTextures(1,OGL_CAST_GLUINTPTR(img->impl_state));
     }
 }
 

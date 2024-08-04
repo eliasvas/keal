@@ -1,6 +1,7 @@
 // FIXME -- this _IMPLEMENTATION macro should be in the (future) asset system
 #define STB_IMAGE_IMPLEMENTATION
 #include "global_state.h"
+#include "misc/gui_impl.h"
 
 static nGlobalState global_state = {0};
 

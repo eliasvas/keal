@@ -6,7 +6,8 @@
 
 static u64 get_current_timestamp() {
     struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    clock_gettime(CLOCK_REALTIME, &ts);
+    //timespec_get(&ts, TIME_UTC);
 
     u64 millis = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
 

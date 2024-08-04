@@ -92,6 +92,7 @@ struct oglSP {
     void *impl_state; // the shader program
 };
 oglShaderAttrib ogl_make_attrib(u32 vbo_idx, oglShaderDataType type, u32 stride, u32 offset, b32 instanced);
+void ogl_sp_add_attrib(oglSP *shader, oglShaderAttrib attrib);
 b32 ogl_sp_init(oglSP *shader, const char *vs_source, const char *fs_source);
 b32 ogl_sp_deinit(oglSP *shader);
 void ogl_sp_set_uniform(oglSP *sp, const char *uniform_name, oglShaderDataType type, void *val);
@@ -115,7 +116,7 @@ enum oglImageKind {
 };
 
 typedef enum oglImageFormat oglImageFormat;
-enum oglImageFortmat {
+enum oglImageFormat {
     OGL_IMAGE_FORMAT_RGBA8U,
     OGL_IMAGE_FORMAT_RGB8U,
     OGL_IMAGE_FORMAT_RGBA32F,

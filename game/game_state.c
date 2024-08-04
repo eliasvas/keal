@@ -51,6 +51,9 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
     s32 w,h,comp;
     stbi_set_flip_vertically_on_load(1);
     unsigned char* image = stbi_load(path, &w, &h, &comp, STBI_rgb_alpha);
+    if(stbi_failure_reason()) {
+        printf("Failed reading image: %s\n", stbi_failure_reason());
+    }
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGBA8U, 0));
     stbi_image_free(image);
@@ -59,9 +62,9 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
 
 
 void game_state_init_images() {
-    gs.atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
+    gs.atlas = game_load_rgba_image_from_disk("/home/ily/Desktop/engine/build/Debug/assets/tileset4922.png");
     u32 white = 0xFFFF;
-    ogl_image_init(&gs.white, &((u8)white), 1, 1, OGL_IMAGE_FORMAT_RGB8U, 1);
+    ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_RGB8U, 1);
 }
 
 void game_state_init() {

@@ -11,14 +11,14 @@
 #include <SDL.h>
 #include <SDL_main.h>
 
-#if defined(OS_WINDOWS)
+#if (OS_WINDOWS)
     #include <GL/glew.h>
     #include <GL/wglew.h>
-#elif defined(OS_LINUX)
+#elif (OS_LINUX)
     #include <SDL_syswm.h>
     #include <GLES3/gl3.h>
     #include <GLES/egl.h>
-#elif defined(__EMSCRIPTEN)
+#elif (__EMSCRIPTEN)
     #include <emscripten.h>
 	#include <emscripten/html5.h>
 	#include <GLES3/gl3.h>
