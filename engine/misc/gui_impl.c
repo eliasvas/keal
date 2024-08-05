@@ -137,8 +137,8 @@ void gui_impl_init() {
 
     // create the gui Atlas texture
     gui_get_ui_state()->atlas.tex.data[0] = 0xFF;
-    assert(ogl_image_init(&atlas, &gui_get_ui_state()->atlas.tex.data[0], 1024, 1024, OGL_IMAGE_FORMAT_RGB8U, 1));
-    //assert(ogl_image_init(&atlas, &gui_get_ui_state()->atlas.tex.data[0], 1, 1, OGL_IMAGE_FORMAT_RGB8U, 1));
+    assert(ogl_image_init(&atlas, &gui_get_ui_state()->atlas.tex.data[0], 1024, 1024, OGL_IMAGE_FORMAT_R8U));
+    //assert(ogl_image_init(&atlas, &gui_get_ui_state()->atlas.tex.data[0], 1, 1, OGL_IMAGE_FORMAT_R8U));
 
 }
 

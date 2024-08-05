@@ -355,7 +355,7 @@ void ogl_image_clear(oglImage *img) {
 }
 
 //TODO: should a 'type' be introduced, switching on the format is wrong
-b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt, b32 is_font) {
+b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt) {
     img->width = tex_w;
     img->height = tex_h;
     img->format = fmt;
@@ -366,27 +366,23 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             img->kind = OGL_IMAGE_KIND_TEXTURE;
             glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
             glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
-            if (is_font) {
-                glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
-                //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex_w, tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data);
-                //glGenerateMipmap(GL_TEXTURE_2D);
-            } else  {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, tex_format, GL_UNSIGNED_BYTE, tex_data);
-                glGenerateMipmap(GL_TEXTURE_2D);
-            }
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, tex_format, GL_UNSIGNED_BYTE, tex_data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            break;
+        case (OGL_IMAGE_FORMAT_R8U):
+            img->kind = OGL_IMAGE_KIND_TEXTURE;
+            glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
+            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex_w, tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data);
             break;
         case (OGL_IMAGE_FORMAT_RGBA32F): // framebuffers
             img->kind = OGL_IMAGE_KIND_RT;
@@ -447,8 +443,8 @@ void ogl_image_deinit(oglImage *img) {
 void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment) {
     glActiveTexture(GL_TEXTURE0 + tex_slot);
     if (img->kind == OGL_IMAGE_KIND_RT) {
-            glBindTexture(GL_TEXTURE_2D, img->attachments[attachment]);
+        glBindTexture(GL_TEXTURE_2D, img->attachments[attachment]);
     } else {
-            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
+        glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
     }
 }

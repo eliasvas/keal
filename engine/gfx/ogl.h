@@ -117,6 +117,7 @@ enum oglImageKind {
 
 typedef enum oglImageFormat oglImageFormat;
 enum oglImageFormat {
+    OGL_IMAGE_FORMAT_R8U,
     OGL_IMAGE_FORMAT_RGBA8U,
     OGL_IMAGE_FORMAT_RGB8U,
     OGL_IMAGE_FORMAT_RGBA32F,
@@ -136,7 +137,7 @@ struct oglImage {
 
 void ogl_rt_bind(oglImage *img);
 void ogl_image_clear(oglImage *img);
-b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt, b32 is_font);
+b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt);
 void ogl_image_deinit(oglImage *img);
 void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment);
 

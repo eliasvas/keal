@@ -55,7 +55,7 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
         printf("Failed reading image: %s\n", stbi_failure_reason());
     }
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGBA8U, 0));
+    assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGBA8U));
     stbi_image_free(image);
     return img;
 }
@@ -64,7 +64,7 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
 void game_state_init_images() {
     gs.atlas = game_load_rgba_image_from_disk("/home/ily/Desktop/engine/build/Debug/assets/tileset4922.png");
     u32 white = 0xFFFF;
-    ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_RGB8U, 1);
+    ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
 }
 
 void game_state_init() {
@@ -102,33 +102,23 @@ void game_state_deinit() {
 
 void game_state_update_and_render() {
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
-    nBatch2DQuad q = {0};
-    q.color = v4(1,1,1,1);
-    q.pos.x = 0;
-    q.pos.y = 0;
-    q.dim.x = 32;
-    q.dim.y = 32;
-    q.tc = TILESET_COW_SKULL_TILE;
-    nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-    nBatch2DQuad q2 = q;
-    q2.pos.x = 32;
-    q2.pos.y = 0;
-    q2.color = v4(1,0.2,0.2,1);
-    nbatch2d_rend_add_quad(&gs.batch_rend, q2, &gs.white);
-    nBatch2DQuad q3 = q;
-    q3.pos.x = 64;
-    q3.pos.y = 0;
-    q3.color = v4(1,0.0,0.0,1);
-    q3.tc = TILESET_SKULL_TILE;
-    nbatch2d_rend_add_quad(&gs.batch_rend, q3, &gs.atlas);
-    nBatch2DQuad q4 = q;
-    q4.pos.x = 96;
-    q4.pos.y = 0;
-    q4.color = v4(0.0,0.0,1.0,1);
-    q4.tc = TILESET_SKULL_TILE;
-    nbatch2d_rend_add_quad(&gs.batch_rend, q4, &gs.atlas);
+    vec4 colors[15] = { v4(0.95f, 0.61f, 0.73f, 1.0f), v4(0.55f, 0.81f, 0.95f, 1.0f), v4(0.68f, 0.85f, 0.90f, 1.0f), v4(0.67f, 0.88f, 0.69f, 1.0f), v4(1.00f, 0.78f, 0.49f, 1.0f), v4(0.98f, 0.93f, 0.36f, 1.0f), v4(1.00f, 0.63f, 0.48f, 1.0f), v4(0.55f, 0.81f, 0.25f, 1.0f), v4(0.85f, 0.44f, 0.84f, 1.0f), v4(0.94f, 0.90f, 0.55f, 1.0f), v4(0.80f, 0.52f, 0.25f, 1.0f), v4(0.70f, 0.13f, 0.13f, 1.0f), v4(0.56f, 0.93f, 0.56f, 1.0f), v4(0.93f, 0.51f, 0.93f, 1.0f), v4(0.95f, 0.61f, 0.73f, 1.0f) };
+    rand_init();
+    for (u32 i = 0; i < 32; i+=1) {
+        for (u32 j = 0; j < 32; j+=1) {
+            nBatch2DQuad q = {0};
+            q.color = colors[gen_random(0,14)];
+            q.pos.x = 32 * i;
+            q.pos.y = 32 * j;
+            q.dim.x = 32;
+            q.dim.y = 32;
+            q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
+            q.angle_rad = 10*sin(get_current_timestamp()/1000.0);
+            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
+        }
+    }
 
-
+    // FIXME -- i think we crash if nothing is drawn?
     nbatch2d_rend_end(&gs.batch_rend);
 
     do_gui_test();

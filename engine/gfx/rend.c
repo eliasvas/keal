@@ -25,6 +25,14 @@ u32 nbatch2d_rend_count_quads(nBatch2DRenderer *rend) {
     return count;
 }
 
+void nbatch2d_calc_rotated_positions(vec2 pos, vec2 dim, f32 angle_rad, vec2 *dst) {
+    vec2 middle_point = vec2_add(pos, vec2_divf(dim, 2));
+    dst[0] = vec2_add(vec2_rot(vec2_add(vec2_sub(pos,middle_point), v2(0,0)), angle_rad),middle_point);
+    dst[1] = vec2_add(vec2_rot(vec2_add(vec2_sub(pos,middle_point), v2(0,dim.y)), angle_rad),middle_point);
+    dst[2] = vec2_add(vec2_rot(vec2_add(vec2_sub(pos,middle_point), v2(dim.x,0)), angle_rad),middle_point);
+    dst[3] = vec2_add(vec2_rot(vec2_add(vec2_sub(pos,middle_point), v2(dim.x,dim.y)), angle_rad),middle_point);
+}
+
 void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     // alloc the vertex array
     u32 quad_count = nbatch2d_rend_count_quads(rend);
@@ -33,14 +41,16 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
 
     // fill the vertex array
     u32 quad_index = 0;
-    for (nBatch2DQuadNode *node= rend->first; node != 0; node = node ->next) {
+    for (nBatch2DQuadNode *node= rend->first; node != 0; node = node->next) {
+        vec2 pos[4] = {0};
         nBatch2DQuad *quad = &node->quad;
-        vertices[quad_index * 6 + 0] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y),v2(quad->tc.x, quad->tc.y),quad->color};
-        vertices[quad_index * 6 + 1] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y + quad->dim.y),v2(quad->tc.x, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 2] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y + quad->dim.y),v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 3] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y + quad->dim.y),v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 4] = (nBatch2DVertex){v2(quad->pos.x + quad->dim.x, quad->pos.y),v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
-        vertices[quad_index * 6 + 5] = (nBatch2DVertex){v2(quad->pos.x, quad->pos.y),v2(quad->tc.x, quad->tc.y),quad->color};
+        nbatch2d_calc_rotated_positions(quad->pos, quad->dim, quad->angle_rad, pos);
+        vertices[quad_index * 6 + 0] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
+        vertices[quad_index * 6 + 1] = (nBatch2DVertex){pos[1],v2(quad->tc.x, quad->tc.y + quad->tc.w),quad->color};
+        vertices[quad_index * 6 + 2] = (nBatch2DVertex){pos[3],v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
+        vertices[quad_index * 6 + 3] = (nBatch2DVertex){pos[3],v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
+        vertices[quad_index * 6 + 4] = (nBatch2DVertex){pos[2],v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
+        vertices[quad_index * 6 + 5] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
         quad_index += 1;
     }
 

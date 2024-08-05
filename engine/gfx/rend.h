@@ -19,6 +19,7 @@ struct nBatch2DQuad {
     vec2 dim; // in pixels
     vec4 tc; // in pixels
     vec4 color;
+    f32 angle_rad;
 };
 
 
