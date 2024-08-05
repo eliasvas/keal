@@ -7,10 +7,10 @@ int main(int argc, char **argv) {
     game_state_init();
 
     while(1) {
-        ninput_manager_consume_events_from_window(&get_gs()->win);
+        ninput_manager_consume_events_from_window(&get_ngs()->win);
         gui_impl_update();
         
-        ogl_clear_all_state(&get_gs()->ogl_ctx);
+        ogl_clear_all_state(&get_ngs()->ogl_ctx);
         nglobal_state_frame_begin();
         ogl_image_clear(NULL);
 

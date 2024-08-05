@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19...3.29)
-option(ENABLE_SANITIZER "Enable AddressSanitizer" ON)
+set(ENABLE_ASAN FALSE)
 
 # set the output directory for built objects.
 # This makes sure that the dynamic library goes into the build directory automatically.
@@ -13,6 +13,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 
 project(TestGame VERSION 1.0.0 LANGUAGES C)
+
 
 # build engine dependencies
 add_subdirectory(ext/gui)
@@ -30,7 +31,7 @@ target_link_libraries(engine SDL2-static)
 target_link_libraries(engine guiLib)
 
 # use Address Sanitizer
-if(ENABLE_SANITIZER)
+if(ENABLE_ASAN)
     message(STATUS "AddressSanitizer enabled")
     target_compile_options(engine PUBLIC -fsanitize=address)
     target_link_options(engine PUBLIC -fsanitize=address)
@@ -40,12 +41,12 @@ else()
     target_compile_definitions(engine PUBLIC ENABLE_SANITIZER=0)
 endif()
 
-
 # to load function definitions for OpenGL ES 3.0
 if (WIN32)
     target_link_libraries(engine libglew_static)
 else()
     target_link_libraries(engine GLESv2)
+    #target_link_libraries(engine GL)
 endif()
 
 #build the game executable

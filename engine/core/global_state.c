@@ -5,7 +5,7 @@
 
 static nGlobalState global_state = {0};
 
-nGlobalState* get_gs() {
+nGlobalState* get_ngs() {
     return &global_state;
 }
 
@@ -37,7 +37,7 @@ void nglobal_state_init() {
     rand_init();
 
     nwindow_init(&global_state.win, "gudGame", 800, 600, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
-    //nwindow_deinit(&get_gs()->win);
+    //nwindow_deinit(&get_ngs()->win);
     nglobal_state_set_target_fps(60.0);
     ogl_ctx_init(&global_state.ogl_ctx);
     gui_impl_init();

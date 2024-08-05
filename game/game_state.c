@@ -101,7 +101,7 @@ void game_state_deinit() {
 }
 
 void game_state_update_and_render() {
-    nbatch2d_rend_begin(&gs.batch_rend, &get_gs()->win);
+    nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
     nBatch2DQuad q = {0};
     q.color = v4(1,1,1,1);
     q.pos.x = 0;

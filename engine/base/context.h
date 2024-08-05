@@ -5,15 +5,15 @@
     #define ENABLE_ASSERT 0
 #endif
 
-#if !defined(ENABLE_SANITIZER)
-    #define ENABLE_SANITIZER 0
+#if !defined(ENABLE_ASAN)
+    #define ENABLE_ASAN 0
 #endif
 
-#if (ENABLE_SANITIZER)
+#if (ENABLE_ASAN)
     #include <sanitizer/asan_interface.h>
 #endif
 
-#if ENABLE_SANITIZER
+#if ENABLE_ASAN
 #define AsanPoison(p,z)   __asan_poison_memory_region((p),(z))
 #define AsanUnpoison(p,z) __asan_unpoison_memory_region((p),(z))
 #else

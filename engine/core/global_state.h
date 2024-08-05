@@ -23,7 +23,7 @@ struct nGlobalState {
     nWindow win;
 };
 
-nGlobalState* get_gs();
+nGlobalState* get_ngs();
 Arena* get_global_arena();
 Arena* get_frame_arena();
 u64 get_global_frame_count();

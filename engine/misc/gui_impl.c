@@ -143,9 +143,10 @@ void gui_impl_init() {
 }
 
 void gui_impl_update() {
-    gui_get_ui_state()->win_dim.x = 800;
-    gui_get_ui_state()->win_dim.y = 600;
-    //gui_state_update(get_gs()->dt);
+    gui_get_ui_state()->win_dim.x = get_ngs()->win.ww;
+    gui_get_ui_state()->win_dim.y = get_ngs()->win.wh;
+
+    //gui_state_update(get_ngs()->dt);
     gui_state_update(1.0/60.0);
 
 	for (u32 mk = 0; mk < 3; mk+=1) {
@@ -182,9 +183,8 @@ void gui_impl_render() {
     ogl_bind_vertex_buffer(&vbo);
     ogl_bind_sp(&sp);
 
-    vec2 windim = v2(800,600);
+    vec2 windim = v2(gui_get_ui_state()->win_dim.x, gui_get_ui_state()->win_dim.y);
     ogl_sp_set_uniform(&sp, "winDim", OGL_SHADER_DATA_TYPE_VEC2, &windim);
     ogl_bind_image_to_texture_slot(&atlas, 0, 0);
     ogl_draw_instanced(OGL_PRIM_TRIANGLE_STRIP, 0, 4, instance_count);
-
 }
