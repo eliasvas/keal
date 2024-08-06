@@ -62,7 +62,7 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
 
 
 void game_state_init_images() {
-    gs.atlas = game_load_rgba_image_from_disk("/home/ily/Desktop/engine/build/Debug/assets/tileset4922.png");
+    gs.atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
     u32 white = 0xFFFF;
     ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
 }
@@ -104,8 +104,8 @@ void game_state_update_and_render() {
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
     vec4 colors[15] = { v4(0.95f, 0.61f, 0.73f, 1.0f), v4(0.55f, 0.81f, 0.95f, 1.0f), v4(0.68f, 0.85f, 0.90f, 1.0f), v4(0.67f, 0.88f, 0.69f, 1.0f), v4(1.00f, 0.78f, 0.49f, 1.0f), v4(0.98f, 0.93f, 0.36f, 1.0f), v4(1.00f, 0.63f, 0.48f, 1.0f), v4(0.55f, 0.81f, 0.25f, 1.0f), v4(0.85f, 0.44f, 0.84f, 1.0f), v4(0.94f, 0.90f, 0.55f, 1.0f), v4(0.80f, 0.52f, 0.25f, 1.0f), v4(0.70f, 0.13f, 0.13f, 1.0f), v4(0.56f, 0.93f, 0.56f, 1.0f), v4(0.93f, 0.51f, 0.93f, 1.0f), v4(0.95f, 0.61f, 0.73f, 1.0f) };
     rand_init();
-    for (u32 i = 0; i < 32; i+=1) {
-        for (u32 j = 0; j < 32; j+=1) {
+    for (u32 i = 0; i < (get_ngs()->win.ww /32); i+=1) {
+        for (u32 j = 0; j < (get_ngs()->win.wh / 32); j+=1) {
             nBatch2DQuad q = {0};
             q.color = colors[gen_random(0,14)];
             q.pos.x = 32 * i;
@@ -114,6 +114,11 @@ void game_state_update_and_render() {
             q.dim.y = 32;
             q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
             q.angle_rad = 10*sin(get_current_timestamp()/1000.0);
+
+            vec2 mp = ninput_get_mouse_pos();
+            if (fabsf(mp.x - q.pos.x - q.dim.x/2) < 10)q.color = v4(1,1,1,1);
+            if (fabsf(mp.y - q.pos.y - q.dim.y/2) < 10)q.color = v4(1,1,1,1);
+
             nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
         }
     }

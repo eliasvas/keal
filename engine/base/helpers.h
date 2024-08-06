@@ -1,18 +1,23 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include "context.h"
+
 #if (OS_WINDOWS)
 	#include <windows.h>
 #elif (OS_LINUX)
 	#include <sys/mman.h>
-#elif __EMSCRIPTEN__
+#endif
+
+#if (ARCH_WASM64)
 	#include <emscripten.h>
+	#include <emscripten/html5.h>
 	#include <sys/mman.h>
 #endif
 
 #if (COMPILER_GCC)
 	#define thread_loc __thread
-#elif (COMPILER_CL)
+#elif (COMPILER_CL) || (COMPILER_CLANG)
 	#define thread_loc __declspec(thread)
 #else
 	#error Cannot define thread_loc

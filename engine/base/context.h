@@ -21,12 +21,11 @@
     #define AsanUnpoison(p,z)
 #endif
 
-
 #if defined(__clang__)
     #define COMPILER_CLANG 1
     #if defined(_WIN32)
         #define OS_WINDOWS 1
-    #elif defined(__gnu_linux__)
+    #elif defined(__gnu_linux__) || defined(__EMSCRIPTEN__)
         #define OS_LINUX 1
     #elif defined(__APPLE__) && defined(__MACH__)
         #define OS_MAC 1
@@ -35,6 +34,11 @@
     #endif
     #if defined(__amd64__)
         #define ARCH_X64 1
+    #elif defined(__wasm64__)
+        #define ARCH_WASM64 1
+    #elif defined(__wasm32__)
+        #define ARCH_WASM32 1
+        //#error "WASM32 not supported! Please do 64-bits"
     #elif defined(__i386__)
         #define ARCH_X86 1
     #elif defined(__arm__)
@@ -117,6 +121,12 @@
 #if !defined(ARCH_ARM64)
     #define ARCH_ARM64 0
 #endif
+#if !defined(ARCH_WASM64)
+    #define ARCH_WASM64 0
+#endif
+#if !defined(ARCH_WASM32)
+    #define ARCH_WASM32 0
+#endif
 
 
 #if defined(__cplusplus)
@@ -125,7 +135,7 @@
     #define LANG_C 1
 #endif
 
-#if ARCH_X64 || ARCH_ARM64
+#if ARCH_X64 || ARCH_ARM64 || ARCH_WASM64
     #define ARCH_ADDRSIZE 64
 #else
     #define ARCH_ADDRSIZE 32

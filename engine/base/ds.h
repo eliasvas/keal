@@ -30,6 +30,7 @@ typedef struct TestNode TestNode;
 struct TestNode {TestNode*next;TestNode*prev;int data;};
 static u64 get_ll_sum(TestNode *node) { u64 sum = 0;for (;node!=NULL;node=node->next){sum+=node->data;} return sum; }
 
+#if ENABLE_TESTS
 static void sll_stack_test() {
     ArenaTemp temp = arena_get_scratch(0);
 	u32 sum = 0;
@@ -106,7 +107,7 @@ static void dll_test() {
 	printf("DLL test finished succesfully\n");
     arena_end_temp(&temp);
 }
-
+#endif
 
 
 

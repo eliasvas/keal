@@ -17,11 +17,7 @@
 #elif (OS_LINUX)
     #include <SDL_syswm.h>
     #include <GLES3/gl3.h>
-    #include <GLES/egl.h>
-#elif (__EMSCRIPTEN)
-    #include <emscripten.h>
-	#include <emscripten/html5.h>
-	#include <GLES3/gl3.h>
+    //#include <GLES/egl.h>
 #endif
 
 
@@ -31,11 +27,7 @@ b32 nwindow_impl_create(nWindow *win) {
         return 0;
     }
 
-    #ifdef __EMSCRIPTEN__
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    #elif (OS_WINDOWS)
+    #if (OS_WINDOWS)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

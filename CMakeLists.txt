@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.19...3.29)
 set(ENABLE_ASAN FALSE)
+set(BUILD_SDL TRUE)
+# we NEED -sMEMORY64 in the long run, if only for the allocators
 
 # set the output directory for built objects.
 # This makes sure that the dynamic library goes into the build directory automatically.
@@ -17,18 +19,29 @@ project(TestGame VERSION 1.0.0 LANGUAGES C)
 
 # build engine dependencies
 add_subdirectory(ext/gui)
-add_subdirectory(ext/SDL)
 if (WIN32)
     add_subdirectory(ext/glew-cmake)
 endif()
 
 # build the engine
 add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
-include_directories(engine ${SDL2_INCLUDE_DIRS})
 include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
-target_link_libraries(engine SDL2-static)
 target_link_libraries(engine guiLib)
+
+
+if (DEFINED EMSCRIPTEN)
+	set_target_properties(engine PROPERTIES COMPILE_FLAGS " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
+	set_target_properties(engine PROPERTIES LINK_FLAGS    " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
+	set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
+endif()
+
+# SDL2 stuff
+if (BUILD_SDL)
+    add_subdirectory(ext/SDL)
+    include_directories(engine ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(engine SDL2-static)
+endif()
 
 # use Address Sanitizer
 if(ENABLE_ASAN)
@@ -46,13 +59,22 @@ if (WIN32)
     target_link_libraries(engine libglew_static)
 else()
     target_link_libraries(engine GLESv2)
-    #target_link_libraries(engine GL)
 endif()
 
 #build the game executable
 add_executable(game game/main.c game/game_state.c)
 target_include_directories(game PUBLIC engine)
-target_link_libraries(game PUBLIC engine SDL2::SDL2main)
+target_link_libraries(game PUBLIC engine)
+if (BUILD_SDL)
+    target_link_libraries(game PUBLIC engine SDL2::SDL2main)
+endif()
+if (DEFINED EMSCRIPTEN)
+	set_target_properties(game PROPERTIES COMPILE_FLAGS "-sASSERTIONS=1  -sMAIN_MODULE=1 -sUSE_SDL=2 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
+	set_target_properties(game PROPERTIES LINK_FLAGS    "-sASSERTIONS=1 -sWASM=1 -sMAIN_MODULE=1 -sFULL_ES3=1 -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
+	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
+
+
 
 # move assets to BUILD_DIR/assets
 set(ASSET_DIR "${CMAKE_SOURCE_DIR}/assets")
@@ -61,4 +83,5 @@ add_custom_target(copy_assets ALL
     ${ASSET_DIR} $<TARGET_FILE_DIR:game>/assets
 )
 add_dependencies(game copy_assets)
+
 target_compile_definitions(game PRIVATE ASSET_DIR="assets")

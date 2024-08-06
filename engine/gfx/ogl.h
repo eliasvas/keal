@@ -15,17 +15,14 @@ our renderer will probably have Command Buffers / Buckets as outlined in https:/
 #define SDL_MAIN_NOIMPL
 #include <SDL.h>
 #include <SDL_main.h>
+
 #if OS_WINDOWS
     #include <GL/glew.h>
     #include <GL/wglew.h>
 #elif OS_LINUX
     #include <SDL_syswm.h>
     #include <GLES3/gl3.h>
-    #include <GLES/egl.h>
-#elif defined(__EMSCRIPTEN__)
-    #include <emscripten.h>
-	#include <emscripten/html5.h>
-	#include <GLES3/gl3.h>
+    //#include <GLES/egl.h>
 #endif
 
 #define OGL_CTX_MAX_ATTRIBS 16

@@ -25,8 +25,8 @@ struct ArenaTemp {
 
 #define M_ARENA_INITIAL_COMMIT_SIZE KB(4)
 #define M_ARENA_MAX_ALIGN 64
-#define M_ARENA_DEFAULT_RESERVE_SIZE GB(1)
-#define M_ARENA_COMMIT_BLOCK_SIZE MB(64)
+#define M_ARENA_DEFAULT_RESERVE_SIZE MB(256)
+#define M_ARENA_COMMIT_BLOCK_SIZE MB(1)
 #define M_ARENA_INTERNAL_MIN_SIZE align_pow2(sizeof(Arena), M_ARENA_MAX_ALIGN)
 
 static Arena* arena_alloc_reserve(u64 reserve_size) {
@@ -200,7 +200,11 @@ static void arena_end_temp(ArenaTemp *t) {
 #define push_array_nz(arena, type, count) (type *)arena_push_nz((arena), sizeof(type)*(count))
 #define push_array(arena, type, count) (type *)arena_push((arena), sizeof(type)*(count))
 
-static thread_loc Arena *m__scratch_pool[2] = {0};
+#if ENABLE_TESTS
+// FIXME -- this should be thread_loc, right now its NOT thread safe,
+// but for some reasong emscripten doesnt recognise __declspec
+//static thread_loc Arena *m__scratch_pool[2] = {0};
+static Arena *m__scratch_pool[2] = {0};
 
 static ArenaTemp arena_get_scratch(Arena *conflict) {
 
@@ -269,5 +273,6 @@ static void arena_scratch_test() {
     arena_end_temp(&temp);
     printf("arena scratch test finished succesfully\n");
 }
+#endif
 
 #endif
