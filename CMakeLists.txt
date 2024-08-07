@@ -62,7 +62,7 @@ else()
 endif()
 
 #build the game executable
-add_executable(game game/main.c game/game_state.c)
+add_executable(game game/main.c game/game_state.c game/actor.c)
 target_include_directories(game PUBLIC engine)
 target_link_libraries(game PUBLIC engine)
 if (BUILD_SDL)

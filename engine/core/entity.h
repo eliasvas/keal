@@ -157,7 +157,8 @@ void ntransform_cm_deinit(nTransformCM *cm, nEntityManager *em);
 void ntransform_cm_simulate(nTransformCM *cm);
 nCompIndex ntransform_cm_lookup(nTransformCM *cm, nEntity e);
 nTransformComponent *ntransform_cm_add(nTransformCM *cm, nEntity e, nEntity p);
-void ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local);
+nTransformComponent *ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local);
+nTransformComponent *ntransform_cm_get(nTransformCM *cm, nCompIndex idx);
 void ntransform_cm_del(nTransformCM *cm, nEntity e);
 
 

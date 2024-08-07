@@ -67,32 +67,27 @@ void game_state_init_images() {
     ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
 }
 
+nEntity player;
 void game_state_init() {
     game_state_init_images();
     nentity_manager_init(&gs.em);
     ntransform_cm_init(&gs.tcm, &gs.em);
+    nactor_cm_init(&gs.acm, &gs.em);
 
-    // ECS test
-    {
-        nEntity parent = nentity_create(&gs.em);
-        nEntity child = nentity_create(&gs.em);
-        ntransform_cm_add(&gs.tcm, parent, 0);
-        ntransform_cm_set_local(&gs.tcm, ntransform_cm_lookup(&gs.tcm, parent), m4d(6.0));
-        nTransformComponent *c = ntransform_cm_add(&gs.tcm, child, parent);
-        ntransform_cm_set_local(&gs.tcm, ntransform_cm_lookup(&gs.tcm, child), m4d(2.0));
-        ntransform_cm_simulate(&gs.tcm);
-
-        ntransform_cm_del(&gs.tcm, parent);
-        assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, parent)));
-        assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, child)));
-    }
     // Init some GUI stuff
     sprintf(wdata.name, "Debug");
     wdata.dim = gv2(400,300);
     wdata.pos = gv2(100,100);
     wdata.active = 0;
 
-
+    player = nentity_create(&gs.em);
+    vec2 winDim = v2(get_ngs()->win.ww, get_ngs()->win.wh);
+    nActorComponent *ac = nactor_cm_add(&(gs.acm), player);
+    ac->color = v4(1,1,1,1);
+    ac->kind = NACTOR_KIND_PLAYER;
+    ac->posx = winDim.x/2;
+    ac->posy = winDim.y/2;
+    ac->tc = TILESET_PLAYER_TILE; 
 }
 
 void game_state_deinit() {
@@ -101,27 +96,47 @@ void game_state_deinit() {
 }
 
 void game_state_update_and_render() {
+    nactor_cm_simulate(&(gs.acm));
+
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
-    vec4 colors[15] = { v4(0.95f, 0.61f, 0.73f, 1.0f), v4(0.55f, 0.81f, 0.95f, 1.0f), v4(0.68f, 0.85f, 0.90f, 1.0f), v4(0.67f, 0.88f, 0.69f, 1.0f), v4(1.00f, 0.78f, 0.49f, 1.0f), v4(0.98f, 0.93f, 0.36f, 1.0f), v4(1.00f, 0.63f, 0.48f, 1.0f), v4(0.55f, 0.81f, 0.25f, 1.0f), v4(0.85f, 0.44f, 0.84f, 1.0f), v4(0.94f, 0.90f, 0.55f, 1.0f), v4(0.80f, 0.52f, 0.25f, 1.0f), v4(0.70f, 0.13f, 0.13f, 1.0f), v4(0.56f, 0.93f, 0.56f, 1.0f), v4(0.93f, 0.51f, 0.93f, 1.0f), v4(0.95f, 0.61f, 0.73f, 1.0f) };
-    rand_init();
-    for (u32 i = 0; i < (get_ngs()->win.ww /32); i+=1) {
-        for (u32 j = 0; j < (get_ngs()->win.wh / 32); j+=1) {
-            nBatch2DQuad q = {0};
-            q.color = colors[gen_random(0,14)];
-            q.pos.x = 32 * i;
-            q.pos.y = 32 * j;
-            q.dim.x = 32;
-            q.dim.y = 32;
-            q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
-            q.angle_rad = 10*sin(get_current_timestamp()/1000.0);
+ 
+    // rand_init();
+    // nTransformComponent *c = ntransform_cm_get(&gs.tcm, ntransform_cm_lookup(&gs.tcm, player));
+    // vec3 component_pos = mat4_extract_pos(c->world);
+    // vec4 colors[15] = { v4(0.95f, 0.61f, 0.73f, 1.0f), v4(0.55f, 0.81f, 0.95f, 1.0f), v4(0.68f, 0.85f, 0.90f, 1.0f), v4(0.67f, 0.88f, 0.69f, 1.0f), v4(1.00f, 0.78f, 0.49f, 1.0f), v4(0.98f, 0.93f, 0.36f, 1.0f), v4(1.00f, 0.63f, 0.48f, 1.0f), v4(0.55f, 0.81f, 0.25f, 1.0f), v4(0.85f, 0.44f, 0.84f, 1.0f), v4(0.94f, 0.90f, 0.55f, 1.0f), v4(0.80f, 0.52f, 0.25f, 1.0f), v4(0.70f, 0.13f, 0.13f, 1.0f), v4(0.56f, 0.93f, 0.56f, 1.0f), v4(0.93f, 0.51f, 0.93f, 1.0f), v4(0.95f, 0.61f, 0.73f, 1.0f) };
+    // nBatch2DQuad q = {
+    //     .color = colors[gen_random(0,14)],
+    //     .pos.x = component_pos.x - 16,
+    //     .pos.y = component_pos.y - 16,
+    //     .dim.x = 32,
+    //     .dim.y = 32,
+    //     .tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y),
+    //     .angle_rad = gen_random(5,10)*sin(get_current_timestamp()/1000.0),
+    // };
+    // nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
 
-            vec2 mp = ninput_get_mouse_pos();
-            if (fabsf(mp.x - q.pos.x - q.dim.x/2) < 10)q.color = v4(1,1,1,1);
-            if (fabsf(mp.y - q.pos.y - q.dim.y/2) < 10)q.color = v4(1,1,1,1);
 
-            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-        }
-    }
+    nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
+
+
+    // for (u32 i = 0; i < (get_ngs()->win.ww /32); i+=1) {
+    //     for (u32 j = 0; j < (get_ngs()->win.wh / 32); j+=1) {
+    //         nBatch2DQuad q = {0};
+    //         q.color = colors[gen_random(0,14)];
+    //         q.pos.x = 32 * i;
+    //         q.pos.y = 32 * j;
+    //         q.dim.x = 32;
+    //         q.dim.y = 32;
+    //         q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
+    //         q.angle_rad = gen_random(5,10)*sin(get_current_timestamp()/1000.0);
+
+    //         vec2 mp = ninput_get_mouse_pos();
+    //         if (fabsf(mp.x - q.pos.x - q.dim.x/2) < 10)q.color = v4(1,1,1,1);
+    //         if (fabsf(mp.y - q.pos.y - q.dim.y/2) < 10)q.color = v4(1,1,1,1);
+
+    //         nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
+    //     }
+    // }
 
     // FIXME -- i think we crash if nothing is drawn?
     nbatch2d_rend_end(&gs.batch_rend);

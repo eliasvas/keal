@@ -103,6 +103,10 @@ INLINE mat4 mat4_ortho(f32 l, f32 r, f32 b, f32 t, f32 n, f32 f)
     return res;
 }
 
+INLINE vec3 mat4_extract_pos(mat4 m) {
+    return v3(m.col[3][0],m.col[3][1],m.col[3][2]);
+}
+
 INLINE mat4 mat4_translate(vec3 t) {
     mat4 res = m4d(1.0f);
     res.col[3][0] = t.x;

@@ -290,13 +290,18 @@ void ntransform_cm_transform(nTransformCM *cm, mat4 pm, nCompIndex idx) {
     }
 }
 
-void ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local) {
+nTransformComponent *ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, mat4 local) {
     assert(NCOMPONENT_INDEX_VALID(idx));
     cm->transform[idx].local = local;
     nCompIndex parent_idx = cm->parent[idx];
     mat4 parent_wm = NCOMPONENT_INDEX_VALID(parent_idx) ? cm->transform[parent_idx].world : m4d(1.0); 
 
     ntransform_cm_transform(cm, parent_wm, idx);
+    return &(cm->transform[idx]);
+}
+
+nTransformComponent *ntransform_cm_get(nTransformCM *cm, nCompIndex idx) {
+    return &(cm->transform[idx]);
 }
 
 // Here we should swap the nCompIndex's while ALSO keeping the links intact
@@ -357,10 +362,27 @@ void ntransform_cm_del(nTransformCM *cm, nEntity e) {
     if (cm->size) {
         ntransform_swap_indices(cm, idx, cm->size-1); 
         cm->size-=1;
+        // remove lookup table entry
+        nEntityComponentIndexPairNode * e_node = ntransform_cm_lookup_node(cm, e);
+        u32 slot = e%cm->lookup_table_size;
+        dll_remove(cm->lookup_table[slot].hash_first, cm->lookup_table[slot].hash_last, e_node);
     }
-
-    // remove lookup table entry
-    nEntityComponentIndexPairNode * e_node = ntransform_cm_lookup_node(cm, e);
-    u32 slot = e%cm->lookup_table_size;
-    dll_remove(cm->lookup_table[slot].hash_first, cm->lookup_table[slot].hash_last, e_node);
 }
+
+    // nentity_manager_init(&gs.em);
+    // ntransform_cm_init(&gs.tcm, &gs.em);
+    // // ECS test
+    // {
+    //     nEntity parent = nentity_create(&gs.em);
+    //     nEntity child = nentity_create(&gs.em);
+    //     ntransform_cm_add(&gs.tcm, parent, 0);
+    //     ntransform_cm_set_local(&gs.tcm, ntransform_cm_lookup(&gs.tcm, parent), m4d(6.0));
+    //     nTransformComponent *c = ntransform_cm_add(&gs.tcm, child, parent);
+    //     ntransform_cm_set_local(&gs.tcm, ntransform_cm_lookup(&gs.tcm, child), m4d(2.0));
+    //     ntransform_cm_simulate(&gs.tcm);
+
+    //     ntransform_cm_del(&gs.tcm, parent);
+    //     assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, parent)));
+    //     assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, child)));
+    // }
+    

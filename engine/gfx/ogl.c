@@ -315,6 +315,12 @@ GLuint ogl_prim_to_gl_prim(oglPrimitive prim) {
         case OGL_PRIM_TRIANGLE_FAN:
             gl_prim = GL_TRIANGLE_FAN;
             break;
+        case OGL_PRIM_LINES:
+            gl_prim = GL_LINES;
+            break;
+        case OGL_PRIM_LINE_STRIP:
+            gl_prim = GL_LINE_STRIP;
+            break;
         default:
             gl_prim = GL_TRIANGLES;
             break;

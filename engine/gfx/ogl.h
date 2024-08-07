@@ -101,6 +101,8 @@ enum oglPrimitive {
     OGL_PRIM_TRIANGLES,
     OGL_PRIM_TRIANGLE_STRIP,
     OGL_PRIM_TRIANGLE_FAN,
+    OGL_PRIM_LINES,
+    OGL_PRIM_LINE_STRIP,
 };
 void ogl_draw(oglPrimitive prim, u32 first, u32 count);
 void ogl_draw_instanced(oglPrimitive prim, u32 first, s32 count, u32 instance_count);
