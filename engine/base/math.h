@@ -146,5 +146,6 @@ typedef union ivec2
     struct { s32 r,g; };
     s32 raw[2];
 }ivec2;
+#define iv2(x,y) (ivec2){x,y}
 
 #endif

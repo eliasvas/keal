@@ -1,6 +1,7 @@
 #ifndef ACTOR_H
 #define ACTOR_H
 #include "engine.h"
+#include "map.h"
 
 
 typedef enum nActorKind nActorKind;
@@ -46,7 +47,7 @@ nCompIndex nactor_cm_lookup(nActorCM *cm, nEntity e);
 nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e);
 void nactor_cm_del(nActorCM *cm, nEntity e);
 void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas);
-void nactor_cm_simulate(nActorCM *cm);
+void nactor_cm_simulate(nActorCM *cm, nMap *map);
 
 
 #endif

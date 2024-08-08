@@ -103,26 +103,31 @@ void nactor_cm_del(nActorCM *cm, nEntity e) {
 ////////////////////////////////
 
 
-void nactor_cm_simulate(nActorCM *cm) {
+void nactor_cm_simulate(nActorCM *cm, nMap *map) {
     for (u32 i = 0; i < cm->size; i+=1) {
+        ivec2 new_pos = iv2(cm->actors[i].posx, cm->actors[i].posy);
         switch (cm->actors[i].kind) {
             case NACTOR_KIND_PLAYER:
                 if (ninput_key_pressed(NKEY_SCANCODE_RIGHT)) {
-                    cm->actors[i].posx+=32;
+                    new_pos.x+=1;
                 }
                 if (ninput_key_pressed(NKEY_SCANCODE_LEFT)) {
-                    cm->actors[i].posx-=32;
+                    new_pos.x-=1;
                 }
                 if (ninput_key_pressed(NKEY_SCANCODE_UP)) {
-                    cm->actors[i].posy-=32;
+                    new_pos.y-=1;
                 }
                 if (ninput_key_pressed(NKEY_SCANCODE_DOWN)) {
-                    cm->actors[i].posy+=32;
+                    new_pos.y+=1;
                 }
                 break;
             default:
                 printf("Who is dis guy?!\n");
                 break;
+        }
+        if (nmap_tile_at(map, new_pos.x, new_pos.y).can_walk) {
+            cm->actors[i].posx = new_pos.x;
+            cm->actors[i].posy = new_pos.y;
         }
 
     }
@@ -134,8 +139,8 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
         nActorComponent *actor = &(cm->actors[i]);
         nBatch2DQuad q = {
             .color = actor->color,
-            .pos.x = actor->posx,
-            .pos.y = actor->posy,
+            .pos.x = actor->posx*32,
+            .pos.y = actor->posy*32,
             .dim.x = 32,
             .dim.y = 32,
             .tc    = actor->tc,

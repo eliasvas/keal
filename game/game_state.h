@@ -2,6 +2,7 @@
 #define GAME_STATE_H
 #include "engine.h"
 #include "actor.h"
+#include "map.h"
 
 typedef struct GameState GameState;
 struct GameState {
@@ -12,6 +13,7 @@ struct GameState {
     nEntityManager em;
     nTransformCM tcm;
     nActorCM acm;
+    nMap map;
 };
 
 void game_state_init();
