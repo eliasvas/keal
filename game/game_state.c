@@ -7,6 +7,7 @@ static GameState gs = {0};
 
 guiSimpleWindowData wdata= {0};
 guiSliderData spin_data;
+guiSliderData slider_data;
 
 void do_gui_test() {
     if (ninput_mkey_pressed(NKEY_MMB)){
@@ -16,30 +17,37 @@ void do_gui_test() {
     guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
     if (wdata.active){
         gui_swindow_begin(&wdata);
+        
+        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
+        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
+        gui_set_next_child_layout_axis(AXIS2_X);
+        guiSignal sp = gui_panel("spinner_panel");
+        gui_push_parent(sp.box);
+        {
+            gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+            gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+            guiSignal s = gui_label("min_room_size (px)");
+            gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+            gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+            gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+            gui_spinner("spinner123", AXIS2_X, gv2(8,16), &spin_data);
+        }
+        gui_pop_parent();
+
         gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-        gui_spinner("spinner123", AXIS2_X, gv2(0,10), &spin_data);
-
-
-        for (u32 i = 0; i < 4; ++i) {
-            char panel_name[128];
-            sprintf(panel_name,"panel_abc%d", i);
-            gui_set_next_child_layout_axis(AXIS2_X);
-            gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-            gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,1.0});
-            guiSignal s = gui_panel(panel_name);
-            gui_push_parent(s.box);
-            for (u32 j = i; j < 5; ++j) {
-                char button_name[128];
-                sprintf(button_name, "b%d%d", i, j);
-                gui_set_next_bg_color(colors[i*(j-1)]);
-                gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,0.0});
-                gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-                gui_button(button_name);
-            }
-            gui_pop_parent();
+        gui_slider("min_room_factor", AXIS2_X, gv2(4,10), &slider_data);
+       
+        gui_set_next_bg_color(gv4(1,0.4,0.4,1.0));
+        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+        guiSignal genb = gui_button("generate map");
+        if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
+            nmap_create_ex(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE, spin_data.value, slider_data.value / 10.0);
         }
+
+
         gui_swindow_end(&wdata);
     }
     gui_build_end();

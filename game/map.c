@@ -54,7 +54,8 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
         s32 room_size = map->min_room_factor * p->w;
         if (room_size >= map->min_room_size) {
             parent_can_be_split = 1;
-            w1 = gen_random(room_size, p->w);
+            //w1 = gen_random(room_size, p->w);
+            w1 = room_size;
             w2 = p->w - w1;
         }
 
@@ -62,7 +63,8 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
         s32 room_size = map->min_room_factor * p->h;
         if (room_size >= map->min_room_size) {
             parent_can_be_split = 1;
-            h1 = gen_random(room_size, p->h);
+            //h1 = gen_random(room_size, p->h);
+            h1 = room_size;
             h2 = p->h - h1;
         }
     }
@@ -84,8 +86,8 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
  
         nDungeonSubdivision *c2 = push_array(get_frame_arena(), nDungeonSubdivision, 1);
         c2->first = c2->last = c2->next = c2->prev = c2->parent = &g_nil_ds;
-        c2->x = p->x + ((w1!=w2) ? w1+1 : 0);
-        c2->y = p->y + ((h1!=h2) ? h1+1 : 0);
+        c2->x = p->x + ((w1!=w2) ? w1 : 0);
+        c2->y = p->y + ((h1!=h2) ? h1 : 0);
         c2->w = w2;
         c2->h = h2;
         dll_push_back_NPZ(&g_nil_ds, p->first, p->last, c2, next, prev);
@@ -100,7 +102,9 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
 }
 
 void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1) {
-    nTile dest = gen_random(0,2) ? NTILE_GROUND : NTILE_WATER;
+    assert(x0 >= 0 && y0 >= 0 && x1 <= map->width && y1 <- map->height);
+    nTile dest = NTILE_GROUND;
+    dest.color = v4(gen_rand01(), gen_rand01(), gen_rand01(), 1);
     if (x1 < x0){
         s32 temp = x1;
         x1 = x0;
@@ -111,8 +115,8 @@ void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1) {
         y1 = y0;
         y0 = temp;
     }
-    for (s32 x = x0; x <= x1; x+=1) {
-        for (s32 y = y0; y <= y1; y+=1) {
+    for (s32 x = x0; x < x1; x+=1) {
+        for (s32 y = y0; y < y1; y+=1) {
             map->tiles[x + y*map->width] = dest;
         }
     }
@@ -120,15 +124,20 @@ void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1) {
 
 void nmap_generate(nMap *map);
 
-void nmap_create(nMap *map, u32 w, u32 h) {
+void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_factor) {
     M_ZERO_STRUCT(map);
     map->width = w;
     map->height = h;
-    map->min_room_size = 8;
-    map->min_room_factor = 0.4;
+    map->min_room_size = min_room_size;
+    map->min_room_factor = min_room_factor;
     map->tiles = push_array_nz(get_ngs()->global_arena, nTile, w*h);
     nmap_generate(map);
 }
+
+void nmap_create(nMap *map, u32 w, u32 h) {
+    nmap_create_ex(map, w, h, 8, 0.4);
+}
+
 
 void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas) {
     for (u32 x = 0; x < map->width; x+=1) {
