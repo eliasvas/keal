@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "actor.h"
+#include "tileset4922.inl"
 
 #define NACTOR_CM_MAX_COMPONENTS 1024
 
@@ -125,7 +126,7 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map) {
                 printf("Who is dis guy?!\n");
                 break;
         }
-        if (nmap_tile_at(map, new_pos.x, new_pos.y).can_walk) {
+        if (nmap_tile_at(map, new_pos.x, new_pos.y).kind != NTILE_KIND_WALL) {
             cm->actors[i].posx = new_pos.x;
             cm->actors[i].posy = new_pos.y;
         }
@@ -139,10 +140,10 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
         nActorComponent *actor = &(cm->actors[i]);
         nBatch2DQuad q = {
             .color = actor->color,
-            .pos.x = actor->posx*32,
-            .pos.y = actor->posy*32,
-            .dim.x = 32,
-            .dim.y = 32,
+            .pos.x = actor->posx*TILESET_DEFAULT_SIZE,
+            .pos.y = actor->posy*TILESET_DEFAULT_SIZE,
+            .dim.x = TILESET_DEFAULT_SIZE,
+            .dim.y = TILESET_DEFAULT_SIZE,
             .tc    = actor->tc,
             .angle_rad = 0,
         };

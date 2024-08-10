@@ -2,6 +2,11 @@
 #include "engine.h"
 #include "game_state.h"
 
+// 3D Blan (Might take a while to start this): First of all we need Models and Armatures to work,
+// I say we use gltf2 for BOTH and make a simple ECS-baed scene system
+// The default scene will be just cubes/spheres with generated PBR materials
+// Then we can also load other scenes (e.g gltf2 samples / sponza) but NOT track them via git
+
 void mainLoop(void) {
     ninput_manager_consume_events_from_window(&get_ngs()->win);
     gui_impl_update();

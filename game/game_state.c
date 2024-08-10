@@ -73,7 +73,7 @@ void game_state_init() {
     nentity_manager_init(&gs.em);
     ntransform_cm_init(&gs.tcm, &gs.em);
     nactor_cm_init(&gs.acm, &gs.em);
-    nmap_create(&gs.map, 32, 32);
+    nmap_create(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE);
 
     // Init some GUI stuff
     sprintf(wdata.name, "Debug");
