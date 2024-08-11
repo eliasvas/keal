@@ -126,7 +126,7 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map) {
                 printf("Who is dis guy?!\n");
                 break;
         }
-        if (nmap_tile_at(map, new_pos.x, new_pos.y).kind != NTILE_KIND_WALL) {
+        if (nmap_tile_at(map, cm->actors[i].posx, cm->actors[i].posy).kind == NTILE_KIND_WALL || nmap_tile_at(map, new_pos.x, new_pos.y).kind != NTILE_KIND_WALL) {
             cm->actors[i].posx = new_pos.x;
             cm->actors[i].posy = new_pos.y;
         }

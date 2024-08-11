@@ -16,9 +16,9 @@ struct nTile {
     nTileKind kind;
     vec4 color;
 };
-#define NTILE_GROUND (nTile){.kind = NTILE_KIND_GROUND, .color = v4(1,0,0,1)}
+#define NTILE_GROUND (nTile){.kind = NTILE_KIND_GROUND, .color = v4(1,1,1,1)}
 #define NTILE_WATER (nTile){.kind = NTILE_KIND_WATER, .color = v4(0,0,1,1)}
-#define NTILE_WALL (nTile){.kind = NTILE_KIND_WALL, .color = v4(1,1,1,1)}
+#define NTILE_WALL (nTile){.kind = NTILE_KIND_WALL, .color = v4(1,0,0,1)}
 
 #define ROOM_MAX_SIZE 12
 #define ROOM_MIN_SIZE 6
@@ -31,6 +31,8 @@ struct nMap {
     u32 min_room_size;
     f32 min_room_factor;
     f32 max_room_factor;
+
+    ivec2 last_center;
 };
 
 void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_factor, f32 max_room_factor);

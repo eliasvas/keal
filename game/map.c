@@ -1,9 +1,13 @@
 #include "map.h"
 
 
-
 void nmap_clear(nMap *map) {
-    M_ZERO(map->tiles, map->height*map->width);
+    //M_ZERO(map->tiles, map->height*map->width);
+    // TODO -- make this M_SET(..)
+    for (u32 i = 0; i < map->width * map->height; i+=1) {
+        map->tiles[i] = NTILE_WALL;
+    }
+    map->last_center = iv2(0,0);
 }
 
 typedef enum nDungeonSubdivisionSplitDirection nDungeonSubdivisionSplitDirection;
@@ -106,10 +110,10 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
 
 void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1, nTileKind kind) {
     assert(x0 >= 0 && y0 >= 0 && x1 <= map->width && y1 <= map->height);
-    nTile dest = {.kind = kind};
-    dest.color = v4(gen_rand01(), gen_rand01(), gen_rand01(), 1);
-    if (kind == NTILE_KIND_WALL){
-        dest.color = v4(1.0,0.0,0.0,1.0);
+    //printf("digging %d %d %d %d\n", x0, y0, x1, y1);
+    nTile dest = {.kind = kind, .color = v4(1,1,1,1)};
+    if (kind == NTILE_KIND_WALL) {
+        dest.color = v4(1,0,0,1);
     }
     if (x1 < x0){
         s32 temp = x1;
@@ -145,6 +149,20 @@ void nmap_create(nMap *map, u32 w, u32 h) {
     nmap_create_ex(map, w, h, 8, 0.4, 0.6);
 }
 
+vec4 nmap_calc_tile_tc(nMap *map, s32 x, s32 y) {
+    if (nmap_tile_at(map, x,y).kind == NTILE_KIND_GROUND) return TILESET_EMPTY_TILE;
+    ivec2 off = iv2(0,0);
+    off.x -= (nmap_tile_at(map, x+1,y).kind == NTILE_KIND_WALL);
+    off.x += (nmap_tile_at(map, x-1,y).kind == NTILE_KIND_WALL);
+    off.y += (nmap_tile_at(map, x,y+1).kind == NTILE_KIND_WALL);
+    off.y -= (nmap_tile_at(map, x,y-1).kind == NTILE_KIND_WALL);
+
+    // if (off.x == 0 && off.y == 0) {
+    //     return TILESET_WALL_TILE;
+    // }
+
+    return TILESET_DUNGEON_TILE(off.x,off.y);
+}
 
 void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas) {
     for (u32 x = 0; x < map->width; x+=1) {
@@ -155,7 +173,7 @@ void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas) {
                 .pos.y = y*TILESET_DEFAULT_SIZE,
                 .dim.x = TILESET_DEFAULT_SIZE,
                 .dim.y = TILESET_DEFAULT_SIZE,
-                .tc    = TILESET_WALL_TILE,
+                .tc    = nmap_calc_tile_tc(map, x, y),
                 .angle_rad = 0,
             };
             nbatch2d_rend_add_quad(rend, q, atlas);
@@ -174,12 +192,30 @@ b32 ndungeon_sub_is_nil(nDungeonSubdivision *s) {
     return (s == 0 || s == &g_nil_ds);
 }
 
-void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
-    f32 child_count = p->child_count;
+b32 ndungeon_sub_is_leaf(nDungeonSubdivision *s) {
+    return (s->child_count == 0);
+}
+
+void nmap_gen_corridors(nMap *map, nDungeonSubdivision *p) {
     for (nDungeonSubdivision *child = p->first; !ndungeon_sub_is_nil(child); child = child->next) {
-        if (child->child_count == 0) {
+        if (ndungeon_sub_is_leaf(child)) {
+            if (map->last_center.x && map->last_center.y) {
+                nmap_dig_region(map, map->last_center.x, map->last_center.y, child->center.x, map->last_center.y+1, NTILE_KIND_GROUND);
+                nmap_dig_region(map, child->center.x, map->last_center.y, child->center.x+1, child->center.y, NTILE_KIND_GROUND);
+            }
+            map->last_center = child->center; 
+        }
+        nmap_gen_corridors(map, child);
+    }
+
+}
+
+
+void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
+    for (nDungeonSubdivision *child = p->first; !ndungeon_sub_is_nil(child); child = child->next) {
+        if (ndungeon_sub_is_leaf(child)) {
             //printf("child %d %d %d %d!\n", child->x, child->y, child->w, child->h);
-            if (gen_rand01() < 0.5) {
+            if (gen_rand01() < 0.75) {
                 s32 w = child->w;
                 s32 h = child->h;
                 child->w = gen_random(map->min_room_size, child->w+1)-1;
@@ -226,5 +262,6 @@ void nmap_generate(nMap *map) {
     dungeon->h = map->height-2;
     nmap_subdivide(map, dungeon);
     nmap_gen_rooms(map, dungeon);
+    nmap_gen_corridors(map, dungeon);
     //nmap_print_dungeon_bsp(dungeon, 0);
 }
