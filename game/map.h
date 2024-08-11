@@ -30,9 +30,10 @@ struct nMap {
 
     u32 min_room_size;
     f32 min_room_factor;
+    f32 max_room_factor;
 };
 
-void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_factor);
+void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_factor, f32 max_room_factor);
 void nmap_create(nMap *map, u32 w, u32 h);
 void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas);
 nTile nmap_tile_at(nMap *map, s32 x, s32 y);

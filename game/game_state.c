@@ -8,6 +8,7 @@ static GameState gs = {0};
 guiSimpleWindowData wdata= {0};
 guiSliderData spin_data;
 guiSliderData slider_data;
+guiSliderData slider_data2;
 
 void do_gui_test() {
     if (ninput_mkey_pressed(NKEY_MMB)){
@@ -39,12 +40,17 @@ void do_gui_test() {
         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
         gui_slider("min_room_factor", AXIS2_X, gv2(4,10), &slider_data);
        
+        gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+        gui_slider("max_room_factor", AXIS2_X, gv2(6,10), &slider_data2);
+       
         gui_set_next_bg_color(gv4(1,0.4,0.4,1.0));
         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
         guiSignal genb = gui_button("generate map");
         if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
-            nmap_create_ex(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE, spin_data.value, slider_data.value / 10.0);
+            nmap_create_ex(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
         }
 
 

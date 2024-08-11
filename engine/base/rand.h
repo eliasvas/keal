@@ -15,8 +15,8 @@ static f64 gen_rand01(void)
 }
 
 static u32 gen_random(u32 min, u32 max) {
-    assert(min <= max);
-    return (rand() % ((max - min) + min + 1));
+    assert(min < max);
+    return (rand() % (max - min) + min);
 }
 
 #endif
