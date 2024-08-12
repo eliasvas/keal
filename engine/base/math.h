@@ -107,6 +107,13 @@ INLINE vec3 mat4_extract_pos(mat4 m) {
     return v3(m.col[3][0],m.col[3][1],m.col[3][2]);
 }
 
+INLINE mat4 mat4_scale(vec3 s) {
+    mat4 res = m4d(1.0f);
+    res.col[0][0] = s.x;
+    res.col[1][1] = s.y;
+    res.col[2][2] = s.z;
+    return res;
+}
 INLINE mat4 mat4_translate(vec3 t) {
     mat4 res = m4d(1.0f);
     res.col[3][0] = t.x;

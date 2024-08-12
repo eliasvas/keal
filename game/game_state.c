@@ -97,7 +97,7 @@ void game_state_init() {
 
     player = nentity_create(&gs.em);
     nActorComponent *ac = nactor_cm_add(&(gs.acm), player);
-    ac->color = v4(1,1,1,1);
+    ac->color = v4(0.5,0.3,0.7,1);
     ac->kind = NACTOR_KIND_PLAYER;
     ac->posx = 0;
     ac->posy = 0;
@@ -111,6 +111,11 @@ void game_state_deinit() {
 
 void game_state_update_and_render() {
     nactor_cm_simulate(&(gs.acm), &(gs.map));
+
+    nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), player);
+    if (player_cmp) {
+        nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
+    }
 
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
  

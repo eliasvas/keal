@@ -1,12 +1,36 @@
-Current engine I'm working on. </br>
-I want a nice and stable game framework, </br>
-OpenGL ES 3.0 is used as the cross-platform gfx API right now, and SDL2 for everything else. </br>
+### Description
+This is a roguelike game/engine project because I've been working on. </br>
+Currently to be cross-platform I use OpenGL ES 3.0 and SDL2 everywhere. </br>
+You can play a somewhat recent version [here](https://ily-gep.itch.io/wasm-demo0) </br>
 
-### support
+### Progress Checklist
+- Prerequisites
+  - [x] Basic Engine Architecture
+  - [x] 2D Rendering
+  - [x] ECS
+  - [ ] Multithreading (Emscripten Sucks)
+- Playable 2D Roguelike
+  - [x] make
+  - [ ] game
+- Editor/GUI stuff
+  - [ ] mini-map
+  - [ ] GUI enhancements
+  - [ ] In-Game editor
+- 3D stuff
+    - [ ] Physically-Based Deferred Renderer
+    - [ ] Skeletal Animations
+    - [ ] Cascaded Shadow-Maps
+    - [ ] Fog-of-War Rendering
+    - [ ] Port game to 3D realm
+- Improve the Game
+    - [ ] TBA
+
+### Platform support
 | Windows  | Linux | WASM |
 | :-------------: | :-------------: | :-------------: |
-| ✅ | ✅ | 🚧 |
-### building
+| ✅ | ✅ | ✅ |
+
+### Building
 #### Linux
 ```sh
 sudo apt-get install build-essential libsdl2-dev libsdl2-2.0-0 libasan6 libgles2-mesa-dev -y
@@ -24,5 +48,4 @@ set EMCC_DEBUG=1
 emcmake cmake ../..
 cmake --build . -j10
 emrun game.html
--sMEMORY64
 ```

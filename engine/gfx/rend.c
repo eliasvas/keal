@@ -69,6 +69,7 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     ogl_set_viewport(0,0,dim.x,dim.y);
     vec2 camera = v2(0,0);
     mat4 view = mat4_translate(v3(-camera.x,-camera.y,0));
+    //mat4 view = mat4_scale(v3(2,2,2));
     ogl_sp_set_uniform(&rend->sp, "view", OGL_SHADER_DATA_TYPE_MAT4, &view);
     mat4 proj = mat4_ortho(0,dim.x,dim.y,0,-1.0,1.0);
     ogl_sp_set_uniform(&rend->sp, "proj", OGL_SHADER_DATA_TYPE_MAT4, &proj);

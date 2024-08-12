@@ -49,6 +49,14 @@ nCompIndex nactor_cm_lookup(nActorCM *cm, nEntity e) {
     return (n) ? n->comp_idx : NCOMPONENT_INDEX_INVALID;
 }
 
+nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e) {
+    nCompIndex actor_idx = nactor_cm_lookup(cm, e);
+    if (actor_idx == NCOMPONENT_INDEX_INVALID){
+        return NULL;
+    }
+
+    return &cm->actors[actor_idx];
+}
 nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e) {
     nCompIndex new_idx = nactor_cm_make_new_index(cm);
     M_ZERO_STRUCT(&cm->actors[new_idx]);

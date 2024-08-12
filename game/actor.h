@@ -45,6 +45,7 @@ void nactor_cm_init(nActorCM *cm, nEntityManager *em);
 void nactor_cm_deinit(nActorCM *cm, nEntityManager *em);
 nCompIndex nactor_cm_lookup(nActorCM *cm, nEntity e);
 nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e);
+nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e);
 void nactor_cm_del(nActorCM *cm, nEntity e);
 void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas);
 void nactor_cm_simulate(nActorCM *cm, nMap *map);

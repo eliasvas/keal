@@ -111,7 +111,8 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
 void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1, nTileKind kind) {
     assert(x0 >= 0 && y0 >= 0 && x1 <= map->width && y1 <= map->height);
     //printf("digging %d %d %d %d\n", x0, y0, x1, y1);
-    nTile dest = {.kind = kind, .color = v4(1,1,1,1)};
+    nTile dest = {.kind = kind, .explored = 0, .color = v4(1,1,1,1)};
+
     if (kind == NTILE_KIND_WALL) {
         dest.color = v4(1,0,0,1);
     }
@@ -132,8 +133,31 @@ void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1, nTileKind kind) 
     }
 }
 
-void nmap_generate(nMap *map);
+void nmap_tile_set_explored(nMap *map, s32 x, s32 y, b32 state) {
+    if (x < 0 || y < 0 || x > map->width || y > map->height)return;
+    map->tiles[x + y*map->width].explored = state;
+}
+b32 nmap_tile_is_explored(nMap *map, s32 x, s32 y) {
+    if (x < 0 || y < 0 || x > map->width || y > map->height)return 0;
+    return map->tiles[x + y*map->width].explored;
+}
 
+b32 nmap_tile_is_wall(nMap *map, s32 x, s32 y) {
+    if (x < 0 || y < 0 || x > map->width || y > map->height)return 1;
+    return (map->tiles[x + y*map->width].kind == NTILE_KIND_WALL);
+}
+
+
+b32 nmap_compute_fov(nMap *map, s32 px, s32 py, s32 fovRadius) {
+    for (s32 i = -fovRadius; i < fovRadius; i+=1) {
+        for (s32 j = -fovRadius; j < fovRadius; j+=1) {
+            nmap_tile_set_explored(map, px+i, py+j, 1);
+        }
+
+    }
+}
+
+void nmap_generate(nMap *map);
 void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_factor, f32 max_room_factor) {
     M_ZERO_STRUCT(map);
     map->width = w;
@@ -150,12 +174,13 @@ void nmap_create(nMap *map, u32 w, u32 h) {
 }
 
 vec4 nmap_calc_tile_tc(nMap *map, s32 x, s32 y) {
-    if (nmap_tile_at(map, x,y).kind == NTILE_KIND_GROUND) return TILESET_EMPTY_TILE;
+    if (nmap_tile_at(map, x,y).kind == NTILE_KIND_GROUND) return TILESET_DOT_TILE;
     ivec2 off = iv2(0,0);
-    off.x -= (nmap_tile_at(map, x+1,y).kind == NTILE_KIND_WALL);
-    off.x += (nmap_tile_at(map, x-1,y).kind == NTILE_KIND_WALL);
-    off.y += (nmap_tile_at(map, x,y+1).kind == NTILE_KIND_WALL);
-    off.y -= (nmap_tile_at(map, x,y-1).kind == NTILE_KIND_WALL);
+
+    off.x -= (nmap_tile_is_wall(map, x+1,y));
+    off.x += (nmap_tile_is_wall(map, x-1,y));
+    off.y += (nmap_tile_is_wall(map, x,y+1));
+    off.y -= (nmap_tile_is_wall(map, x,y-1));
 
     // if (off.x == 0 && off.y == 0) {
     //     return TILESET_WALL_TILE;
@@ -168,7 +193,7 @@ void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas) {
     for (u32 x = 0; x < map->width; x+=1) {
         for (u32 y = 0; y < map->height; y+=1) {
             nBatch2DQuad q = {
-                .color = nmap_tile_at(map,x,y).color,
+                .color = vec4_divf(nmap_tile_at(map,x,y).color,(nmap_tile_is_explored(map, x, y)) ? 1.0f : 2.0f),
                 .pos.x = x*TILESET_DEFAULT_SIZE,
                 .pos.y = y*TILESET_DEFAULT_SIZE,
                 .dim.x = TILESET_DEFAULT_SIZE,
@@ -186,8 +211,6 @@ nTile nmap_tile_at(nMap *map, s32 x, s32 y) {
     if (x < 0 || y < 0 || x > map->width || y > map->height)return NTILE_WALL;
     return map->tiles[x + y*map->width];
 }
-
-
 b32 ndungeon_sub_is_nil(nDungeonSubdivision *s) {
     return (s == 0 || s == &g_nil_ds);
 }
