@@ -19,6 +19,7 @@ struct nActorComponent {
     vec4 tc;
     vec4 color;
     nActorKind kind;
+    u8 name[64];
 };
 
 // CM = ComponentManager
@@ -36,6 +37,8 @@ struct nActorCM {
     // lookup table
     u32 lookup_table_size;
     nEntityComponentIndexPairHashSlot *lookup_table;
+    // To store deleted IndexPairs
+    nEntityComponentIndexPairNode *free_nodes;
  
     // ref to parent nEntityManager (who does allocations for now)
     nEntityManager *em_ref;
@@ -49,6 +52,8 @@ nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e);
 void nactor_cm_del(nActorCM *cm, nEntity e);
 void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas);
 void nactor_cm_simulate(nActorCM *cm, nMap *map);
+void nactor_cm_clear(nActorCM *cm);
+b32 nactor_cm_check_movement_event(nActorCM *cm);
 
 
 #endif

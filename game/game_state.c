@@ -5,6 +5,10 @@
 
 static GameState gs = {0};
 
+GameState *get_ggs() {
+    return &gs;
+}
+
 guiSimpleWindowData wdata= {0};
 guiSliderData spin_data;
 guiSliderData slider_data;
@@ -50,6 +54,7 @@ void do_gui_test() {
         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
         guiSignal genb = gui_button("generate map");
         if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
+            nactor_cm_clear(&(get_ggs()->acm));
             nmap_create_ex(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
         }
 
@@ -83,6 +88,7 @@ void game_state_init_images() {
 
 nEntity player;
 void game_state_init() {
+    gs.status = GAME_STATUS_STARTUP;
     game_state_init_images();
     nentity_manager_init(&gs.em);
     ntransform_cm_init(&gs.tcm, &gs.em);
@@ -102,6 +108,7 @@ void game_state_init() {
     ac->posx = 0;
     ac->posy = 0;
     ac->tc = TILESET_PLAYER_TILE; 
+    sprintf(ac->name, "player");
 }
 
 void game_state_deinit() {
@@ -110,11 +117,18 @@ void game_state_deinit() {
 }
 
 void game_state_update_and_render() {
-    nactor_cm_simulate(&(gs.acm), &(gs.map));
+    gs.status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
 
-    nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), player);
-    if (player_cmp) {
-        nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
+    // If new turn registered update game all state
+    if (gs.status == GAME_STATUS_NEW_TURN) {
+
+        // If there is a player entity, compute visibility
+        nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), player);
+        if (player_cmp) {
+            nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
+        }
+
+        nactor_cm_simulate(&(gs.acm), &(gs.map));
     }
 
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
@@ -123,7 +137,7 @@ void game_state_update_and_render() {
 
     nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
 
-    // FIXME -- i think we crash if nothing is drawn?
+    // FIXME -- i think we crash if nothing is drawn? WHY?!
     nbatch2d_rend_end(&gs.batch_rend);
 
     do_gui_test();

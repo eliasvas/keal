@@ -33,6 +33,8 @@ struct nMap {
     f32 min_room_factor;
     f32 max_room_factor;
 
+    f32 max_room_enemies;
+
     ivec2 last_center;
 };
 

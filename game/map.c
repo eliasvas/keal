@@ -1,4 +1,6 @@
 #include "map.h"
+#include "actor.h"
+#include "game_state.h"
 
 
 void nmap_clear(nMap *map) {
@@ -165,6 +167,7 @@ void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_fac
     map->min_room_size = min_room_size;
     map->min_room_factor = min_room_factor;
     map->max_room_factor = max_room_factor;
+    map->max_room_enemies = 3;
     map->tiles = push_array_nz(get_ngs()->global_arena, nTile, w*h);
     nmap_generate(map);
 }
@@ -219,12 +222,32 @@ b32 ndungeon_sub_is_leaf(nDungeonSubdivision *s) {
     return (s->child_count == 0);
 }
 
+void nmap_add_enemy(nMap *map, s32 x, s32 y) {
+    nEntity enemy = nentity_create(&(get_ggs()->em));
+    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), enemy);
+    ac->kind = NACTOR_KIND_ENEMY;
+    ac->posx = x;
+    ac->posy = y;
+    if (gen_random(0,100) < 70) {
+        sprintf(ac->name, "skelly");
+        ac->color = v4(0.9,0.9,0.9,1);
+        ac->tc = TILESET_SKELLY_TILE; 
+    }else {
+        sprintf(ac->name, "troll");
+        ac->color = v4(0.8,0.5,0.7,1);
+        ac->tc = TILESET_TROLL_TILE; 
+    }
+
+}
+
+
+// TODO -- there is a bug here when we are making corridors, sometimes a corridor is off by 1 (right corners only)
 void nmap_gen_corridors(nMap *map, nDungeonSubdivision *p) {
     for (nDungeonSubdivision *child = p->first; !ndungeon_sub_is_nil(child); child = child->next) {
         if (ndungeon_sub_is_leaf(child)) {
             if (map->last_center.x && map->last_center.y) {
-                nmap_dig_region(map, map->last_center.x, map->last_center.y, child->center.x, map->last_center.y+1, NTILE_KIND_GROUND);
-                nmap_dig_region(map, child->center.x, map->last_center.y, child->center.x+1, child->center.y, NTILE_KIND_GROUND);
+                nmap_dig_region(map, map->last_center.x, map->last_center.y, child->center.x+1, map->last_center.y+1, NTILE_KIND_GROUND);
+                nmap_dig_region(map, child->center.x, map->last_center.y, child->center.x+1, child->center.y+1, NTILE_KIND_GROUND);
             }
             map->last_center = child->center; 
         }
@@ -241,12 +264,26 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
             if (gen_rand01() < 0.75) {
                 s32 w = child->w;
                 s32 h = child->h;
+                // Generate randomized room inside sub-dungeon bounds
                 child->w = gen_random(map->min_room_size, child->w+1)-1;
                 child->h = gen_random(map->min_room_size, child->h+1)-1;
                 child->x = child->x + (w/child->w)/2.0 + 1;
                 child->y = child->y + (h/child->h)/2.0 + 1;
                 child->center = iv2(child->x + child->w/2.0, child->y + child->h/2.0);
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_GROUND);
+
+
+                // Generate randomized enemies
+                s32 enemy_num = gen_random(0, map->max_room_enemies+1);
+                while (enemy_num) {
+                    s32 x = gen_random(child->x, child->x + child->w+1);
+                    s32 y = gen_random(child->y, child->y + child->h+1);
+                    if (!nmap_tile_is_wall(map, x,y)) {
+                        nmap_add_enemy(map,x,y);
+                    }
+                    enemy_num-=1;
+                }
+
             }else {
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_WALL);
             }
@@ -271,8 +308,6 @@ void nmap_print_dungeon_bsp(nDungeonSubdivision *ds, u32 depth) {
 		nmap_print_dungeon_bsp(child, depth+1);
 	}
 }
-
-
 
 void nmap_generate(nMap *map) {
     nmap_clear(map);
