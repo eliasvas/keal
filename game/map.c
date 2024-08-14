@@ -149,6 +149,19 @@ b32 nmap_tile_is_wall(nMap *map, s32 x, s32 y) {
     return (map->tiles[x + y*map->width].kind == NTILE_KIND_WALL);
 }
 
+b32 nmap_tile_is_walkable(nMap *map, s32 x, s32 y) {
+    b32 overlapping_actors_movable = 1;
+    for (u32 i = 0; i < get_ggs()->acm.size; i+=1) {
+        nActorComponent *actor = &get_ggs()->acm.actors[i];
+        if (actor->posx == x && actor->posy == y) {
+            overlapping_actors_movable &= !(get_ggs()->acm.actors[i].blocks);
+        }
+    }
+
+    return (!nmap_tile_is_wall(map, x, y) && overlapping_actors_movable);
+}
+
+
 
 b32 nmap_compute_fov(nMap *map, s32 px, s32 py, s32 fovRadius) {
     for (s32 i = -fovRadius; i < fovRadius; i+=1) {
@@ -228,6 +241,10 @@ void nmap_add_enemy(nMap *map, s32 x, s32 y) {
     ac->kind = NACTOR_KIND_ENEMY;
     ac->posx = x;
     ac->posy = y;
+    ac->blocks = 1;
+    ac->d = ndestructible_data_make(10,1);
+    ac->a = nattack_data_make(10);
+    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE;
     if (gen_random(0,100) < 70) {
         sprintf(ac->name, "skelly");
         ac->color = v4(0.9,0.9,0.9,1);

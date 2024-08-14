@@ -108,6 +108,10 @@ void game_state_init() {
     ac->posx = 0;
     ac->posy = 0;
     ac->tc = TILESET_PLAYER_TILE; 
+    ac->blocks = 0;
+    ac->d = ndestructible_data_make(10,2);
+    ac->a = nattack_data_make(3);
+    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE;
     sprintf(ac->name, "player");
 }
 

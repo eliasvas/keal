@@ -156,6 +156,23 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map) {
                 }else if (ninput_key_pressed(NKEY_SCANCODE_DOWN)) {
                     delta.y+=1;
                 }
+                // Should this logic remain here??
+                {
+                    ivec2 new_pos = iv2(cm->actors[i].posx + delta.x, cm->actors[i].posy + delta.y);
+
+                    if (nmap_tile_is_walkable(map, new_pos.x, new_pos.y) || !nmap_tile_is_walkable(map, cm->actors[i].posx, cm->actors[i].posy) ) {
+                        cm->actors[i].posx = new_pos.x;
+                        cm->actors[i].posy = new_pos.y;
+                    }
+
+                    // Check to see whether in target position there is an enemy, in which case, we CUT
+                    for (u32 j = 0; j < get_ggs()->acm.size; j+=1) {
+                        nActorComponent *actor = &get_ggs()->acm.actors[j];
+                        if (actor->posx == new_pos.x && actor->posy == new_pos.y && actor->kind != NACTOR_KIND_PLAYER) {
+                            nactor_attack(&(cm->actors[i]), &(cm->actors[j]));
+                        }
+                    }
+                }
                 break;
             case NACTOR_KIND_ENEMY:
                 break;
@@ -163,12 +180,7 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map) {
                 printf("Who is dis guy?!\n");
                 break;
         }
-        ivec2 new_pos = iv2(cm->actors[i].posx + delta.x, cm->actors[i].posy + delta.y);
-
-        if (nmap_tile_at(map, cm->actors[i].posx, cm->actors[i].posy).kind == NTILE_KIND_WALL || nmap_tile_at(map, new_pos.x, new_pos.y).kind != NTILE_KIND_WALL) {
-            cm->actors[i].posx = new_pos.x;
-            cm->actors[i].posy = new_pos.y;
-        }
+        
 
     }
 }
@@ -190,3 +202,35 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
     }
 }
 
+s32 nactor_die(nActorComponent *ac) {
+    printf("actor: %s died!\n", ac->name);
+    ac->tc = TILESET_SKULL_TILE;
+    ac->blocks = 0;
+    //also shift this component to begining, so its drawn before HERO
+}
+
+s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
+    damage -= ac->d.def;
+    if (damage > 0) {
+        ac->d.hp -= damage;
+        if (ac->d.hp <= 0) {
+            nactor_die(ac);
+        }
+    }else {
+        damage = 0;
+    }
+    return damage;
+}
+
+void nactor_attack(nActorComponent *attacker, nActorComponent *victim) {
+    if (victim->flags & NACTOR_FEATURE_FLAG_DESTRUCTIBLE && (victim->d.hp > 0)) {
+        nactor_take_damage(victim, attacker->a.powa);
+    }
+}
+
+nDestructibleData ndestructible_data_make(s32 max_hp, s32 def) {
+    return (nDestructibleData){.max_hp = max_hp, .hp = max_hp, .def = def};
+}
+nAttackData nattack_data_make(s32 powa) {
+    return (nAttackData){.powa = powa};
+}

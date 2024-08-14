@@ -3,6 +3,37 @@
 #include "engine.h"
 #include "map.h"
 
+////////////////////////////////
+// Composition-based nActor attributes 
+////////////////////////////////
+
+typedef struct nDestructibleData nDestructibleData;
+struct nDestructibleData {
+    s32 max_hp;
+    s32 hp;
+    s32 def;
+};
+nDestructibleData ndestructible_data_make(s32 max_hp, s32 def);
+
+typedef struct nAttackData nAttackData;
+struct nAttackData {
+    s32 powa;
+};
+nAttackData nattack_data_make(s32 powa);
+
+
+
+
+////////////////////////////////
+// nActor component
+////////////////////////////////
+
+typedef enum nActorFeatureFlags nActorFeatureFlags;
+enum nActorFeatureFlags {
+    NACTOR_FEATURE_FLAG_DESTRUCTIBLE = (1 << 0), // Can take damage and break/die
+    NACTOR_FEATURE_FLAG_ATTACKER     = (1 << 1), // Can damage destructibles
+    NACTOR_FEATURE_FLAG_AI           = (1 << 2), // It's self updating
+};
 
 typedef enum nActorKind nActorKind;
 enum nActorKind {
@@ -19,8 +50,16 @@ struct nActorComponent {
     vec4 tc;
     vec4 color;
     nActorKind kind;
+    nActorFeatureFlags flags;
+    nDestructibleData d;
+    nAttackData a;
+    b32 blocks; // Is this actor blocking movement??
     u8 name[64];
 };
+
+////////////////////////////////
+// nActor component manager
+////////////////////////////////
 
 // CM = ComponentManager
 #define NACTOR_CM_MAX_COMPONENTS 1024
@@ -54,6 +93,7 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas);
 void nactor_cm_simulate(nActorCM *cm, nMap *map);
 void nactor_cm_clear(nActorCM *cm);
 b32 nactor_cm_check_movement_event(nActorCM *cm);
+void nactor_attack(nActorComponent *attacker, nActorComponent *victim);
 
 
 #endif

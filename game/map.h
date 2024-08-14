@@ -43,6 +43,7 @@ void nmap_create(nMap *map, u32 w, u32 h);
 void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas);
 nTile nmap_tile_at(nMap *map, s32 x, s32 y);
 b32 nmap_compute_fov(nMap *map, s32 px, s32 py, s32 fovRadius);
+b32 nmap_tile_is_walkable(nMap *map, s32 x, s32 y);
 
 // Will take an already created (allocated) map and generate a new Dungeon!
 void nmap_generate(nMap *map);
