@@ -244,7 +244,8 @@ void nmap_add_enemy(nMap *map, s32 x, s32 y) {
     ac->blocks = 1;
     ac->d = ndestructible_data_make(10,1);
     ac->a = nattack_data_make(10);
-    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE;
+    ac->s = nshake_data_make(0, 0.5);
+    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
     if (gen_random(0,100) < 70) {
         sprintf(ac->name, "skelly");
         ac->color = v4(0.9,0.9,0.9,1);
@@ -254,7 +255,6 @@ void nmap_add_enemy(nMap *map, s32 x, s32 y) {
         ac->color = v4(0.8,0.5,0.7,1);
         ac->tc = TILESET_TROLL_TILE; 
     }
-
 }
 
 

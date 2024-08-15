@@ -21,6 +21,14 @@ struct nAttackData {
 };
 nAttackData nattack_data_make(s32 powa);
 
+typedef struct nShakeData nShakeData;
+struct nShakeData {
+    f32 shake_duration;
+    f32 shake_str;
+};
+nShakeData nshake_data_make(f32 shake_duration, f32 shake_str);
+
+
 
 
 
@@ -33,6 +41,7 @@ enum nActorFeatureFlags {
     NACTOR_FEATURE_FLAG_DESTRUCTIBLE = (1 << 0), // Can take damage and break/die
     NACTOR_FEATURE_FLAG_ATTACKER     = (1 << 1), // Can damage destructibles
     NACTOR_FEATURE_FLAG_AI           = (1 << 2), // It's self updating
+    NACTOR_FEATURE_FLAG_SHAKEABLE     = (1 << 3), // It will Shake!
 };
 
 typedef enum nActorKind nActorKind;
@@ -53,6 +62,7 @@ struct nActorComponent {
     nActorFeatureFlags flags;
     nDestructibleData d;
     nAttackData a;
+    nShakeData s;
     b32 blocks; // Is this actor blocking movement??
     u8 name[64];
 };
@@ -90,7 +100,7 @@ nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e);
 nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e);
 void nactor_cm_del(nActorCM *cm, nEntity e);
 void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas);
-void nactor_cm_simulate(nActorCM *cm, nMap *map);
+void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn);
 void nactor_cm_clear(nActorCM *cm);
 b32 nactor_cm_check_movement_event(nActorCM *cm);
 void nactor_attack(nActorComponent *attacker, nActorComponent *victim);

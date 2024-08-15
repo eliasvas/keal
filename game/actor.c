@@ -142,8 +142,11 @@ b32 nactor_cm_check_movement_event(nActorCM *cm) {
     return (ninput_key_pressed(NKEY_SCANCODE_RIGHT) | ninput_key_pressed(NKEY_SCANCODE_LEFT) | ninput_key_pressed(NKEY_SCANCODE_UP) | ninput_key_pressed(NKEY_SCANCODE_DOWN));
 }
 
-void nactor_cm_simulate(nActorCM *cm, nMap *map) {
+void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn) {
     for (u32 i = 0; i < cm->size; i+=1) {
+        cm->actors[i].s.shake_duration = maximum(0.0f, cm->actors[i].s.shake_duration - get_ngs()->dt);
+        printf("dt %f\n", get_ngs()->dt);
+        if (!new_turn)continue;
         ivec2 delta = iv2(0,0);
         switch (cm->actors[i].kind) {
             case NACTOR_KIND_PLAYER:
@@ -185,14 +188,21 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map) {
     }
 }
 
+vec2 nactor_calc_shake_offset(nActorComponent *ac) {
+    f32 off_x = (ac->s.shake_duration > 0.0) ? (gen_random(0,100) / 100.0f - 0.5f) * ac->s.shake_str : 0;
+    f32 off_y = (ac->s.shake_duration > 0.0) ? (gen_random(0,100) / 100.0f - 0.5f) * ac->s.shake_str : 0;
+    return v2(off_x, off_y);
+}
+
 void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
 
     for (u32 i = 0; i < cm->size; i+=1) {
         nActorComponent *actor = &(cm->actors[i]);
+        vec2 shake_offset = nactor_calc_shake_offset(actor);
         nBatch2DQuad q = {
             .color = actor->color,
-            .pos.x = actor->posx*TILESET_DEFAULT_SIZE,
-            .pos.y = actor->posy*TILESET_DEFAULT_SIZE,
+            .pos.x = (actor->posx+shake_offset.x)*TILESET_DEFAULT_SIZE,
+            .pos.y = (actor->posy+shake_offset.y)*TILESET_DEFAULT_SIZE,
             .dim.x = TILESET_DEFAULT_SIZE,
             .dim.y = TILESET_DEFAULT_SIZE,
             .tc    = actor->tc,
@@ -216,6 +226,7 @@ s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
         if (ac->d.hp <= 0) {
             nactor_die(ac);
         }
+        ac->s.shake_duration = 1.2;
     }else {
         damage = 0;
     }
@@ -234,3 +245,8 @@ nDestructibleData ndestructible_data_make(s32 max_hp, s32 def) {
 nAttackData nattack_data_make(s32 powa) {
     return (nAttackData){.powa = powa};
 }
+
+nShakeData nshake_data_make(f32 shake_duration, f32 shake_str) {
+    return (nShakeData) {.shake_duration = shake_duration, .shake_str = shake_str};
+}
+

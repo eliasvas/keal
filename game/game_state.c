@@ -111,7 +111,8 @@ void game_state_init() {
     ac->blocks = 0;
     ac->d = ndestructible_data_make(10,2);
     ac->a = nattack_data_make(3);
-    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE;
+    ac->s = nshake_data_make(0, 0.5);
+    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
     sprintf(ac->name, "player");
 }
 
@@ -124,7 +125,7 @@ void game_state_update_and_render() {
     gs.status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
 
     // If new turn registered update game all state
-    if (gs.status == GAME_STATUS_NEW_TURN) {
+    //if (gs.status == GAME_STATUS_NEW_TURN) {
 
         // If there is a player entity, compute visibility
         nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), player);
@@ -132,8 +133,8 @@ void game_state_update_and_render() {
             nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
         }
 
-        nactor_cm_simulate(&(gs.acm), &(gs.map));
-    }
+        nactor_cm_simulate(&(gs.acm), &(gs.map), (gs.status == GAME_STATUS_NEW_TURN));
+    //}
 
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
  
