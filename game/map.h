@@ -35,6 +35,8 @@ struct nMap {
 
     f32 max_room_enemies;
 
+    nEntity player;
+
     ivec2 last_center;
 };
 

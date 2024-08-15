@@ -141,50 +141,70 @@ void nactor_cm_del(nActorCM *cm, nEntity e) {
 b32 nactor_cm_check_movement_event(nActorCM *cm) {
     return (ninput_key_pressed(NKEY_SCANCODE_RIGHT) | ninput_key_pressed(NKEY_SCANCODE_LEFT) | ninput_key_pressed(NKEY_SCANCODE_UP) | ninput_key_pressed(NKEY_SCANCODE_DOWN));
 }
+void nactor_move_or_attack(nActorComponent *ac, nMap *map, ivec2 delta) {
+    ivec2 new_pos = iv2(ac->posx + delta.x, ac->posy + delta.y);
+    if (nmap_tile_is_walkable(map, new_pos.x, new_pos.y)) {
+        ac->posx = new_pos.x;
+        ac->posy = new_pos.y;
+    }
+
+    // Check to see whether in target position there is an enemy, in which case, we CUT
+    for (u32 j = 0; j < get_ggs()->acm.size; j+=1) {
+        nActorComponent *actor = &get_ggs()->acm.actors[j];
+        if (actor->posx == new_pos.x && actor->posy == new_pos.y && actor->kind != ac->kind && (actor->flags & NACTOR_FEATURE_FLAG_DESTRUCTIBLE)) {
+            nactor_attack(ac, actor);
+        }
+    }
+}
+
+void nactor_update(nActorComponent *ac, nMap *map) {
+    if (ac->d.hp <= 0)return;
+    ivec2 delta = iv2(0,0);
+    switch (ac->kind) {
+        case NACTOR_KIND_PLAYER:
+            if (ninput_key_pressed(NKEY_SCANCODE_RIGHT)) {
+                delta.x+=1;
+            }else if (ninput_key_pressed(NKEY_SCANCODE_LEFT)) {
+                delta.x-=1;
+            }else if (ninput_key_pressed(NKEY_SCANCODE_UP)) {
+                delta.y-=1;
+            }else if (ninput_key_pressed(NKEY_SCANCODE_DOWN)) {
+                delta.y+=1;
+            }
+            break;
+        case NACTOR_KIND_ENEMY:
+            if (gen_random(0,10) == 0) {
+                if (gen_random(0,2)) {
+                    delta.x = gen_random(1,4)-2;
+                } else {
+                    delta.y = gen_random(1,4)-2;
+                }
+            } else {
+                nActorComponent *player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
+                ivec2 move_dir = iv2(player_cmp->posx - ac->posx, player_cmp->posy - ac->posy);
+                if (player_cmp && abs(ivec2_len(move_dir)) < 5){
+                    if (gen_random(0,2)) {
+                        delta.x = signof(move_dir.x);
+                    }else {
+                        delta.y = signof(move_dir.y);
+                    }
+
+                }
+            }
+           break;
+        default:
+            printf("Who is dis guy?!\n");
+            break;
+    }
+    nactor_move_or_attack(ac, map, delta);
+}
+
 
 void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn) {
     for (u32 i = 0; i < cm->size; i+=1) {
-        cm->actors[i].s.shake_duration = maximum(0.0f, cm->actors[i].s.shake_duration - get_ngs()->dt);
-        printf("dt %f\n", get_ngs()->dt);
+        cm->actors[i].s.shake_duration = maximum(0.0f, cm->actors[i].s.shake_duration - get_ngs()->dt/1000.0);
         if (!new_turn)continue;
-        ivec2 delta = iv2(0,0);
-        switch (cm->actors[i].kind) {
-            case NACTOR_KIND_PLAYER:
-                if (ninput_key_pressed(NKEY_SCANCODE_RIGHT)) {
-                    delta.x+=1;
-                }else if (ninput_key_pressed(NKEY_SCANCODE_LEFT)) {
-                    delta.x-=1;
-                }else if (ninput_key_pressed(NKEY_SCANCODE_UP)) {
-                    delta.y-=1;
-                }else if (ninput_key_pressed(NKEY_SCANCODE_DOWN)) {
-                    delta.y+=1;
-                }
-                // Should this logic remain here??
-                {
-                    ivec2 new_pos = iv2(cm->actors[i].posx + delta.x, cm->actors[i].posy + delta.y);
-
-                    if (nmap_tile_is_walkable(map, new_pos.x, new_pos.y) || !nmap_tile_is_walkable(map, cm->actors[i].posx, cm->actors[i].posy) ) {
-                        cm->actors[i].posx = new_pos.x;
-                        cm->actors[i].posy = new_pos.y;
-                    }
-
-                    // Check to see whether in target position there is an enemy, in which case, we CUT
-                    for (u32 j = 0; j < get_ggs()->acm.size; j+=1) {
-                        nActorComponent *actor = &get_ggs()->acm.actors[j];
-                        if (actor->posx == new_pos.x && actor->posy == new_pos.y && actor->kind != NACTOR_KIND_PLAYER) {
-                            nactor_attack(&(cm->actors[i]), &(cm->actors[j]));
-                        }
-                    }
-                }
-                break;
-            case NACTOR_KIND_ENEMY:
-                break;
-            default:
-                printf("Who is dis guy?!\n");
-                break;
-        }
-        
-
+        nactor_update(&(cm->actors[i]), map);
     }
 }
 
@@ -226,7 +246,7 @@ s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
         if (ac->d.hp <= 0) {
             nactor_die(ac);
         }
-        ac->s.shake_duration = 1.2;
+        ac->s.shake_duration = 0.3;
     }else {
         damage = 0;
     }

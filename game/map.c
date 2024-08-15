@@ -235,7 +235,24 @@ b32 ndungeon_sub_is_leaf(nDungeonSubdivision *s) {
     return (s->child_count == 0);
 }
 
-void nmap_add_enemy(nMap *map, s32 x, s32 y) {
+nEntity nmap_add_player(nMap *map, s32 x, s32 y) {
+    nEntity player = nentity_create(&(get_ggs()->em));
+    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), player);
+    ac->color = v4(0.5,0.3,0.7,1);
+    ac->kind = NACTOR_KIND_PLAYER;
+    ac->posx = x;
+    ac->posy = y;
+    ac->tc = TILESET_PLAYER_TILE; 
+    ac->blocks = 1;
+    ac->d = ndestructible_data_make(1000,2);
+    ac->a = nattack_data_make(3);
+    ac->s = nshake_data_make(0, 0.3);
+    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
+    sprintf(ac->name, "player");
+    return player;
+}
+
+nEntity nmap_add_enemy(nMap *map, s32 x, s32 y) {
     nEntity enemy = nentity_create(&(get_ggs()->em));
     nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), enemy);
     ac->kind = NACTOR_KIND_ENEMY;
@@ -244,7 +261,7 @@ void nmap_add_enemy(nMap *map, s32 x, s32 y) {
     ac->blocks = 1;
     ac->d = ndestructible_data_make(10,1);
     ac->a = nattack_data_make(10);
-    ac->s = nshake_data_make(0, 0.5);
+    ac->s = nshake_data_make(0, 0.3);
     ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
     if (gen_random(0,100) < 70) {
         sprintf(ac->name, "skelly");
@@ -255,6 +272,7 @@ void nmap_add_enemy(nMap *map, s32 x, s32 y) {
         ac->color = v4(0.8,0.5,0.7,1);
         ac->tc = TILESET_TROLL_TILE; 
     }
+    return enemy;
 }
 
 
@@ -289,13 +307,20 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                 child->center = iv2(child->x + child->w/2.0, child->y + child->h/2.0);
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_GROUND);
 
+                // Add player to first dungeon's first block
+                //if (map->player ==)
+                nActorComponent *player_cmp = nactor_cm_get(&(get_ggs()->acm), map->player);
+                if (!player_cmp) {
+                    map->player = nmap_add_player(map, child->x, child->y);
+                }
+
 
                 // Generate randomized enemies
                 s32 enemy_num = gen_random(0, map->max_room_enemies+1);
                 while (enemy_num) {
                     s32 x = gen_random(child->x, child->x + child->w+1);
                     s32 y = gen_random(child->y, child->y + child->h+1);
-                    if (!nmap_tile_is_wall(map, x,y)) {
+                    if (nmap_tile_is_walkable(map, x,y)) {
                         nmap_add_enemy(map,x,y);
                     }
                     enemy_num-=1;

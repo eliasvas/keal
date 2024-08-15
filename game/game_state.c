@@ -100,20 +100,6 @@ void game_state_init() {
     wdata.dim = gv2(400,300);
     wdata.pos = gv2(100,100);
     wdata.active = 0;
-
-    player = nentity_create(&gs.em);
-    nActorComponent *ac = nactor_cm_add(&(gs.acm), player);
-    ac->color = v4(0.5,0.3,0.7,1);
-    ac->kind = NACTOR_KIND_PLAYER;
-    ac->posx = 0;
-    ac->posy = 0;
-    ac->tc = TILESET_PLAYER_TILE; 
-    ac->blocks = 0;
-    ac->d = ndestructible_data_make(10,2);
-    ac->a = nattack_data_make(3);
-    ac->s = nshake_data_make(0, 0.5);
-    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
-    sprintf(ac->name, "player");
 }
 
 void game_state_deinit() {
@@ -128,7 +114,7 @@ void game_state_update_and_render() {
     //if (gs.status == GAME_STATUS_NEW_TURN) {
 
         // If there is a player entity, compute visibility
-        nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), player);
+        nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), gs.map.player);
         if (player_cmp) {
             nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
         }

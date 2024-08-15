@@ -42,6 +42,7 @@
 #define clamp(x, a, b)  (maximum(a, minimum(x, b)))
 #define is_pow2(x) ((x & (x - 1)) == 0)
 #define array_count(a) (sizeof(a) / sizeof((a)[0]))
+#define signof(x) ((x) > 0 ? 1 : ((x) < 0 ? -1 : 0))
 
 #define each_enumv(type, it) type it = (type)0; it < type##_COUNT; it = (type)(it+1)
 

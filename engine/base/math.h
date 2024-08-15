@@ -154,5 +154,7 @@ typedef union ivec2
     s32 raw[2];
 }ivec2;
 #define iv2(x,y) (ivec2){x,y}
+INLINE s32 ivec2_dot(ivec2 a, ivec2 b)       {return (a.x*b.x)+(a.y*b.y);}
+INLINE s32 ivec2_len(ivec2 a)               {return (s32)sqrtf(ivec2_dot(a,a));}
 
 #endif
