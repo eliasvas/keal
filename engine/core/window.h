@@ -33,6 +33,7 @@ enum nWindowEventKind {
     N_WINDOW_EVENT_KIND_KEYBOARD_EVENT,
     N_WINDOW_EVENT_KIND_MOUSE_EVENT,
     N_WINDOW_EVENT_KIND_MOUSE_MOTION_EVENT,
+    N_WINDOW_EVENT_KIND_SCROLLWHEEL_EVENT,
 };
 
 typedef struct nWindowKeyboardEvent nWindowKeyboardEvent;
@@ -53,6 +54,12 @@ struct nWindowMouseMotionEvent {
     f32 y;
 };
 
+typedef struct nWindowScrollWheelEvent nWindowScrollWheelEvent;
+struct nWindowScrollWheelEvent {
+    f32 y; // scroll amount
+};
+
+
 typedef struct nWindowEventNode nWindowEventNode;
 struct nWindowEventNode {
     nWindowEventNode *next;
@@ -60,6 +67,7 @@ struct nWindowEventNode {
         nWindowKeyboardEvent ke;
         nWindowMouseEvent me;
         nWindowMouseMotionEvent mme;
+        nWindowScrollWheelEvent swe;
     };
     nWindowEventKind kind;
 };

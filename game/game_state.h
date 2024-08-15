@@ -25,6 +25,8 @@ struct GameState {
     nTransformCM tcm;
     nActorCM acm;
     nMap map;
+
+    f32 zoom_amount;
 };
 
 

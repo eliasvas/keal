@@ -3,6 +3,7 @@ static nInputManager global_input_manager;
 
 void ninput_manager_consume_events_from_window(nWindow *win) {
     global_input_manager.prev_mouse_pos = global_input_manager.mouse_pos;
+    global_input_manager.prev_scroll_amount = global_input_manager.scroll_amount;
     nWindowEventNode* event_queue = nwindow_capture_events(win);
     u64 frame_idx = get_global_frame_count();
     for (nWindowEventNode *n = event_queue; n != 0; n = n->next) {
@@ -18,6 +19,9 @@ void ninput_manager_consume_events_from_window(nWindow *win) {
                 break;
             case(N_WINDOW_EVENT_KIND_MOUSE_MOTION_EVENT):
                 global_input_manager.mouse_pos = v2(n->mme.x,n->mme.y);
+                break;
+            case(N_WINDOW_EVENT_KIND_SCROLLWHEEL_EVENT):
+                global_input_manager.scroll_amount += n->swe.y;
                 break;
             default:
                 assert(0);
@@ -81,3 +85,10 @@ vec2 ninput_get_mouse_delta(void) {
 }
 
 
+nScrollAmount ninput_get_scroll_amount_delta(void) {
+    return (global_input_manager.scroll_amount - global_input_manager.prev_scroll_amount);
+}
+
+nScrollAmount ninput_get_scroll_amount(void) {
+    return global_input_manager.scroll_amount;
+}

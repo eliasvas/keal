@@ -6,6 +6,8 @@
 #include "core/core_inc.h"
 
 
+typedef s32 nScrollAmount; 
+
 // TODO -- maybe these should be called NMKEY_ for N<MOUSE>KEY_
 typedef enum nKeyMouseKeycode nKeyMouseKeycode;
 enum nKeyMouseKeycode {
@@ -129,6 +131,9 @@ struct nInputManager {
 
     vec2 mouse_pos;
     vec2 prev_mouse_pos;
+
+    nScrollAmount scroll_amount;
+    nScrollAmount prev_scroll_amount;
 };
 
 void ninput_manager_consume_events_from_window(nWindow *win);
@@ -145,5 +150,8 @@ b32 ninput_mkey_released(nKeyMouseKeycode key);
 
 vec2 ninput_get_mouse_delta(void);
 vec2 ninput_get_mouse_pos(void);
+
+nScrollAmount ninput_get_scroll_amount_delta(void);
+nScrollAmount ninput_get_scroll_amount(void);
 
 #endif

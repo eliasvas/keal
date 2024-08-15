@@ -33,6 +33,10 @@ void nbatch2d_calc_rotated_positions(vec2 pos, vec2 dim, f32 angle_rad, vec2 *ds
     dst[3] = vec2_add(vec2_rot(vec2_add(vec2_sub(pos,middle_point), v2(dim.x,dim.y)), angle_rad),middle_point);
 }
 
+void nbatch2d_rend_set_view_mat(nBatch2DRenderer *rend, mat4 view) {
+    rend->view = view;
+}
+
 void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     // alloc the vertex array
     u32 quad_count = nbatch2d_rend_count_quads(rend);
@@ -68,9 +72,9 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     vec2 dim = nwindow_get_dim(rend->win_ref);
     ogl_set_viewport(0,0,dim.x,dim.y);
     vec2 camera = v2(0,0);
-    mat4 view = mat4_translate(v3(-camera.x,-camera.y,0));
+    //mat4 view = mat4_translate(v3(-camera.x,-camera.y,0));
     //mat4 view = mat4_scale(v3(2,2,2));
-    ogl_sp_set_uniform(&rend->sp, "view", OGL_SHADER_DATA_TYPE_MAT4, &view);
+    ogl_sp_set_uniform(&rend->sp, "view", OGL_SHADER_DATA_TYPE_MAT4, &rend->view);
     mat4 proj = mat4_ortho(0,dim.x,dim.y,0,-1.0,1.0);
     ogl_sp_set_uniform(&rend->sp, "proj", OGL_SHADER_DATA_TYPE_MAT4, &proj);
 

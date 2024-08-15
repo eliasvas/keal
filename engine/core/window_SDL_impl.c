@@ -134,6 +134,11 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
                 node->ke.state = 0;
                 sll_queue_push(first, last, node);
                 break;
+            case SDL_MOUSEWHEEL:
+                node->kind = N_WINDOW_EVENT_KIND_SCROLLWHEEL_EVENT;
+                s32 scroll_y = event.wheel.y;
+                node->swe.y = scroll_y;
+                sll_queue_push(first, last, node);
             default:
                 break;
         }

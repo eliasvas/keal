@@ -55,7 +55,7 @@ void do_gui_test() {
         guiSignal genb = gui_button("generate map");
         if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
             nactor_cm_clear(&(get_ggs()->acm));
-            nmap_create_ex(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
+            nmap_create_ex(&gs.map, 64,64, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
         }
 
 
@@ -89,11 +89,12 @@ void game_state_init_images() {
 nEntity player;
 void game_state_init() {
     gs.status = GAME_STATUS_STARTUP;
+    gs.zoom_amount = 1;
     game_state_init_images();
     nentity_manager_init(&gs.em);
     ntransform_cm_init(&gs.tcm, &gs.em);
     nactor_cm_init(&gs.acm, &gs.em);
-    nmap_create(&gs.map, get_ngs()->win.ww / TILESET_DEFAULT_SIZE, get_ngs()->win.wh / TILESET_DEFAULT_SIZE);
+    nmap_create(&gs.map,64,64);
 
     // Init some GUI stuff
     sprintf(wdata.name, "Debug");
@@ -110,17 +111,24 @@ void game_state_deinit() {
 void game_state_update_and_render() {
     gs.status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
 
-    // If new turn registered update game all state
-    //if (gs.status == GAME_STATUS_NEW_TURN) {
+    ivec2 player_pos = iv2(0,0);
+    nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), gs.map.player);
+    if (player_cmp) {
+        nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
+        player_pos = iv2(player_cmp->posx, player_cmp->posy);
+    }
 
-        // If there is a player entity, compute visibility
-        nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), gs.map.player);
-        if (player_cmp) {
-            nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
-        }
+    nactor_cm_simulate(&(gs.acm), &(gs.map), (gs.status == GAME_STATUS_NEW_TURN));
 
-        nactor_cm_simulate(&(gs.acm), &(gs.map), (gs.status == GAME_STATUS_NEW_TURN));
-    //}
+    // TODO -- this 0.1 should become scroll speed or something
+    nScrollAmount scroll_y = ninput_get_scroll_amount_delta();
+    if (scroll_y) {
+        gs.zoom_amount += scroll_y * 0.1;
+    }
+
+    ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_ngs()->win.ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_ngs()->win.wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
+    mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
+    nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
 
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
  
