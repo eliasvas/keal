@@ -202,15 +202,15 @@ void nactor_update(nActorComponent *ac, nMap *map) {
 
 void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn) {
     for (u32 i = 0; i < cm->size; i+=1) {
-        cm->actors[i].s.shake_duration = maximum(0.0f, cm->actors[i].s.shake_duration - get_ngs()->dt/1000.0);
+        cm->actors[i].d.shake_duration = maximum(0.0f, cm->actors[i].d.shake_duration - get_ngs()->dt/1000.0);
         if (!new_turn)continue;
         nactor_update(&(cm->actors[i]), map);
     }
 }
 
 vec2 nactor_calc_shake_offset(nActorComponent *ac) {
-    f32 off_x = (ac->s.shake_duration > 0.0) ? (gen_random(0,100) / 100.0f - 0.5f) * ac->s.shake_str : 0;
-    f32 off_y = (ac->s.shake_duration > 0.0) ? (gen_random(0,100) / 100.0f - 0.5f) * ac->s.shake_str : 0;
+    f32 off_x = (ac->d.shake_duration > 0.0) ? (gen_random(0,100) / 100.0f - 0.5f) * ac->d.shake_str : 0;
+    f32 off_y = (ac->d.shake_duration > 0.0) ? (gen_random(0,100) / 100.0f - 0.5f) * ac->d.shake_str : 0;
     return v2(off_x, off_y);
 }
 
@@ -232,11 +232,35 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
     }
 }
 
+// also shift this component to begining, so its drawn before HERO
 s32 nactor_die(nActorComponent *ac) {
     printf("actor: %s died!\n", ac->name);
     ac->tc = TILESET_SKULL_TILE;
     ac->blocks = 0;
-    //also shift this component to begining, so its drawn before HERO
+    if (strcmp(ac->name,"player") == 0) {
+        printf("YOU DIED\n");
+        nactor_cm_clear(&(get_ggs()->acm));
+        nmap_create(&(get_ggs()->map),64,64);
+    }
+}
+s32 nactor_pick_up_item(nActorComponent *ac, nActorComponent *item) {
+    if (ac->flags & NACTOR_FEATURE_FLAG_HAS_CONTAINER) {
+        ac->c.items[ac->c.item_count] = item;
+        ac->c.item_count+=1;
+    }
+}
+
+s32 nactor_use_item(nActorComponent *ac, u8 item_index) {
+    assert(item_index < ac->c.item_count);
+    nActorComponent *item = ac->c.items[item_index] = item;
+    // ITEM LOGIC
+    //nactor_cm_del(get_ggs()->acm, item->) {
+}
+
+s32 nactor_heal(nActorComponent *ac, s32 heal_amount) {
+    ac->d.hp += heal_amount;
+    ac->d.hp = minimum(ac->d.hp, ac->d.max_hp);
+    return ac->d.hp;
 }
 
 s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
@@ -246,7 +270,7 @@ s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
         if (ac->d.hp <= 0) {
             nactor_die(ac);
         }
-        ac->s.shake_duration = 0.3;
+        ac->d.shake_duration = 0.3;
     }else {
         damage = 0;
     }
@@ -259,14 +283,10 @@ void nactor_attack(nActorComponent *attacker, nActorComponent *victim) {
     }
 }
 
-nDestructibleData ndestructible_data_make(s32 max_hp, s32 def) {
-    return (nDestructibleData){.max_hp = max_hp, .hp = max_hp, .def = def};
+nDestructibleData ndestructible_data_make(s32 max_hp, s32 def, f32 shake_str) {
+    return (nDestructibleData){.max_hp = max_hp, .hp = max_hp, .def = def, .shake_duration = 0.0, .shake_str = shake_str};
 }
+
 nAttackData nattack_data_make(s32 powa) {
     return (nAttackData){.powa = powa};
 }
-
-nShakeData nshake_data_make(f32 shake_duration, f32 shake_str) {
-    return (nShakeData) {.shake_duration = shake_duration, .shake_str = shake_str};
-}
-

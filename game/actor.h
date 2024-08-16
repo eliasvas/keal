@@ -12,8 +12,12 @@ struct nDestructibleData {
     s32 max_hp;
     s32 hp;
     s32 def;
+
+    // Should these really be here??
+    f32 shake_duration;
+    f32 shake_str;
 };
-nDestructibleData ndestructible_data_make(s32 max_hp, s32 def);
+nDestructibleData ndestructible_data_make(s32 max_hp, s32 def, f32 shake_str);
 
 typedef struct nAttackData nAttackData;
 struct nAttackData {
@@ -21,16 +25,14 @@ struct nAttackData {
 };
 nAttackData nattack_data_make(s32 powa);
 
-typedef struct nShakeData nShakeData;
-struct nShakeData {
-    f32 shake_duration;
-    f32 shake_str;
+#define NMAX_ITEMS 6
+typedef struct nActorContainer nActorContainer;
+typedef struct nActorComponent nActorComponent; // this is UGLY AF, basically mutated struct declaration
+struct nActorContainer {
+    nActorComponent *items[NMAX_ITEMS];
+    u8 item_count;
+    u8 current_selected_item_index;
 };
-nShakeData nshake_data_make(f32 shake_duration, f32 shake_str);
-
-
-
-
 
 ////////////////////////////////
 // nActor component
@@ -38,10 +40,12 @@ nShakeData nshake_data_make(f32 shake_duration, f32 shake_str);
 
 typedef enum nActorFeatureFlags nActorFeatureFlags;
 enum nActorFeatureFlags {
-    NACTOR_FEATURE_FLAG_DESTRUCTIBLE = (1 << 0), // Can take damage and break/die
-    NACTOR_FEATURE_FLAG_ATTACKER     = (1 << 1), // Can damage destructibles
-    NACTOR_FEATURE_FLAG_AI           = (1 << 2), // It's self updating
+    NACTOR_FEATURE_FLAG_DESTRUCTIBLE  = (1 << 0), // Can take damage and break/die
+    NACTOR_FEATURE_FLAG_ATTACKER      = (1 << 1), // Can damage destructibles
+    NACTOR_FEATURE_FLAG_AI            = (1 << 2), // It's self updating
     NACTOR_FEATURE_FLAG_SHAKEABLE     = (1 << 3), // It will Shake!
+    NACTOR_FEATURE_FLAG_PICKABLE      = (1 << 4), // Actor is pickable
+    NACTOR_FEATURE_FLAG_HAS_CONTAINER = (1 << 5), // Actor can pick up things
 };
 
 typedef enum nActorKind nActorKind;
@@ -62,7 +66,7 @@ struct nActorComponent {
     nActorFeatureFlags flags;
     nDestructibleData d;
     nAttackData a;
-    nShakeData s;
+    nActorContainer c;
     b32 blocks; // Is this actor blocking movement??
     u8 name[64];
 };

@@ -244,10 +244,10 @@ nEntity nmap_add_player(nMap *map, s32 x, s32 y) {
     ac->posy = y;
     ac->tc = TILESET_PLAYER_TILE; 
     ac->blocks = 1;
-    ac->d = ndestructible_data_make(1000,2);
+    ac->d = ndestructible_data_make(30,2,0.3);
     ac->a = nattack_data_make(3);
-    ac->s = nshake_data_make(0, 0.3);
-    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
+    M_ZERO_STRUCT(&ac->c);
+    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE | NACTOR_FEATURE_FLAG_HAS_CONTAINER;
     sprintf(ac->name, "player");
     return player;
 }
@@ -259,9 +259,9 @@ nEntity nmap_add_enemy(nMap *map, s32 x, s32 y) {
     ac->posx = x;
     ac->posy = y;
     ac->blocks = 1;
-    ac->d = ndestructible_data_make(10,1);
+    ac->d = ndestructible_data_make(10,1,0.3);
     ac->a = nattack_data_make(10);
-    ac->s = nshake_data_make(0, 0.3);
+    M_ZERO_STRUCT(&ac->c);
     ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
     if (gen_random(0,100) < 70) {
         sprintf(ac->name, "skelly");

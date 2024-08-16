@@ -3,6 +3,21 @@
 #include "engine.h"
 #include "tileset4922.inl"
 
+/*
+    GAME TODO:
+
+    To reach a point where we can start playing around with GUI/editor stuff I need the game loop
+    to be better. We need a bit more things.
+
+    - There should be droppable items we can pick up and put in inventory (spell scrolls/potions)
+    - We should be able to have a 'scroll list' of items (interface will be Q+ E- SPACE to use said item)
+    - Tiles should be pickable so you can 'cast' spells
+    - There should be stairs somewhere in the dungeon to signify end of the level
+
+    Maybe once these + 3D +++++ all other stuff are done we will have
+    a teleglitch style game (i want real time combat REAL bad)
+*/
+
 static GameState gs = {0};
 
 GameState *get_ggs() {
