@@ -45,6 +45,11 @@ nEntityComponentIndexPairNode *nactor_cm_lookup_node(nActorCM *cm, nEntity e) {
 }
 
 
+nEntity nactor_cm_lookup_entity_from_ptr(nActorCM *cm, nActorComponent *cmp) {
+    nCompIndex idx = (cmp - cm->actors) / sizeof(nActorComponent);
+    return cm->entity[idx];
+}
+
 nCompIndex nactor_cm_lookup(nActorCM *cm, nEntity e) {
     nEntityComponentIndexPairNode *n = nactor_cm_lookup_node(cm, e);
     return (n) ? n->comp_idx : NCOMPONENT_INDEX_INVALID;
@@ -62,7 +67,7 @@ nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e) {
     nCompIndex new_idx = nactor_cm_make_new_index(cm);
     M_ZERO_STRUCT(&cm->actors[new_idx]);
     cm->entity[new_idx] = e;
-    //cm->actors[new_idx] = e;
+    //cm->actors[new_idx] = __;
 
     // insert Pair in lookup table
     u32 slot = e%cm->lookup_table_size;
@@ -155,10 +160,21 @@ void nactor_move_or_attack(nActorComponent *ac, nMap *map, ivec2 delta) {
             nactor_attack(ac, actor);
         }
     }
+
+    // Check to see whether in target position there is an item, in which case, we PICK UP 
+    for (u32 j = 0; j < get_ggs()->acm.size; j+=1) {
+        nActorComponent *actor = &get_ggs()->acm.actors[j];
+        if (actor->posx == new_pos.x && actor->posy == new_pos.y && actor->kind != ac->kind && (actor->flags & NACTOR_FEATURE_FLAG_PICKABLE) && (ac->flags & NACTOR_FEATURE_FLAG_HAS_CONTAINER)) {
+            s32 container_index = nactor_pick_up_item(ac, actor);
+            nactor_use_item(ac, container_index);
+        }
+    }
+
+
 }
 
 void nactor_update(nActorComponent *ac, nMap *map) {
-    if (ac->d.hp <= 0)return;
+    if ((ac->flags & NACTOR_FEATURE_FLAG_DESTRUCTIBLE) && ac->d.hp <= 0)return;
     ivec2 delta = iv2(0,0);
     switch (ac->kind) {
         case NACTOR_KIND_PLAYER:
@@ -171,6 +187,7 @@ void nactor_update(nActorComponent *ac, nMap *map) {
             }else if (ninput_key_pressed(NKEY_SCANCODE_DOWN)) {
                 delta.y+=1;
             }
+            nactor_move_or_attack(ac, map, delta);
             break;
         case NACTOR_KIND_ENEMY:
             if (gen_random(0,10) == 0) {
@@ -191,12 +208,22 @@ void nactor_update(nActorComponent *ac, nMap *map) {
 
                 }
             }
-           break;
+            nactor_move_or_attack(ac, map, delta);
+            break;
+        case NACTOR_KIND_DOOR:
+            nActorComponent *player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
+            if (player_cmp && player_cmp->posx == ac->posx && player_cmp->posy == ac->posy){
+                printf("NEXT LEVEL!\n");
+                nactor_cm_clear(&(get_ggs()->acm));
+                nmap_create(&(get_ggs()->map),64,64);
+            }
+            break;
+        case NACTOR_KIND_ITEM:
+            break;
         default:
             printf("Who is dis guy?!\n");
             break;
     }
-    nactor_move_or_attack(ac, map, delta);
 }
 
 
@@ -204,6 +231,7 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn) {
     for (u32 i = 0; i < cm->size; i+=1) {
         cm->actors[i].d.shake_duration = maximum(0.0f, cm->actors[i].d.shake_duration - get_ngs()->dt/1000.0);
         if (!new_turn)continue;
+        if (!cm->actors[i].active)continue;
         nactor_update(&(cm->actors[i]), map);
     }
 }
@@ -218,6 +246,7 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
 
     for (u32 i = 0; i < cm->size; i+=1) {
         nActorComponent *actor = &(cm->actors[i]);
+        if (!actor->active)continue;
         vec2 shake_offset = nactor_calc_shake_offset(actor);
         nBatch2DQuad q = {
             .color = actor->color,
@@ -245,16 +274,20 @@ s32 nactor_die(nActorComponent *ac) {
 }
 s32 nactor_pick_up_item(nActorComponent *ac, nActorComponent *item) {
     if (ac->flags & NACTOR_FEATURE_FLAG_HAS_CONTAINER) {
-        ac->c.items[ac->c.item_count] = item;
-        ac->c.item_count+=1;
+        if (ac->c.item_count < NMAX_ITEMS) {
+            for (s32 i = 0; i < NMAX_ITEMS; i+=1) {
+                if (ac->c.items[i] == 0) {
+                    ac->c.items[i] = item;
+                    ac->c.item_count+=1;
+                    item->active = 0;
+                    return i;
+                }
+            }
+        }else {
+            printf("inventory full!\n");
+        }
     }
-}
-
-s32 nactor_use_item(nActorComponent *ac, u8 item_index) {
-    assert(item_index < ac->c.item_count);
-    nActorComponent *item = ac->c.items[item_index] = item;
-    // ITEM LOGIC
-    //nactor_cm_del(get_ggs()->acm, item->) {
+    return 0;
 }
 
 s32 nactor_heal(nActorComponent *ac, s32 heal_amount) {
@@ -276,6 +309,25 @@ s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
     }
     return damage;
 }
+
+s32 nactor_use_item(nActorComponent *ac, u8 item_index) {
+    nActorComponent *item = ac->c.items[item_index];
+
+    // ITEM LOGIC
+    printf("item: %s used!\n", item->name);
+    nEntity item_entity = nactor_cm_lookup_entity_from_ptr(&(get_ggs()->acm), item);
+    if (strcmp(item->name, "hlt-potion") == 0) {
+        nactor_heal(ac, 10);
+    }else {
+        ac->a.powa*=2;
+    }
+
+    // remove item from container
+    ac->c.item_count-=1;
+    ac->c.items[item_index] = 0;
+    //nactor_cm_del(&(get_ggs()->acm), item_entity);
+}
+
 
 void nactor_attack(nActorComponent *attacker, nActorComponent *victim) {
     if (victim->flags & NACTOR_FEATURE_FLAG_DESTRUCTIBLE && (victim->d.hp > 0)) {

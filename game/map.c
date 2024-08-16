@@ -235,16 +235,35 @@ b32 ndungeon_sub_is_leaf(nDungeonSubdivision *s) {
     return (s->child_count == 0);
 }
 
+
+nEntity nmap_add_door(nMap *map, s32 x, s32 y) {
+    nEntity door = nentity_create(&(get_ggs()->em));
+    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), door);
+    ac->active = 1;
+    ac->color = v4(0,0,1,1);
+    ac->kind = NACTOR_KIND_DOOR;
+    ac->posx = x;
+    ac->posy = y;
+    ac->tc = TILESET_DOOR_TILE; 
+    ac->blocks = 0;
+    M_ZERO_STRUCT(&ac->c);
+    ac->flags = 0;
+    sprintf(ac->name, "door");
+    return door;
+}
+
+
 nEntity nmap_add_player(nMap *map, s32 x, s32 y) {
     nEntity player = nentity_create(&(get_ggs()->em));
     nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), player);
+    ac->active = 1;
     ac->color = v4(0.5,0.3,0.7,1);
     ac->kind = NACTOR_KIND_PLAYER;
     ac->posx = x;
     ac->posy = y;
     ac->tc = TILESET_PLAYER_TILE; 
     ac->blocks = 1;
-    ac->d = ndestructible_data_make(30,2,0.3);
+    ac->d = ndestructible_data_make(50,2,0.3);
     ac->a = nattack_data_make(3);
     M_ZERO_STRUCT(&ac->c);
     ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE | NACTOR_FEATURE_FLAG_HAS_CONTAINER;
@@ -260,7 +279,8 @@ nEntity nmap_add_enemy(nMap *map, s32 x, s32 y) {
     ac->posy = y;
     ac->blocks = 1;
     ac->d = ndestructible_data_make(10,1,0.3);
-    ac->a = nattack_data_make(10);
+    ac->a = nattack_data_make(5);
+    ac->active = 1;
     M_ZERO_STRUCT(&ac->c);
     ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
     if (gen_random(0,100) < 70) {
@@ -271,6 +291,30 @@ nEntity nmap_add_enemy(nMap *map, s32 x, s32 y) {
         sprintf(ac->name, "troll");
         ac->color = v4(0.8,0.5,0.7,1);
         ac->tc = TILESET_TROLL_TILE; 
+    }
+    return enemy;
+}
+
+nEntity nmap_add_item(nMap *map, s32 x, s32 y) {
+    nEntity enemy = nentity_create(&(get_ggs()->em));
+    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), enemy);
+    ac->active = 1;
+    ac->kind = NACTOR_KIND_ITEM;
+    ac->posx = x;
+    ac->posy = y;
+    ac->blocks = 0;
+    ac->d = ndestructible_data_make(10,1,0.3);
+    ac->a = nattack_data_make(10);
+    M_ZERO_STRUCT(&ac->c);
+    ac->flags = NACTOR_FEATURE_FLAG_PICKABLE;
+    if (gen_random(0,100) < 70) {
+        sprintf(ac->name, "hlt-potion");
+        ac->color = v4(0.9,0.2,0.2,1);
+        ac->tc = TILESET_POTION_TILE; 
+    }else {
+        sprintf(ac->name, "str-potion");
+        ac->color = v4(0.3,0.9,0.8,1);
+        ac->tc = TILESET_POTION_TILE; 
     }
     return enemy;
 }
@@ -326,6 +370,16 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                     enemy_num-=1;
                 }
 
+                // Generate randomized items 
+                s32 item_num = gen_random(0, map->max_room_enemies+1);
+                while (item_num) {
+                    s32 x = gen_random(child->x, child->x + child->w+1);
+                    s32 y = gen_random(child->y, child->y + child->h+1);
+                    if (nmap_tile_is_walkable(map, x,y)) {
+                        nmap_add_item(map,x,y);
+                    }
+                    item_num-=1;
+                }
             }else {
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_WALL);
             }
@@ -363,5 +417,16 @@ void nmap_generate(nMap *map) {
     nmap_subdivide(map, dungeon);
     nmap_gen_rooms(map, dungeon);
     nmap_gen_corridors(map, dungeon);
+
+    // Generate randomized door for end of level
+    s32 door_x= gen_random(0, map->width);
+    s32 door_y = gen_random(0, map->height);
+    while (!nmap_tile_is_walkable(map, door_x, door_y)) {
+        door_x= gen_random(0, map->width);
+        door_y = gen_random(0, map->height);
+    }
+    nmap_add_door(map, door_x, door_y);
+
+
     //nmap_print_dungeon_bsp(dungeon, 0);
 }

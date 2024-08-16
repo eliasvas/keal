@@ -54,6 +54,8 @@ enum nActorKind {
     NACTOR_KIND_ENEMY,
     NACTOR_KIND_NPC,
     NACTOR_KIND_OTHER,
+    NACTOR_KIND_ITEM,
+    NACTOR_KIND_DOOR,
     NACTOR_KIND_COUNT,
 };
 
@@ -69,6 +71,7 @@ struct nActorComponent {
     nActorContainer c;
     b32 blocks; // Is this actor blocking movement??
     u8 name[64];
+    b32 active;
 };
 
 ////////////////////////////////
@@ -100,6 +103,7 @@ struct nActorCM {
 void nactor_cm_init(nActorCM *cm, nEntityManager *em);
 void nactor_cm_deinit(nActorCM *cm, nEntityManager *em);
 nCompIndex nactor_cm_lookup(nActorCM *cm, nEntity e);
+nEntity nactor_cm_lookup_entity_from_ptr(nActorCM *cm, nActorComponent *cmp);
 nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e);
 nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e);
 void nactor_cm_del(nActorCM *cm, nEntity e);
@@ -108,6 +112,8 @@ void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn);
 void nactor_cm_clear(nActorCM *cm);
 b32 nactor_cm_check_movement_event(nActorCM *cm);
 void nactor_attack(nActorComponent *attacker, nActorComponent *victim);
+s32 nactor_pick_up_item(nActorComponent *ac, nActorComponent *item);
+s32 nactor_use_item(nActorComponent *ac, u8 item_index);
 
 
 #endif
