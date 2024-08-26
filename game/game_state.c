@@ -118,9 +118,41 @@ void game_state_deinit() {
     nentity_manager_destroy(&gs.em);
 }
 
+// TODO -- Make these fade in/out based not only on current but previous sprites!
+void game_state_render_silly_stuff() {
+    rand_init();
+    guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
+    for (u32 i = 0; i < (get_ngs()->win.ww /32); i+=1) {
+        for (u32 j = 0; j < (get_ngs()->win.wh / 32); j+=1) {
+            nBatch2DQuad q = {0};
+            guiVec4 c =colors[gen_random(0,14)]; 
+            q.color = v4(c.x,c.y,c.z,c.w);
+            q.pos.x = 32 * i;
+            q.pos.y = 32 * j;
+            q.dim.x = 32;
+            q.dim.y = 32;
+            q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
+            q.angle_rad = sin(get_current_timestamp()/500.0)/3;
+            vec2 mp = ninput_get_mouse_pos();
+            if (fabsf(mp.x - q.pos.x - q.dim.x/2) < 10)q.color = v4(1,1,1,1);
+            if (fabsf(mp.y - q.pos.y - q.dim.y/2) < 10)q.color = v4(1,1,1,1);
+            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
+        }
+    }
+}
+
 void game_state_update_and_render() {
     do_game_gui();
-    if (game_state_status_match(GAME_STATUS_START_MENU)) {return;}
+    if (ninput_key_pressed(NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
+    if (game_state_status_match(GAME_STATUS_START_MENU)) {
+        // mat4 viewm = m4d(1);
+        // nbatch2d_rend_set_view_mat(&gs.batch_rend, viewm);
+        // nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
+        // game_state_render_silly_stuff();
+        // nbatch2d_rend_end(&gs.batch_rend);
+        return;
+    }
+
     GameStatus status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
     game_state_status_set(status);
 
@@ -132,27 +164,17 @@ void game_state_update_and_render() {
     }
 
     nactor_cm_simulate(&(gs.acm), &(gs.map), game_state_status_match(GAME_STATUS_NEW_TURN));
-
-    // TODO -- this 0.1 should become scroll speed or something
     nScrollAmount scroll_y = ninput_get_scroll_amount_delta();
-    if (scroll_y) {
-        gs.zoom_amount += scroll_y * 0.1;
-    }
 
-    ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_ngs()->win.ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_ngs()->win.wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
+    if (scroll_y) { gs.zoom_amount += scroll_y * 0.1; }
+    ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount - get_ngs()->win.ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_ngs()->win.wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
     mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
     nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
-
     nbatch2d_rend_begin(&gs.batch_rend, &get_ngs()->win);
- 
     nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));
-
     nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
-
-    // FIXME -- i think we crash if nothing is drawn? WHY?!
     nbatch2d_rend_end(&gs.batch_rend);
 
-    //do_gui_test();
 }
 
 void game_state_status_set(GameStatus status) {

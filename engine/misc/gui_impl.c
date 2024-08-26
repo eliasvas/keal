@@ -186,5 +186,6 @@ void gui_impl_render() {
     vec2 windim = v2(gui_get_ui_state()->win_dim.x, gui_get_ui_state()->win_dim.y);
     ogl_sp_set_uniform(&sp, "winDim", OGL_SHADER_DATA_TYPE_VEC2, &windim);
     ogl_bind_image_to_texture_slot(&atlas, 0, 0);
+    ogl_set_viewport(0,0,gui_get_ui_state()->win_dim.x, gui_get_ui_state()->win_dim.y);
     ogl_draw_instanced(OGL_PRIM_TRIANGLE_STRIP, 0, 4, instance_count);
 }

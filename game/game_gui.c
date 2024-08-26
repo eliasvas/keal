@@ -25,15 +25,26 @@ void gui_start_menu_panel_end() {
 }
 
 void do_start_menu_gui() {
-    gui_start_menu_panel_begin(100,100);
+    gui_start_menu_panel_begin(200,200);
     //gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,1,0});
     gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1,0});
+    gui_set_next_bg_color(gv4(0.23,0.35,0.65,1)); // #3b5ba5
     guiSignal play_sig = gui_button("Play");
     if (play_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
-        // generate a dungeon
+        // generate a new level
         game_state_generate_new_level();
         // and start the game 
         game_state_status_set(GAME_STATUS_IDLE);
+    }
+    gui_set_next_bg_color(gv4(0.9,0.47,0.36,1)); // #e87a5d
+    guiSignal options_sig = gui_button("Options"); 
+    if (options_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
+        // Do Options menu (TBA)
+    }
+    gui_set_next_bg_color(gv4(0.95,0.72,0.25,1)); // #f3b941
+    guiSignal quit_sig = gui_button("Quit");
+    if (quit_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
+        exit(1);
     }
     gui_start_menu_panel_end();
 }
