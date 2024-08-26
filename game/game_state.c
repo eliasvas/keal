@@ -24,60 +24,59 @@ GameState *get_ggs() {
     return &gs;
 }
 
-guiSimpleWindowData wdata= {0};
-guiSliderData spin_data;
-guiSliderData slider_data;
-guiSliderData slider_data2;
+// guiSimpleWindowData wdata = {0};
+// guiSliderData spin_data = {0};
+// guiSliderData slider_data = {0};
+// guiSliderData slider_data2 = {0};
 
-void do_gui_test() {
-    if (ninput_mkey_pressed(NKEY_MMB)){
-        wdata.active = (wdata.active) ? 0 : 1;
-    }
-    gui_build_begin();
-    guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
-    if (wdata.active){
-        gui_swindow_begin(&wdata);
+// void do_gui_test() {
+//     if (ninput_mkey_pressed(NKEY_MMB)){
+//         wdata.active = (wdata.active) ? 0 : 1;
+//     }
+//     gui_build_begin();
+//     guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
+//     if (wdata.active){
+//         gui_swindow_begin(&wdata, AXIS2_Y);
         
-        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
-        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
-        gui_set_next_child_layout_axis(AXIS2_X);
-        guiSignal sp = gui_panel("spinner_panel");
-        gui_push_parent(sp.box);
-        {
-            gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-            gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-            guiSignal s = gui_label("min_room_size (px)");
-            gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
-            gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-            gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-            gui_spinner("spinner123", AXIS2_X, gv2(8,16), &spin_data);
-        }
-        gui_pop_parent();
+//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
+//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
+//         gui_set_next_child_layout_axis(AXIS2_X);
+//         guiSignal sp = gui_panel("spinner_panel");
+//         gui_push_parent(sp.box);
+//         {
+//             gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+//             gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+//             guiSignal s = gui_label("min_room_size (px)");
+//             gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+//             gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+//             gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+//             gui_spinner("spinner123", AXIS2_X, gv2(8,16), &spin_data);
+//         }
+//         gui_pop_parent();
 
-        gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
-        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-        gui_slider("min_room_factor", AXIS2_X, gv2(4,10), &slider_data);
+//         gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+//         gui_slider("min_room_factor", AXIS2_X, gv2(4,10), &slider_data);
        
-        gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
-        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-        gui_slider("max_room_factor", AXIS2_X, gv2(6,10), &slider_data2);
+//         gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
+//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
+//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
+//         gui_slider("max_room_factor", AXIS2_X, gv2(6,10), &slider_data2);
        
-        gui_set_next_bg_color(gv4(1,0.4,0.4,1.0));
-        gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-        gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-        guiSignal genb = gui_button("generate map");
-        if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
-            nactor_cm_clear(&(get_ggs()->acm));
-            nmap_create_ex(&gs.map, 64,64, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
-        }
+//         gui_set_next_bg_color(gv4(1,0.4,0.4,1.0));
+//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
+//         guiSignal genb = gui_button("generate map");
+//         if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
+//             nactor_cm_clear(&(get_ggs()->acm));
+//             nmap_create_ex(&gs.map, 64,64, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
+//         }
+//         gui_swindow_end(&wdata);
+//     }
+//     gui_build_end();
+// }
 
-
-        gui_swindow_end(&wdata);
-    }
-    gui_build_end();
-}
 
 
 oglImage game_load_rgba_image_from_disk(const char *path) {
@@ -103,19 +102,15 @@ void game_state_init_images() {
 
 nEntity player;
 void game_state_init() {
-    gs.status = GAME_STATUS_STARTUP;
+    game_state_status_set(GAME_STATUS_STARTUP);
     gs.zoom_amount = 1;
+    gs.animation_speed = 10;
     game_state_init_images();
     nentity_manager_init(&gs.em);
     ntransform_cm_init(&gs.tcm, &gs.em);
     nactor_cm_init(&gs.acm, &gs.em);
-    nmap_create(&gs.map,64,64);
-
-    // Init some GUI stuff
-    sprintf(wdata.name, "Debug");
-    wdata.dim = gv2(400,300);
-    wdata.pos = gv2(100,100);
-    wdata.active = 0;
+    game_state_generate_new_level();
+    game_state_status_set(GAME_STATUS_START_MENU);
 }
 
 void game_state_deinit() {
@@ -124,7 +119,10 @@ void game_state_deinit() {
 }
 
 void game_state_update_and_render() {
-    gs.status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
+    do_game_gui();
+    if (game_state_status_match(GAME_STATUS_START_MENU)) {return;}
+    GameStatus status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
+    game_state_status_set(status);
 
     ivec2 player_pos = iv2(0,0);
     nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), gs.map.player);
@@ -133,7 +131,7 @@ void game_state_update_and_render() {
         player_pos = iv2(player_cmp->posx, player_cmp->posy);
     }
 
-    nactor_cm_simulate(&(gs.acm), &(gs.map), (gs.status == GAME_STATUS_NEW_TURN));
+    nactor_cm_simulate(&(gs.acm), &(gs.map), game_state_status_match(GAME_STATUS_NEW_TURN));
 
     // TODO -- this 0.1 should become scroll speed or something
     nScrollAmount scroll_y = ninput_get_scroll_amount_delta();
@@ -154,5 +152,18 @@ void game_state_update_and_render() {
     // FIXME -- i think we crash if nothing is drawn? WHY?!
     nbatch2d_rend_end(&gs.batch_rend);
 
-    do_gui_test();
+    //do_gui_test();
+}
+
+void game_state_status_set(GameStatus status) {
+    gs.status = status;
+}
+
+b32  game_state_status_match(GameStatus status) {
+    return (gs.status == status);
+}
+
+void game_state_generate_new_level() {
+    nactor_cm_clear(&(get_ggs()->acm));
+    nmap_create_ex(&gs.map, 64,64, 8,0.4,0.6);
 }

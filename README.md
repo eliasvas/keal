@@ -1,5 +1,5 @@
 ### Description
-This is a roguelike game/engine project because I've been working on. </br>
+This is a roguelike game/engine project I've been working on. </br>
 Currently to be cross-platform I use OpenGL ES 3.0 and SDL2 everywhere. </br>
 You can play a somewhat recent version [here](https://ily-gep.itch.io/wasm-demo0) </br>
 
@@ -11,10 +11,11 @@ You can play a somewhat recent version [here](https://ily-gep.itch.io/wasm-demo0
   - [ ] Multithreading (Emscripten Sucks)
 - Playable 2D Roguelike
   - [x] make
+  - [ ] real-time combat 
   - [ ] game
 - Editor/GUI stuff
   - [ ] mini-map
-  - [ ] GUI enhancements
+  - [x] GUI enhancements
   - [ ] In-Game editor
 - 3D stuff
     - [ ] Physically-Based Deferred Renderer

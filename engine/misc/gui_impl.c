@@ -174,8 +174,8 @@ void gui_impl_update() {
 
 // TODO -- these instance data should be some kind of list in the gui, and COMPOSE a static array for VBO
 void gui_impl_render() {
-    guiInstanceData *instance_data = (guiInstanceData*)&gui_get_ui_state()->rcmd_buf.commands[0];
-    u32 instance_count = gui_render_cmd_buf_count(&gui_get_ui_state()->rcmd_buf);
+    guiInstanceData *instance_data = (guiInstanceData*)gui_render_cmd_buf_get_array(&gui_get_ui_state()->rcmd_buf);
+    u32 instance_count = gui_render_cmd_buf_get_count(&gui_get_ui_state()->rcmd_buf);
 
     //vbo = ogl_buf_make(OGL_BUF_KIND_VERTEX, instance_data, instance_count, sizeof(guiInstanceData));
     ogl_buf_update(&vbo, instance_data, instance_count,sizeof(guiInstanceData));

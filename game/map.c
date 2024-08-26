@@ -263,7 +263,7 @@ nEntity nmap_add_player(nMap *map, s32 x, s32 y) {
     ac->posy = y;
     ac->tc = TILESET_PLAYER_TILE; 
     ac->blocks = 1;
-    ac->d = ndestructible_data_make(50,2,0.3);
+    ac->d = ndestructible_data_make(10,2,0.3);
     ac->a = nattack_data_make(3);
     M_ZERO_STRUCT(&ac->c);
     ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE | NACTOR_FEATURE_FLAG_HAS_CONTAINER;
