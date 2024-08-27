@@ -24,23 +24,38 @@ if (WIN32)
 endif()
 
 # build the engine
-add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c)
+add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c engine/audio/audio.c engine/audio/audio_SDL_impl.c)
 include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
 target_link_libraries(engine guiLib)
 
 
 if (DEFINED EMSCRIPTEN)
-	set_target_properties(engine PROPERTIES COMPILE_FLAGS " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
-	set_target_properties(engine PROPERTIES LINK_FLAGS    " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
+	set_target_properties(engine PROPERTIES COMPILE_FLAGS " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
+	set_target_properties(engine PROPERTIES LINK_FLAGS    " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
 	set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 endif()
 
 # SDL2 stuff
 if (BUILD_SDL)
+    # regular SDL2
+    option(SDL_STATIC "Build SDL2 as a static library" ON)
+    option(SDL_SHARED "Build SDL2 as a shared library" OFF)
     add_subdirectory(ext/SDL)
     include_directories(engine ${SDL2_INCLUDE_DIRS})
     target_link_libraries(engine SDL2-static)
+
+    # and SDL_Mixer
+    option(SDL2MIXER_SHARED "Build SDL2_mixer as a shared library" OFF)
+    option(SDL2MIXER_BUILD_SHARED_LIBS "Build SDL2_mixer shared libraries" OFF)
+    option(BUILD_SHARED_LIBS "Build SDL2_mixer shared libraries" OFF)
+    option(SDL2MIXER_STATIC "Build SDL2_mixer as a static library" ON)
+    option(SDL2MIXER_MIDI "Support MIDI output" OFF)
+    option(SDL2MIXER_MOD "Support loading MOD music" OFF)
+    option(SDL2MIXER_WAVPACK "Enable WavPack music" OFF)
+    add_subdirectory(ext/SDL_mixer)
+    include_directories(${SDL2_MIXER_INCLUDE_DIRS})
+    target_link_libraries(engine SDL2_mixer)
 endif()
 
 # use Address Sanitizer

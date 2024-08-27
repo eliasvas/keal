@@ -16,7 +16,6 @@ guiSignal gui_start_menu_panel_begin(f32 width, f32 height) {
 	guiSignal main_menu_panel = gui_panel(box_name);
 	gui_push_parent(main_menu_panel.box);
     gui_push_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1,0});
-
 }
 
 void gui_start_menu_panel_end() {
@@ -40,6 +39,11 @@ void do_start_menu_gui() {
     guiSignal options_sig = gui_button("Options"); 
     if (options_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
         // Do Options menu (TBA)
+        nSound *s = push_array(get_global_arena(), nSound, 1);
+        nSoundPcmData sound_data = nsound_gen_sample_pcm_data();
+        nsound_load_from_pcm_data(&(get_ngs()->actx), s, &sound_data);
+        nsound_play(&(get_ngs()->actx), s);
+        nsound_pcm_data_deinit(&sound_data);
     }
     gui_set_next_bg_color(gv4(0.95,0.72,0.25,1)); // #f3b941
     guiSignal quit_sig = gui_button("Quit");

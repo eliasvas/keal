@@ -9,6 +9,7 @@ typedef enum GameStatus GameStatus;
 enum GameStatus {
     GAME_STATUS_STARTUP,
     GAME_STATUS_START_MENU,
+    GAME_STATUS_OPTIONS_MENU,
     GAME_STATUS_IDLE,
     GAME_STATUS_NEW_TURN,
     GAME_STATUS_VICTORY,

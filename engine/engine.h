@@ -6,6 +6,7 @@
 #include "core/core_inc.h"
 #include "gfx/gfx_inc.h"
 #include "misc/misc_inc.h"
+#include "audio/audio.h"
 #include "gui.h"
 
 #endif

@@ -1,9 +1,10 @@
-#ifndef nglobal_state_H
-#define nglobal_state_H
+#ifndef NGLOBAL_STATE_H
+#define NGLOBAL_STATE_H
 
 #include "base/base_inc.h"
 #include "gfx/ogl.h"
 #include "core/window.h"
+#include "audio/audio.h"
 
 typedef struct nGlobalState nGlobalState;
 struct nGlobalState {
@@ -17,6 +18,9 @@ struct nGlobalState {
     u64 frame_count;
     u64 frame_start_ts, frame_end_ts;
     f64 dt;
+
+    // audio stuff
+    nAudioContext actx;
 
     // rendering stuff
     oglContext ogl_ctx;

@@ -24,6 +24,7 @@ void mainLoop(void) {
 int main(int argc, char **argv) {
     nglobal_state_init();
     game_state_init();
+
     #ifdef __EMSCRIPTEN__
         emscripten_set_main_loop(mainLoop, 0, 1);
     #else

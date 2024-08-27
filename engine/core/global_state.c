@@ -1,5 +1,3 @@
-// FIXME -- this _IMPLEMENTATION macro should be in the (future) asset system
-#define STB_IMAGE_IMPLEMENTATION
 #include "global_state.h"
 #include "misc/gui_impl.h"
 
@@ -40,6 +38,7 @@ void nglobal_state_init() {
     //nwindow_deinit(&get_ngs()->win);
     nglobal_state_set_target_fps(60.0);
     ogl_ctx_init(&global_state.ogl_ctx);
+    naudio_context_init(&global_state.actx);
     gui_impl_init();
 }
 
