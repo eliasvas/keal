@@ -8,3 +8,7 @@
 [submodule "ext/glew-cmake"]
 	path = ext/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake
+[submodule "ext/SDL_mixer"]
+	path = ext/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer.git
+	branch = SDL2
