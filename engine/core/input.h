@@ -1,9 +1,7 @@
-#ifndef INPUT_H
-#define INPUT_H
-// TODO -- API for scroll-wheel!
-// TODO -- ditch global input_manager, maybe have one in every window?? IDK
+#ifndef NINPUT_H
+#define NINPUT_H
 #include "base/base_inc.h"
-#include "core/core_inc.h"
+#include "core/window.h"
 
 
 typedef s32 nScrollAmount; 
@@ -136,22 +134,23 @@ struct nInputManager {
     nScrollAmount prev_scroll_amount;
 };
 
-void ninput_manager_consume_events_from_window(nWindow *win);
+void ninput_manager_init(nInputManager *im);
+void ninput_manager_consume_events_from_window(nInputManager *im, nWindow *win);
 
-b32 ninput_key_up(nKeyScanCode key);
-b32 ninput_key_down(nKeyScanCode key);
-b32 ninput_key_pressed(nKeyScanCode key);
-b32 ninput_key_released(nKeyScanCode key);
+b32 ninput_key_up(nInputManager *im, nKeyScanCode key);
+b32 ninput_key_down(nInputManager *im, nKeyScanCode key);
+b32 ninput_key_pressed(nInputManager *im, nKeyScanCode key);
+b32 ninput_key_released(nInputManager *im, nKeyScanCode key);
 
-b32 ninput_mkey_up(nKeyMouseKeycode key);
-b32 ninput_mkey_down(nKeyMouseKeycode key);
-b32 ninput_mkey_pressed(nKeyMouseKeycode key);
-b32 ninput_mkey_released(nKeyMouseKeycode key);
+b32 ninput_mkey_up(nInputManager *im, nKeyMouseKeycode key);
+b32 ninput_mkey_down(nInputManager *im, nKeyMouseKeycode key);
+b32 ninput_mkey_pressed(nInputManager *im, nKeyMouseKeycode key);
+b32 ninput_mkey_released(nInputManager *im, nKeyMouseKeycode key);
 
-vec2 ninput_get_mouse_delta(void);
-vec2 ninput_get_mouse_pos(void);
+vec2 ninput_get_mouse_delta(nInputManager *im);
+vec2 ninput_get_mouse_pos(nInputManager *im);
 
-nScrollAmount ninput_get_scroll_amount_delta(void);
-nScrollAmount ninput_get_scroll_amount(void);
+nScrollAmount ninput_get_scroll_amount_delta(nInputManager *im);
+nScrollAmount ninput_get_scroll_amount(nInputManager *im);
 
 #endif

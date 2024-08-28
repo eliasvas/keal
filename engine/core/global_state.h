@@ -4,6 +4,7 @@
 #include "base/base_inc.h"
 #include "gfx/ogl.h"
 #include "core/window.h"
+#include "core/input.h"
 #include "audio/audio.h"
 
 typedef struct nGlobalState nGlobalState;
@@ -22,6 +23,9 @@ struct nGlobalState {
     // audio stuff
     nAudioContext actx;
 
+    // input stuff
+    nInputManager im;
+
     // rendering stuff
     oglContext ogl_ctx;
     nWindow win;
@@ -37,5 +41,12 @@ void nglobal_state_frame_begin();
 void nglobal_state_frame_end();
 void nglobal_state_set_target_fps(f64 target_fps);
 f64  nglobal_state_get_dt();
+
+
+// Let's one global instead of singletons
+nWindow *get_nwin();
+oglContext *get_nogl_ctx();
+nAudioContext *get_nactx();
+nInputManager *get_nim();
 
 #endif

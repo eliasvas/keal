@@ -8,10 +8,10 @@
 // Then we can also load other scenes (e.g gltf2 samples / sponza) but NOT track them via git
 
 void mainLoop(void) {
-    ninput_manager_consume_events_from_window(&get_ngs()->win);
+    ninput_manager_consume_events_from_window(get_nim(), get_nwin());
     gui_impl_update();
     
-    ogl_clear_all_state(&get_ngs()->ogl_ctx);
+    ogl_clear_all_state(get_nogl_ctx());
     nglobal_state_frame_begin();
     ogl_image_clear(NULL);
 

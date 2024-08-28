@@ -144,7 +144,7 @@ void nactor_cm_del(nActorCM *cm, nEntity e) {
 ////////////////////////////////
 
 b32 nactor_cm_check_movement_event(nActorCM *cm) {
-    return (ninput_key_pressed(NKEY_SCANCODE_RIGHT) | ninput_key_pressed(NKEY_SCANCODE_LEFT) | ninput_key_pressed(NKEY_SCANCODE_UP) | ninput_key_pressed(NKEY_SCANCODE_DOWN));
+    return (ninput_key_pressed(get_nim(),NKEY_SCANCODE_RIGHT) | ninput_key_pressed(get_nim(),NKEY_SCANCODE_LEFT) | ninput_key_pressed(get_nim(),NKEY_SCANCODE_UP) | ninput_key_pressed(get_nim(),NKEY_SCANCODE_DOWN));
 }
 void nactor_move_or_attack(nActorComponent *ac, nMap *map, ivec2 delta) {
     ivec2 new_pos = iv2(ac->posx + delta.x, ac->posy + delta.y);
@@ -178,13 +178,13 @@ void nactor_update(nActorComponent *ac, nMap *map) {
     ivec2 delta = iv2(0,0);
     switch (ac->kind) {
         case NACTOR_KIND_PLAYER:
-            if (ninput_key_pressed(NKEY_SCANCODE_RIGHT)) {
+            if (ninput_key_pressed(get_nim(),NKEY_SCANCODE_RIGHT)) {
                 delta.x+=1;
-            }else if (ninput_key_pressed(NKEY_SCANCODE_LEFT)) {
+            }else if (ninput_key_pressed(get_nim(),NKEY_SCANCODE_LEFT)) {
                 delta.x-=1;
-            }else if (ninput_key_pressed(NKEY_SCANCODE_UP)) {
+            }else if (ninput_key_pressed(get_nim(),NKEY_SCANCODE_UP)) {
                 delta.y-=1;
-            }else if (ninput_key_pressed(NKEY_SCANCODE_DOWN)) {
+            }else if (ninput_key_pressed(get_nim(),NKEY_SCANCODE_DOWN)) {
                 delta.y+=1;
             }
             nactor_move_or_attack(ac, map, delta);

@@ -19,6 +19,7 @@ u64 get_global_frame_count() {
     return (global_state.frame_count);
 }
 
+
 void nglobal_state_init() {
     // Track engine start time
     global_state.engine_start_ts = get_current_timestamp();
@@ -35,10 +36,10 @@ void nglobal_state_init() {
     rand_init();
 
     nwindow_init(&global_state.win, "gudGame", 1024, 768, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
-    //nwindow_deinit(&get_ngs()->win);
     nglobal_state_set_target_fps(60.0);
     ogl_ctx_init(&global_state.ogl_ctx);
     naudio_context_init(&global_state.actx);
+    ninput_manager_init(&global_state.im);
     gui_impl_init();
 }
 
@@ -66,3 +67,15 @@ f64 nglobal_state_get_dt() {
     return global_state.dt;
 }
 
+nWindow *get_nwin() {
+    return &global_state.win;
+}
+oglContext *get_nogl_ctx() {
+    return &global_state.ogl_ctx;
+}
+nAudioContext *get_nactx() {
+    return &global_state.actx;
+}
+nInputManager *get_nim() {
+    return &global_state.im;
+}

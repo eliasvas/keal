@@ -6,7 +6,7 @@
 guiSignal gui_start_menu_panel_begin(f32 width, f32 height) {
 	char box_name[128];
     gui_push_bg_color(gv4(0.4,0.4,0.4,0.5));
-    guiVec2 middle_point = gv2(get_ngs()->win.ww/2,get_ngs()->win.wh/2); 
+    guiVec2 middle_point = gv2(get_nwin()->ww/2,get_nwin()->wh/2); 
 	gui_set_next_fixed_x(middle_point.x-width/2);
 	gui_set_next_fixed_y(middle_point.y-height/2);
 	gui_set_next_fixed_width(width);
@@ -41,8 +41,8 @@ void do_start_menu_gui() {
         // Do Options menu (TBA)
         nSound *s = push_array(get_global_arena(), nSound, 1);
         nSoundPcmData sound_data = nsound_gen_sample_pcm_data();
-        nsound_load_from_pcm_data(&(get_ngs()->actx), s, &sound_data);
-        nsound_play(&(get_ngs()->actx), s);
+        nsound_load_from_pcm_data(get_nactx(), s, &sound_data);
+        nsound_play(get_nactx(), s);
         nsound_pcm_data_deinit(&sound_data);
     }
     gui_set_next_bg_color(gv4(0.95,0.72,0.25,1)); // #f3b941

@@ -143,8 +143,8 @@ void gui_impl_init() {
 }
 
 void gui_impl_update() {
-    gui_get_ui_state()->win_dim.x = get_ngs()->win.ww;
-    gui_get_ui_state()->win_dim.y = get_ngs()->win.wh;
+    gui_get_ui_state()->win_dim.x = get_nwin()->ww;
+    gui_get_ui_state()->win_dim.y = get_nwin()->wh;
 
     //gui_state_update(get_ngs()->dt);
     gui_state_update(1.0/60.0);
@@ -153,17 +153,17 @@ void gui_impl_update() {
         guiInputEventNode e = {0};
         e.type = GUI_INPUT_EVENT_TYPE_MOUSE_BUTTON_EVENT;
         e.param0 = mk;
-        if (ninput_mkey_pressed(mk)){
+        if (ninput_mkey_pressed(get_nim(), mk)){
             e.param1 = 1;
             gui_input_push_event(e);
         }
-        if (ninput_mkey_released(mk)){
+        if (ninput_mkey_released(get_nim(),mk)){
             e.param1 = 0;
             gui_input_push_event(e);
         }
     }
     {
-        vec2 mp = ninput_get_mouse_pos();
+        vec2 mp = ninput_get_mouse_pos(get_nim());
         guiInputEventNode mme = {0};
         mme.type = GUI_INPUT_EVENT_TYPE_MOUSE_MOVE;
         mme.param0 = (s32)mp.x;
