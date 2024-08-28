@@ -35,4 +35,18 @@ void nsound_deinit(nAudioContext *actx, nSound *s);
 // TODO -- This should generate a 'nSoundInstance' struct that we can control its properties, like speed/volume
 void nsound_play(nAudioContext *actx, nSound *s);
 
+#define NMUSIC_PLAY_FOREVER U64_MAX
+#define NMUSIC_MAX_NAME_SIZE 64
+typedef struct nMusic nMusic;
+struct nMusic {
+    u32 volume;
+    char name[NSOUND_MAX_NAME_SIZE];
+    void *impl_state;
+};
+
+void nmusic_load(nAudioContext *actx, nMusic *m, const char *filepath);
+void nmusic_deinit(nAudioContext *actx, nMusic *m);
+void nmusic_play(nAudioContext *actx, nMusic *m, u64 times);
+
+
 #endif
