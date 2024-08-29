@@ -176,6 +176,7 @@ void nactor_move_or_attack(nActorComponent *ac, nMap *map, ivec2 delta) {
 void nactor_update(nActorComponent *ac, nMap *map) {
     if ((ac->flags & NACTOR_FEATURE_FLAG_DESTRUCTIBLE) && ac->d.hp <= 0)return;
     ivec2 delta = iv2(0,0);
+    nActorComponent *player_cmp;
     switch (ac->kind) {
         case NACTOR_KIND_PLAYER:
             if (ninput_key_pressed(get_nim(),NKEY_SCANCODE_RIGHT)) {
@@ -197,7 +198,7 @@ void nactor_update(nActorComponent *ac, nMap *map) {
                     delta.y = gen_random(1,4)-2;
                 }
             } else {
-                nActorComponent *player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
+                player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
                 ivec2 move_dir = iv2(player_cmp->posx - ac->posx, player_cmp->posy - ac->posy);
                 if (player_cmp && abs(ivec2_len(move_dir)) < 5){
                     if (gen_random(0,2)) {
@@ -211,7 +212,7 @@ void nactor_update(nActorComponent *ac, nMap *map) {
             nactor_move_or_attack(ac, map, delta);
             break;
         case NACTOR_KIND_DOOR:
-            nActorComponent *player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
+            player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
             if (player_cmp && player_cmp->posx == ac->posx && player_cmp->posy == ac->posy){
                 printf("NEXT LEVEL!\n");
                 nactor_cm_clear(&(get_ggs()->acm));

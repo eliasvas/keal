@@ -4,12 +4,146 @@
 #define OGL_CAST_GLUINT(x) ((GLuint)((u64)(x)))
 #define OGL_CAST_PTR(x) ((void*)((u64)(x)))
 //TODO -- multiple vertex buffers not supported https://stackoverflow.com/questions/14249634/opengl-vaos-and-multiple-buffers
+// maybe this helps too https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description
+
+
+////////////////////////////////
+// OpenGL function loading
+////////////////////////////////
+
+#define GLFunc(type, name) PFNGL##type##PROC name;
+GLFunc( GENBUFFERS, glGenBuffers);
+GLFunc( BINDBUFFER, glBindBuffer);
+GLFunc( DRAWBUFFERS, glDrawBuffers);
+GLFunc( USEPROGRAM, glUseProgram);
+GLFunc( SHADERSOURCE, glShaderSource);
+GLFunc( COMPILESHADER, glCompileShader);
+GLFunc( GETSHADERIV, glGetShaderiv);
+GLFunc( MAPBUFFERRANGE, glMapBufferRange);
+GLFunc( MAPBUFFER, glMapBuffer);
+GLFunc( CREATESHADER, glCreateShader);
+GLFunc( GETSHADERINFOLOG, glGetShaderInfoLog);
+GLFunc( GETPROGRAMINFOLOG, glGetProgramInfoLog);
+GLFunc( CREATEPROGRAM, glCreateProgram);
+GLFunc( ATTACHSHADER, glAttachShader);
+GLFunc( DELETESHADER, glDeleteShader);
+GLFunc( DELETEBUFFERS, glDeleteBuffers);
+GLFunc( DELETEPROGRAM, glDeleteProgram);
+GLFunc( DELETEVERTEXARRAYS, glDeleteVertexArrays);
+GLFunc( DISABLEVERTEXATTRIBARRAY, glDisableVertexAttribArray);
+GLFunc( LINKPROGRAM, glLinkProgram);
+GLFunc( GETPROGRAMIV, glGetProgramiv);
+GLFunc( UNIFORM1I, glUniform1i);
+GLFunc( UNIFORM1FV, glUniform1fv);
+GLFunc( UNIFORM2FV, glUniform2fv);
+GLFunc( UNIFORM3FV, glUniform3fv);
+GLFunc( UNIFORM4FV, glUniform4fv);
+GLFunc( UNIFORM2F, glUniform2f);
+GLFunc( UNIFORM3F, glUniform3f);
+GLFunc( UNIFORM4F, glUniform4f);
+GLFunc( UNIFORM1IV, glUniform1iv);
+GLFunc( UNIFORM2FV, glUniform2fv);
+GLFunc( UNIFORM1F, glUniform1f);
+//GLFunc( ACTIVETEXTURE, glActiveTexture);
+GLFunc( VERTEXATTRIBDIVISOR, glVertexAttribDivisor);
+GLFunc( GETUNIFORMLOCATION, glGetUniformLocation);
+GLFunc( GENVERTEXARRAYS, glGenVertexArrays);
+GLFunc( DRAWELEMENTSINSTANCED, glDrawElementsInstanced);
+GLFunc( DRAWARRAYSINSTANCED, glDrawArraysInstanced);
+//GLFunc( DRAWARRAYS, glDrawArrays);
+GLFunc( BINDVERTEXARRAY, glBindVertexArray);
+GLFunc( UNIFORMMATRIX4FV, glUniformMatrix4fv);
+GLFunc( BUFFERDATA, glBufferData);
+GLFunc( VERTEXATTRIBPOINTER, glVertexAttribPointer);
+GLFunc( VERTEXATTRIBIPOINTER, glVertexAttribIPointer);
+GLFunc( ENABLEVERTEXATTRIBARRAY, glEnableVertexAttribArray);
+GLFunc( GENERATEMIPMAP, glGenerateMipmap);
+GLFunc( GENFRAMEBUFFERS, glGenFramebuffers);
+GLFunc( FRAMEBUFFERTEXTURE2D, glFramebufferTexture2D);
+GLFunc( BINDFRAMEBUFFER, glBindFramebuffer);
+GLFunc( CHECKFRAMEBUFFERSTATUS, glCheckFramebufferStatus);
+GLFunc( BINDRENDERBUFFER, glBindRenderbuffer);
+GLFunc( RENDERBUFFERSTORAGE, glRenderbufferStorage);
+GLFunc( GENRENDERBUFFERS, glGenRenderbuffers);
+GLFunc( FRAMEBUFFERRENDERBUFFER, glFramebufferRenderbuffer);
+//GLFunc( TEXIMAGE3D, glTexImage3D);
+//GLFunc( TEXIMAGE2D, glTexImage2D);
+GLFunc( BINDIMAGETEXTURE, glBindImageTexture);
+GLFunc( MEMORYBARRIER, glMemoryBarrier);
+GLFunc( COPYIMAGESUBDATA, glCopyImageSubData);
+GLFunc( BLENDFUNCSEPARATE, glBlendFuncSeparate);
+GLFunc( BLENDEQUATIONSEPARATE, glBlendEquationSeparate);
+GLFunc( DELETEFRAMEBUFFERS, glDeleteFramebuffers);
+GLFunc( BLITFRAMEBUFFER, glBlitFramebuffer);
+
+GLFunc( BINDBUFFERBASE, glBindBufferBase);
+GLFunc( UNMAPBUFFER, glUnmapBuffer);
+GLFunc( GETBUFFERSUBDATA, glGetBufferSubData);
+GLFunc( CLEARBUFFERDATA, glClearBufferData);
+GLFunc( TEXSTORAGE2D, glTexStorage2D);
+GLFunc( BUFFERSUBDATA, glBufferSubData);
+GLFunc( CLEARTEXIMAGE, glClearTexImage);
+GLFunc( DISPATCHCOMPUTE, glDispatchCompute);
+GLFunc( MEMORYBARRIER, glMemoryBarrier);
+void ogl_load_gl_functions(void *(*load_func)()) {
+    glGenBuffers = (PFNGLGENBUFFERSPROC)load_func("glGenBuffers");
+    glBindBuffer = (PFNGLBINDBUFFERPROC)load_func("glBindBuffer");
+    glBufferData = (PFNGLBUFFERDATAPROC)load_func("glBufferData");
+    glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)load_func("glDeleteBuffers");
+    glDeleteShader = (PFNGLDELETESHADERPROC)load_func("glDeleteShader");
+
+    glCreateShader = (PFNGLCREATESHADERPROC)load_func("glCreateShader");
+    glShaderSource = (PFNGLSHADERSOURCEPROC)load_func("glShaderSource");
+    glCompileShader = (PFNGLCOMPILESHADERPROC)load_func("glCompileShader");
+    glCreateProgram = (PFNGLCREATEPROGRAMPROC)load_func("glCreateProgram");
+    glAttachShader = (PFNGLATTACHSHADERPROC)load_func("glAttachShader");
+    glLinkProgram = (PFNGLLINKPROGRAMPROC)load_func("glLinkProgram");
+    glUseProgram = (PFNGLUSEPROGRAMPROC)load_func("glUseProgram");
+    glGetShaderiv = (PFNGLGETSHADERIVPROC)load_func("glGetShaderiv");
+    glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)load_func("glGetShaderInfoLog");
+    glGetProgramiv = (PFNGLGETPROGRAMIVPROC)load_func("glGetProgramiv");
+    glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)load_func("glGetProgramInfoLog");
+
+    glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)load_func("glGetUniformLocation");
+    glUniform1i = (PFNGLUNIFORM1IPROC)load_func("glUniform1i");
+    glUniform1f = (PFNGLUNIFORM1FPROC)load_func("glUniform1f");
+    glUniform2f = (PFNGLUNIFORM2FPROC)load_func("glUniform2f");
+    glUniform3f = (PFNGLUNIFORM3FPROC)load_func("glUniform3f");
+    glUniform4f = (PFNGLUNIFORM4FPROC)load_func("glUniform4f");
+    glUniform1fv = (PFNGLUNIFORM1FVPROC)load_func("glUniform1fv");
+    glUniform2fv = (PFNGLUNIFORM2FVPROC)load_func("glUniform2fv");
+    glUniform3fv = (PFNGLUNIFORM3FVPROC)load_func("glUniform3fv");
+    glUniform4fv = (PFNGLUNIFORM4FVPROC)load_func("glUniform4fv");
+    glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)load_func("glUniformMatrix4fv");
+
+    glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)load_func("glVertexAttribPointer");
+    glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)load_func("glEnableVertexAttribArray");
+    glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)load_func("glDisableVertexAttribArray");
+    glVertexAttribDivisor = (PFNGLVERTEXATTRIBDIVISORPROC)load_func("glVertexAttribDivisor");
+
+    glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)load_func("glGenVertexArrays");
+    glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)load_func("glBindVertexArray");
+    glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)load_func("glDeleteVertexArrays");
+
+    //glActiveTexture = (PFNGLACTIVETEXTUREPROC)load_func("glActiveTexture");
+    glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)load_func("glGenerateMipmap");
+    glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)load_func("glGenFrameBuffers");
+    glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)load_func("glBindFramebuffer");
+    glBlendFuncSeparate= (PFNGLBLENDFUNCSEPARATEPROC)load_func("glBlendFuncSeparate");
+    glBlendEquationSeparate= (PFNGLBLENDEQUATIONSEPARATEPROC)load_func("glBlendEquationSeparate");
+
+    //glDrawArrays = (PFNGLDRAWARRAYSPROC)load_func("glDrawArrays");
+    //glDrawElements = (PFNGLDRAWELEMENTSPROC)load_func("glDrawElements");
+    glDrawArraysInstanced = (PFNGLDRAWARRAYSINSTANCEDPROC)load_func("glDrawArraysInstanced");
+}
 
 ////////////////////////////////
 // OGL context
 ////////////////////////////////
 
 b32 ogl_ctx_init(oglContext *ctx) {
+    //ogl_load_gl_functions(SDL_GL_GetProcAddress);
+    assert(glGenVertexArrays);
     glGenVertexArrays(1, &ctx->vao);
     ctx->initialized = 1;
     return (ctx->vao != 0);
@@ -366,10 +500,11 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
     img->width = tex_w;
     img->height = tex_h;
     img->format = fmt;
+    GLuint tex_format;
     switch (img->format) {
         case (OGL_IMAGE_FORMAT_RGBA8U): // normal textures
         case (OGL_IMAGE_FORMAT_RGB8U):
-            GLuint tex_format = (img->format == OGL_IMAGE_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
+            tex_format = (img->format == OGL_IMAGE_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
             img->kind = OGL_IMAGE_KIND_TEXTURE;
             glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
             glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));

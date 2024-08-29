@@ -1,26 +1,14 @@
 #include "window.h"
 #include "core/global_state.h"
+#include "gfx/ogl.h"
 
 // TODO -- we need some more SDL_Error logs I think
 // TODO -- Probably we want _SDL_nwindow_impl_xxx, and link with main implementation via function pointers
 // TODO -- maybe add an option for graphics API to be used?
 
-// SDL/ES3 includes
 #define SDL_MAIN_NOIMPL
-
 #include <SDL.h>
 #include <SDL_main.h>
-
-#if (OS_WINDOWS)
-    #include <GL/glew.h>
-    #include <GL/wglew.h>
-#elif (OS_LINUX)
-    #include <SDL_syswm.h>
-    #include <GLES3/gl3.h>
-    //#include <GLES/egl.h>
-#endif
-
-
 
 b32 nwindow_impl_create(nWindow *win) {
     if (SDL_Init(SDL_INIT_VIDEO)) {
@@ -54,12 +42,7 @@ b32 nwindow_impl_create(nWindow *win) {
         return 0;
     }
     SDL_GL_MakeCurrent(window,glcontext);
-
-    #if (OS_WINDOWS)
-        glewInit();
-        assert(GLEW_ARB_ES3_compatibility);
-        //glEnable(GL_FRAMEBUFFER_SRGB);
-    #endif
+    ogl_load_gl_functions(SDL_GL_GetProcAddress);
 
     {
         int majorv, minorv, profilem;
@@ -99,6 +82,7 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
     nWindowEventNode *first = NULL;
     nWindowEventNode *last = NULL;
     SDL_Event event;
+    s32 scroll_y;
     while (SDL_PollEvent(&event)) {
         nWindowEventNode *node = push_array(get_frame_arena(), nWindowEventNode, 1);
         switch (event.type) {
@@ -136,7 +120,7 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
                 break;
             case SDL_MOUSEWHEEL:
                 node->kind = N_WINDOW_EVENT_KIND_SCROLLWHEEL_EVENT;
-                s32 scroll_y = event.wheel.y;
+                scroll_y = event.wheel.y;
                 node->swe.y = scroll_y;
                 sll_queue_push(first, last, node);
             default:
@@ -147,4 +131,3 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
 
     return first;
 }
-

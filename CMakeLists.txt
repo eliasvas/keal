@@ -19,16 +19,12 @@ project(TestGame VERSION 1.0.0 LANGUAGES C)
 
 # build engine dependencies
 add_subdirectory(ext/gui)
-if (WIN32)
-    add_subdirectory(ext/glew-cmake)
-endif()
 
 # build the engine
 add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c engine/audio/audio.c engine/audio/audio_SDL_impl.c)
 include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
 target_link_libraries(engine guiLib)
-
 
 if (DEFINED EMSCRIPTEN)
 	set_target_properties(engine PROPERTIES COMPILE_FLAGS " -sWASM=1 -sSIDE_MODULE=1 -s STANDALONE_WASM -sFULL_ES3=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
@@ -70,10 +66,10 @@ else()
 endif()
 
 # to load function definitions for OpenGL ES 3.0
-if (WIN32)
-    target_link_libraries(engine libglew_static)
-else()
+if (DEFINED EMSCRIPTEN)
     target_link_libraries(engine GLESv2)
+else()
+    target_link_libraries(engine GL)
 endif()
 
 #build the game executable
@@ -84,8 +80,8 @@ if (BUILD_SDL)
     target_link_libraries(game PUBLIC engine SDL2::SDL2main)
 endif()
 if (DEFINED EMSCRIPTEN)
-	set_target_properties(game PROPERTIES COMPILE_FLAGS "-sASSERTIONS=1  -sMAIN_MODULE=1 -sUSE_SDL=2 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
-	set_target_properties(game PROPERTIES LINK_FLAGS    "-sASSERTIONS=1 -sWASM=1 -sMAIN_MODULE=1 -sFULL_ES3=1 -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
+	set_target_properties(game PROPERTIES COMPILE_FLAGS "-sASSERTIONS=1  -sMAIN_MODULE=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1")
+	set_target_properties(game PROPERTIES LINK_FLAGS    "-sASSERTIONS=1 -sWASM=1 -sMAIN_MODULE=1 -sFULL_ES3=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 

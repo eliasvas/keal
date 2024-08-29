@@ -27,7 +27,7 @@ void nmusic_impl_play(nAudioContext *actx, nMusic *m, u64 times);
 
 void naudio_context_init(nAudioContext *actx) {
     naudio_impl_context_init(actx);
-    actx->master_volume = 20;
+    actx->master_volume = 5;
 }
 void naudio_context_deinit(nAudioContext *actx) {
     naudio_impl_context_deinit(actx);

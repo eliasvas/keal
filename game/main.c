@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
     game_state_init();
 
     #ifdef __EMSCRIPTEN__
+        EM_ASM({ Module.wasmTable = wasmTable; });
         emscripten_set_main_loop(mainLoop, 0, 1);
     #else
         while (1) { mainLoop(); }

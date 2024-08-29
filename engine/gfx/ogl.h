@@ -3,27 +3,14 @@
 #include "base/base_inc.h"
 
 /*
-OverGL: This is a simple graphics abstraction on top of (currently) OpenGL ES 3.0, the main goal is to NOT have VAOs and find a
-better way to do uniforms (maybe we restrict uniforms to only UBOs/SSBOs?). It remains a 'stateful' API in the sense that
-you do bind_vertex_buffer(..);bind_index_buffer(..);draw_arrays(..). Making the engine's rendering API stateless is much easier,
-our renderer will probably have Command Buffers / Buckets as outlined in https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/  
+    OverGL: This is a simple graphics abstraction on top of (currently) OpenGL ES 3.0, the main goal is to NOT have VAOs and find a
+    better way to do uniforms (maybe we restrict uniforms to only UBOs/SSBOs?). It remains a 'stateful' API in the sense that
+    you do bind_vertex_buffer(..);bind_index_buffer(..);draw_arrays(..). Making the engine's rendering API stateless is much easier,
+    our renderer will probably have Command Buffers / Buckets as outlined in https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/  
 */
 
-// NOTE -- SDL stuff (like window/input stuff) should probably be somewhere else!
-
-
-#define SDL_MAIN_NOIMPL
-#include <SDL.h>
-#include <SDL_main.h>
-
-#if OS_WINDOWS
-    #include <GL/glew.h>
-    #include <GL/wglew.h>
-#elif OS_LINUX
-    #include <SDL_syswm.h>
-    #include <GLES3/gl3.h>
-    //#include <GLES/egl.h>
-#endif
+#include <SDL2/SDL_opengl.h>
+#include "ext/GL/glext.h"
 
 #define OGL_CTX_MAX_ATTRIBS 16
 #define OGL_CTX_MAX_TEX_SLOTS 4
@@ -139,5 +126,7 @@ void ogl_image_clear(oglImage *img);
 b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt);
 void ogl_image_deinit(oglImage *img);
 void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment);
+
+void ogl_load_gl_functions(void *(*load_func)());
 
 #endif
