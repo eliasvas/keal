@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "actor.h"
 #include "map.h"
+#include "dungeon_cam.h"
 #include "game_gui.h"
 
 typedef enum GameStatus GameStatus;
@@ -29,7 +30,7 @@ struct GameState {
     nActorCM acm;
     nMap map;
 
-    f32 zoom_amount;
+    nDungeonCam dcam;
     f32 animation_speed;
 };
 

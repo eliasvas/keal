@@ -24,61 +24,6 @@ GameState *get_ggs() {
     return &gs;
 }
 
-// guiSimpleWindowData wdata = {0};
-// guiSliderData spin_data = {0};
-// guiSliderData slider_data = {0};
-// guiSliderData slider_data2 = {0};
-
-// void do_gui_test() {
-//     if (ninput_mkey_pressed(NKEY_MMB)){
-//         wdata.active = (wdata.active) ? 0 : 1;
-//     }
-//     gui_build_begin();
-//     guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
-//     if (wdata.active){
-//         gui_swindow_begin(&wdata, AXIS2_Y);
-        
-//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
-//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_CHILDREN_SUM,1.0,0.2});
-//         gui_set_next_child_layout_axis(AXIS2_X);
-//         guiSignal sp = gui_panel("spinner_panel");
-//         gui_push_parent(sp.box);
-//         {
-//             gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-//             gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-//             guiSignal s = gui_label("min_room_size (px)");
-//             gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
-//             gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-//             gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-//             gui_spinner("spinner123", AXIS2_X, gv2(8,16), &spin_data);
-//         }
-//         gui_pop_parent();
-
-//         gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
-//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-//         gui_slider("min_room_factor", AXIS2_X, gv2(4,10), &slider_data);
-       
-//         gui_set_next_bg_color(gv4(0.6,0.2,0.4,1.0));
-//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0,1.0});
-//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1.0/5.0,0.5});
-//         gui_slider("max_room_factor", AXIS2_X, gv2(6,10), &slider_data2);
-       
-//         gui_set_next_bg_color(gv4(1,0.4,0.4,1.0));
-//         gui_set_next_pref_width((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-//         gui_set_next_pref_height((guiSize){GUI_SIZEKIND_TEXT_CONTENT,5.0,1.0});
-//         guiSignal genb = gui_button("generate map");
-//         if (genb.flags & GUI_SIGNAL_FLAG_LMB_PRESSED) {
-//             nactor_cm_clear(&(get_ggs()->acm));
-//             nmap_create_ex(&gs.map, 64,64, spin_data.value, slider_data.value / 10.0,slider_data2.value / 10.0);
-//         }
-//         gui_swindow_end(&wdata);
-//     }
-//     gui_build_end();
-// }
-
-
-
 oglImage game_load_rgba_image_from_disk(const char *path) {
     oglImage img;
     s32 w,h,comp;
@@ -103,7 +48,7 @@ void game_state_init_images() {
 nEntity player;
 void game_state_init() {
     game_state_status_set(GAME_STATUS_STARTUP);
-    gs.zoom_amount = 1;
+    gs.dcam.zoom = 1;
     gs.animation_speed = 10;
     game_state_init_images();
     nentity_manager_init(&gs.em);
@@ -111,6 +56,7 @@ void game_state_init() {
     nactor_cm_init(&gs.acm, &gs.em);
     game_state_generate_new_level();
     game_state_status_set(GAME_STATUS_START_MENU);
+    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(5,5));
 }
 
 void game_state_deinit() {
@@ -166,9 +112,11 @@ void game_state_update_and_render() {
     nactor_cm_simulate(&(gs.acm), &(gs.map), game_state_status_match(GAME_STATUS_NEW_TURN));
     nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
 
-    if (scroll_y) { gs.zoom_amount += scroll_y * 0.1; }
-    ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount - get_nwin()->ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_nwin()->wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
-    mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
+    if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
+    //ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount - get_nwin()->ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_nwin()->wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
+    //mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
+    ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
+    mat4 view = ndungeon_cam_get_view_mat(&gs.dcam); 
     nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
     nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
     nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));
