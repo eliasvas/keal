@@ -32,7 +32,7 @@ static const char *batch_frag=
 "void main()\n"
 "{\n"
 "   vec4 tex_col = texture(Tex, tc/vec2(textureSize(Tex,0)));\n"
-"   FragColor = vec4(tex_col.xyz * color.xyz,tex_col.a);\n"
+"   FragColor = tex_col*color;\n"
 "}\n\0";
 
 

@@ -14,5 +14,6 @@ struct nDungeonCam {
 void ndungeon_cam_update(nDungeonCam *cam, vec2 player_pos);
 void ndungeon_cam_set(nDungeonCam *cam, vec2 pos, vec2 max_off);
 mat4 ndungeon_cam_get_view_mat(nDungeonCam *cam);
+vec2 ndungeon_screen_to_world(nDungeonCam *cam, vec2 sc);
 
 #endif

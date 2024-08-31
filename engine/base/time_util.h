@@ -14,5 +14,8 @@ static u64 get_current_timestamp() {
     return millis;
 }
 
+static f64 get_current_timestamp_sec() {
+    return (get_current_timestamp()/1000.0);
+}
 
 #endif

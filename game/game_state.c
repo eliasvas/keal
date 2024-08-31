@@ -56,7 +56,7 @@ void game_state_init() {
     nactor_cm_init(&gs.acm, &gs.em);
     game_state_generate_new_level();
     game_state_status_set(GAME_STATUS_START_MENU);
-    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(5,5));
+    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(3,3));
 }
 
 void game_state_deinit() {
@@ -85,6 +85,38 @@ void game_state_render_silly_stuff() {
             nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
         }
     }
+}
+void game_state_render_selection_box() {
+    nBatch2DQuad q = {0};
+    vec2 mp = ninput_get_mouse_pos(get_nim());
+    mp = ndungeon_screen_to_world(&gs.dcam, mp);
+    q.color = v4(1,1,1,1);
+    q.pos.x = TILESET_DEFAULT_SIZE * (floor(mp.x));
+    q.pos.y = TILESET_DEFAULT_SIZE * (floor(mp.y));
+    q.dim.x = TILESET_DEFAULT_SIZE;
+    q.dim.y = TILESET_DEFAULT_SIZE;
+    q.tc = TILESET_SELECTION_BOX_TILE;
+    q.angle_rad = 0;
+    nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
+}
+
+void game_state_render_dir_arrow(vec2 player_pos) {
+    nBatch2DQuad q = {0};
+    vec2 mp = ninput_get_mouse_pos(get_nim());
+    mp = ndungeon_screen_to_world(&gs.dcam, mp);
+    mp = vec2_sub(mp, player_pos);
+    mp = vec2_norm(mp);
+    f32 dist = 1.0;
+    f32 x_off = dist * mp.x;
+    f32 y_off = dist * mp.y;
+    q.color = v4(1,1,1,1);
+    q.pos.x = TILESET_DEFAULT_SIZE * (player_pos.x + x_off);
+    q.pos.y = TILESET_DEFAULT_SIZE * (player_pos.y + y_off);
+    q.dim.x = TILESET_DEFAULT_SIZE;
+    q.dim.y = TILESET_DEFAULT_SIZE;
+    q.tc = TILESET_RARROW_TILE;
+    q.angle_rad = atan2(y_off, x_off);
+    nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
 }
 
 void game_state_update_and_render() {
@@ -120,9 +152,10 @@ void game_state_update_and_render() {
     nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
     nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
     nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));
+    game_state_render_dir_arrow(v2(player_pos.x,player_pos.y));
+    game_state_render_selection_box();
     nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
     nbatch2d_rend_end(&gs.batch_rend);
-
 }
 
 void game_state_status_set(GameStatus status) {
