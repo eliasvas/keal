@@ -48,7 +48,7 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
     b32 parent_can_be_split = 0;
     p->center = iv2(p->x + p->w/2.0f, p->w + p->h/2.0f);
 
-    nDungeonSubdivisionSplitDirection split_dir = gen_random(0, NDUNGEON_SUBDIVISION_SPLIT_AXIS_COUNT); 
+    nDungeonSubdivisionSplitDirection split_dir = gen_random(0, NDUNGEON_SUBDIVISION_SPLIT_AXIS_COUNT);
     assert(split_dir == NDUNGEON_SUBDIVISION_SPLIT_AXIS_VERTICAL || split_dir == NDUNGEON_SUBDIVISION_SPLIT_AXIS_HORIZONTAL);
 
     if (map->min_room_factor * p->w < map->min_room_size){
@@ -79,7 +79,7 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
         }
     }
 
-    // if we can split parent, we make c1 and c2 and insert as children 
+    // if we can split parent, we make c1 and c2 and insert as children
     if (parent_can_be_split) {
 
         nDungeonSubdivision *c1 = push_array(get_frame_arena(), nDungeonSubdivision, 1);
@@ -92,7 +92,7 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
         p->child_count += 1;
         c1->parent = p;
         nmap_subdivide(map, c1);
- 
+
         nDungeonSubdivision *c2 = push_array(get_frame_arena(), nDungeonSubdivision, 1);
         c2->first = c2->last = c2->next = c2->prev = c2->parent = &g_nil_ds;
         c2->x = p->x + ((split_dir == NDUNGEON_SUBDIVISION_SPLIT_AXIS_HORIZONTAL) ? w1 : 0);
@@ -163,12 +163,11 @@ b32 nmap_tile_is_walkable(nMap *map, s32 x, s32 y) {
 
 
 
-b32 nmap_compute_fov(nMap *map, s32 px, s32 py, s32 fovRadius) {
+void nmap_compute_fov(nMap *map, s32 px, s32 py, s32 fovRadius) {
     for (s32 i = -fovRadius; i < fovRadius; i+=1) {
         for (s32 j = -fovRadius; j < fovRadius; j+=1) {
             nmap_tile_set_explored(map, px+i, py+j, 1);
         }
-
     }
 }
 
@@ -244,7 +243,7 @@ nEntity nmap_add_door(nMap *map, s32 x, s32 y) {
     ac->kind = NACTOR_KIND_DOOR;
     ac->posx = x;
     ac->posy = y;
-    ac->tc = TILESET_DOOR_TILE; 
+    ac->tc = TILESET_DOOR_TILE;
     ac->blocks = 0;
     M_ZERO_STRUCT(&ac->c);
     ac->flags = 0;
@@ -261,7 +260,7 @@ nEntity nmap_add_player(nMap *map, s32 x, s32 y) {
     ac->kind = NACTOR_KIND_PLAYER;
     ac->posx = x;
     ac->posy = y;
-    ac->tc = TILESET_PLAYER_TILE; 
+    ac->tc = TILESET_PLAYER_TILE;
     ac->blocks = 1;
     ac->d = ndestructible_data_make(10,2,0.3);
     ac->a = nattack_data_make(3);
@@ -286,11 +285,11 @@ nEntity nmap_add_enemy(nMap *map, s32 x, s32 y) {
     if (gen_random(0,100) < 70) {
         sprintf(ac->name, "skelly");
         ac->color = v4(0.9,0.9,0.9,1);
-        ac->tc = TILESET_SKELLY_TILE; 
+        ac->tc = TILESET_SKELLY_TILE;
     }else {
         sprintf(ac->name, "troll");
         ac->color = v4(0.8,0.5,0.7,1);
-        ac->tc = TILESET_TROLL_TILE; 
+        ac->tc = TILESET_TROLL_TILE;
     }
     return enemy;
 }
@@ -310,11 +309,11 @@ nEntity nmap_add_item(nMap *map, s32 x, s32 y) {
     if (gen_random(0,100) < 70) {
         sprintf(ac->name, "hlt-potion");
         ac->color = v4(0.9,0.2,0.2,1);
-        ac->tc = TILESET_POTION_TILE; 
+        ac->tc = TILESET_POTION_TILE;
     }else {
         sprintf(ac->name, "str-potion");
         ac->color = v4(0.3,0.9,0.8,1);
-        ac->tc = TILESET_POTION_TILE; 
+        ac->tc = TILESET_POTION_TILE;
     }
     return enemy;
 }
@@ -328,7 +327,7 @@ void nmap_gen_corridors(nMap *map, nDungeonSubdivision *p) {
                 nmap_dig_region(map, map->last_center.x, map->last_center.y, child->center.x+1, map->last_center.y+1, NTILE_KIND_GROUND);
                 nmap_dig_region(map, child->center.x, map->last_center.y, child->center.x+1, child->center.y+1, NTILE_KIND_GROUND);
             }
-            map->last_center = child->center; 
+            map->last_center = child->center;
         }
         nmap_gen_corridors(map, child);
     }
@@ -370,7 +369,7 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                     enemy_num-=1;
                 }
 
-                // Generate randomized items 
+                // Generate randomized items
                 s32 item_num = gen_random(0, map->max_room_enemies+1);
                 while (item_num) {
                     s32 x = gen_random(child->x, child->x + child->w+1);

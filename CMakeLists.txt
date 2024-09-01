@@ -19,6 +19,7 @@ if (DEFINED EMSCRIPTEN)
 else()
     # regular SDL2
     option(SDL_STATIC "Build SDL2 as a static library" ON)
+    option(SDL_TEST "Build SDL2 tests" OFF)
     option(SDL_SHARED "Build SDL2 as a shared library" OFF)
     add_subdirectory(ext/SDL)
     include_directories(engine ${SDL2_INCLUDE_DIRS})
@@ -35,8 +36,9 @@ else()
     include_directories(${SDL2_MIXER_INCLUDE_DIRS})
     target_link_libraries(engine SDL2_mixer)
     # and OpenGL
-    target_link_libraries(engine GL)
+    #target_link_libraries(engine GL)
 endif()
+    target_link_libraries(engine opengl32 user32 gdi32 shell32 dxguid.lib winmm.lib)
 
 # use Address Sanitizer (in engine)
 if(ENABLE_ASAN)
@@ -58,7 +60,7 @@ if (DEFINED EMSCRIPTEN)
 	set_target_properties(game PROPERTIES LINK_FLAGS    "-sASSERTIONS=1 -sWASM=1 -sMAIN_MODULE=1 -sFULL_ES3=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2GB -sFORCE_FILESYSTEM=1 --preload-file assets")
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
 else()
-    target_link_libraries(game PUBLIC engine SDL2::SDL2main)
+    target_link_libraries(game PUBLIC engine SDL2::SDL2main opengl32 user32 gdi32 shell32 dxguid.lib winmm.lib)
 endif()
 
 # move assets to BUILD_DIR/assets

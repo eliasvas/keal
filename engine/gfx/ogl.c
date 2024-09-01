@@ -44,7 +44,7 @@ GLFunc( UNIFORM4F, glUniform4f);
 GLFunc( UNIFORM1IV, glUniform1iv);
 GLFunc( UNIFORM2FV, glUniform2fv);
 GLFunc( UNIFORM1F, glUniform1f);
-//GLFunc( ACTIVETEXTURE, glActiveTexture);
+GLFunc( ACTIVETEXTURE, glActiveTexture_dl);
 GLFunc( VERTEXATTRIBDIVISOR, glVertexAttribDivisor);
 GLFunc( GETUNIFORMLOCATION, glGetUniformLocation);
 GLFunc( GENVERTEXARRAYS, glGenVertexArrays);
@@ -86,6 +86,7 @@ GLFunc( CLEARTEXIMAGE, glClearTexImage);
 GLFunc( DISPATCHCOMPUTE, glDispatchCompute);
 GLFunc( MEMORYBARRIER, glMemoryBarrier);
 void ogl_load_gl_functions(void *(*load_func)()) {
+    glActiveTexture_dl = (PFNGLACTIVETEXTUREPROC)load_func("glActiveTexture");
     glGenBuffers = (PFNGLGENBUFFERSPROC)load_func("glGenBuffers");
     glBindBuffer = (PFNGLBINDBUFFERPROC)load_func("glBindBuffer");
     glBufferData = (PFNGLBUFFERDATAPROC)load_func("glBufferData");
@@ -168,7 +169,7 @@ void ogl_clear_all_state(oglContext *ctx) {
         glDisableVertexAttribArray(i);
     }
     for (u32 i = 0; i < OGL_CTX_MAX_TEX_SLOTS; i+=1) {
-        glActiveTexture(GL_TEXTURE0 + i);
+        glActiveTexture_dl(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -214,7 +215,7 @@ GLenum gl_check_err(const char *file, int line) {
     }
     return last_ec;
 }
-#define ogl_check_error() gl_check_err(__FILE__, __LINE__) 
+#define ogl_check_error() gl_check_err(__FILE__, __LINE__)
 
 
 
@@ -265,7 +266,7 @@ void ogl_bind_vertex_buffer(oglBuf *b) {
 
 
 ////////////////////////////////
-// OGL shaders 
+// OGL shaders
 ////////////////////////////////
 
 b32 gl_check_gl_shader_link_errors(GLuint sp_handle) {
@@ -478,7 +479,7 @@ void ogl_draw_indexed(oglPrimitive prim, u32 count) {
 // OGL image API
 ////////////////////////////////
 
-void ogl_rt_bind(oglImage *img) { 
+void ogl_rt_bind(oglImage *img) {
     if (img == NULL) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
@@ -508,7 +509,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             img->kind = OGL_IMAGE_KIND_TEXTURE;
             glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
             glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -535,7 +536,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             img->kind = OGL_IMAGE_KIND_RT;
             glGenFramebuffers(1, OGL_CAST_GLUINTPTR(img->impl_state));
             glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(img->impl_state));
-            
+
             // - position color buffer
             glGenTextures(1, &img->attachments[0]);
             glBindTexture(GL_TEXTURE_2D, img->attachments[0]);
@@ -543,7 +544,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, img->attachments[0], 0);
-            
+
             // - normal color buffer
             glGenTextures(1, &img->attachments[1]);
             glBindTexture(GL_TEXTURE_2D, img->attachments[1]);
@@ -551,7 +552,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, img->attachments[1], 0);
-            
+
             // - color + specular color buffer
             glGenTextures(1, &img->attachments[2]);
             glBindTexture(GL_TEXTURE_2D, img->attachments[2]);
@@ -565,8 +566,8 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
 
             GLuint rbo;
             glGenRenderbuffers(1, &rbo);
-            glBindRenderbuffer(GL_RENDERBUFFER, rbo); 
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tex_w, tex_h);  
+            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tex_w, tex_h);
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
@@ -588,7 +589,7 @@ void ogl_image_deinit(oglImage *img) {
 
 
 void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment) {
-    glActiveTexture(GL_TEXTURE0 + tex_slot);
+    glActiveTexture_dl(GL_TEXTURE0 + tex_slot);
     if (img->kind == OGL_IMAGE_KIND_RT) {
         glBindTexture(GL_TEXTURE_2D, img->attachments[attachment]);
     } else {

@@ -11,7 +11,7 @@ void nactor_cm_init(nActorCM *cm, nEntityManager *em) {
     cm->size = 0;
     u32 size_of_data = sizeof(nActorComponent) + sizeof(nEntity);
     cm->em_ref = em;
-    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap); 
+    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap);
 
     cm->actors = cm->buf;
     cm->entity = (nEntity*)((u8*)cm->actors + (u64)(sizeof(nActorComponent)*cm->cap));
@@ -127,7 +127,7 @@ void nactor_cm_clear(nActorCM *cm) {
 void nactor_cm_del(nActorCM *cm, nEntity e) {
     nCompIndex idx = nactor_cm_lookup(cm, e);
     if (cm->size) {
-        nactor_swap_indices(cm, idx, cm->size-1); 
+        nactor_swap_indices(cm, idx, cm->size-1);
         cm->size-=1;
 
         // remove lookup table entry
@@ -161,7 +161,7 @@ void nactor_move_or_attack(nActorComponent *ac, nMap *map, ivec2 delta) {
         }
     }
 
-    // Check to see whether in target position there is an item, in which case, we PICK UP 
+    // Check to see whether in target position there is an item, in which case, we PICK UP
     for (u32 j = 0; j < get_ggs()->acm.size; j+=1) {
         nActorComponent *actor = &get_ggs()->acm.actors[j];
         if (actor->posx == new_pos.x && actor->posy == new_pos.y && actor->kind != ac->kind && (actor->flags & NACTOR_FEATURE_FLAG_PICKABLE) && (ac->flags & NACTOR_FEATURE_FLAG_HAS_CONTAINER)) {
@@ -262,8 +262,8 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
     }
 }
 
-// also shift this component to begining, so its drawn before HERO
-s32 nactor_die(nActorComponent *ac) {
+// also shift this component to beginning, so its drawn before HERO
+void nactor_die(nActorComponent *ac) {
     printf("actor: %s died!\n", ac->name);
     ac->tc = TILESET_SKULL_TILE;
     ac->blocks = 0;
@@ -311,7 +311,7 @@ s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
     return damage;
 }
 
-s32 nactor_use_item(nActorComponent *ac, u8 item_index) {
+void nactor_use_item(nActorComponent *ac, u8 item_index) {
     nActorComponent *item = ac->c.items[item_index];
 
     // ITEM LOGIC

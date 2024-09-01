@@ -6,9 +6,10 @@
     OverGL: This is a simple graphics abstraction on top of (currently) OpenGL ES 3.0, the main goal is to NOT have VAOs and find a
     better way to do uniforms (maybe we restrict uniforms to only UBOs/SSBOs?). It remains a 'stateful' API in the sense that
     you do bind_vertex_buffer(..);bind_index_buffer(..);draw_arrays(..). Making the engine's rendering API stateless is much easier,
-    our renderer will probably have Command Buffers / Buckets as outlined in https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/  
+    our renderer will probably have Command Buffers / Buckets as outlined in https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/
 */
 
+//#define NO_SDL_GLEXT
 #include <SDL2/SDL_opengl.h>
 #include "ext/GL/glext.h"
 
@@ -117,7 +118,7 @@ struct oglImage {
     oglImageKind kind;
 
     void *impl_state;
-    //optional: only configured for RTs (RT_COL -> colors) (RT_DS -> rbo) 
+    //optional: only configured for RTs (RT_COL -> colors) (RT_DS -> rbo)
     GLuint attachments[4];
 };
 

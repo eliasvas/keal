@@ -6,7 +6,7 @@
 guiSignal gui_start_menu_panel_begin(f32 width, f32 height) {
 	char box_name[128];
     gui_push_bg_color(gv4(0.4,0.4,0.4,0.5));
-    guiVec2 middle_point = gv2(get_nwin()->ww/2,get_nwin()->wh/2); 
+    guiVec2 middle_point = gv2(get_nwin()->ww/2,get_nwin()->wh/2);
 	gui_set_next_fixed_x(middle_point.x-width/2);
 	gui_set_next_fixed_y(middle_point.y-height/2);
 	gui_set_next_fixed_width(width);
@@ -16,6 +16,8 @@ guiSignal gui_start_menu_panel_begin(f32 width, f32 height) {
 	guiSignal main_menu_panel = gui_panel(box_name);
 	gui_push_parent(main_menu_panel.box);
     gui_push_pref_height((guiSize){GUI_SIZEKIND_PERCENT_OF_PARENT,1,0});
+
+    return main_menu_panel;
 }
 
 void gui_start_menu_panel_end() {
@@ -32,11 +34,11 @@ void do_start_menu_gui() {
     if (play_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
         // generate a new level
         game_state_generate_new_level();
-        // and start the game 
+        // and start the game
         game_state_status_set(GAME_STATUS_IDLE);
     }
     gui_set_next_bg_color(gv4(0.9,0.47,0.36,1)); // #e87a5d
-    guiSignal options_sig = gui_button("Options"); 
+    guiSignal options_sig = gui_button("Options");
     if (options_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
         // Do Options menu (TBA)
         nSound *s = push_array(get_global_arena(), nSound, 1);
