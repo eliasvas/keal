@@ -122,6 +122,7 @@ void game_state_render_dir_arrow(vec2 player_pos) {
 void game_state_update_and_render() {
     do_game_gui();
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
+    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {nactor_cm_gc(&gs.acm);}
     if (game_state_status_match(GAME_STATUS_START_MENU)) {
         // mat4 viewm = m4d(1);
         // nbatch2d_rend_set_view_mat(&gs.batch_rend, viewm);

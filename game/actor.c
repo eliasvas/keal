@@ -11,7 +11,7 @@ void nactor_cm_init(nActorCM *cm, nEntityManager *em) {
     cm->size = 0;
     u32 size_of_data = sizeof(nActorComponent) + sizeof(nEntity);
     cm->em_ref = em;
-    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap);
+    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap); 
 
     cm->actors = cm->buf;
     cm->entity = (nEntity*)((u8*)cm->actors + (u64)(sizeof(nActorComponent)*cm->cap));
@@ -65,9 +65,9 @@ nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e) {
 }
 nActorComponent *nactor_cm_add(nActorCM *cm, nEntity e) {
     nCompIndex new_idx = nactor_cm_make_new_index(cm);
-    M_ZERO_STRUCT(&cm->actors[new_idx]);
     cm->entity[new_idx] = e;
-    //cm->actors[new_idx] = __;
+    M_ZERO_STRUCT(&cm->actors[new_idx]);
+    cm->actors[new_idx].active = 1;
 
     // insert Pair in lookup table
     u32 slot = e%cm->lookup_table_size;
@@ -108,6 +108,7 @@ void nactor_swap_indices(nActorCM *cm, nCompIndex a, nCompIndex b) {
 void nactor_cm_clear(nActorCM *cm) {
     M_ZERO(cm->entity, sizeof(nEntity)*cm->cap);
     M_ZERO(cm->actors, sizeof(nActorComponent)*cm->cap);
+    cm->size = 0;
 
     cm->lookup_table_size = NACTOR_CM_MAX_COMPONENTS/2;
     cm->lookup_table = push_array(cm->em_ref->arena, nEntityComponentIndexPairHashSlot, cm->lookup_table_size);
@@ -127,7 +128,7 @@ void nactor_cm_clear(nActorCM *cm) {
 void nactor_cm_del(nActorCM *cm, nEntity e) {
     nCompIndex idx = nactor_cm_lookup(cm, e);
     if (cm->size) {
-        nactor_swap_indices(cm, idx, cm->size-1);
+        nactor_swap_indices(cm, idx, cm->size-1); 
         cm->size-=1;
 
         // remove lookup table entry
@@ -137,6 +138,33 @@ void nactor_cm_del(nActorCM *cm, nEntity e) {
         M_ZERO_STRUCT(e_node);
         sll_stack_push(cm->free_nodes, e_node);
     }
+}
+void nactor_cm_gc(nActorCM *cm) {
+    printf("Performing actor CM GC with size: %d\n",cm->size);
+    // First count how many actors we should remove
+    u32 inactive_count = 0;
+    for (u32 i = 0; i < cm->size; i+=1) {
+        if (!cm->actors[i].active) {
+            inactive_count += 1;
+            printf("actor: [%s] inactive\n", cm->actors[i].name);
+        }
+    }
+    if (inactive_count){
+        // put inside an array all entitie's whose Actor components will be deleted
+        nEntity *actors_to_be_deleted = push_array(get_frame_arena(), nEntity, inactive_count);
+        u32 entity_count = 0;
+        for (u32 i = 0; i < cm->size; i+=1) {
+            if (!cm->actors[i].active) {
+                actors_to_be_deleted[entity_count] = cm->entity[i];
+                entity_count += 1;
+            }
+        }
+        // finally delete them all 1-by-1
+        for (u32 i = 0; i < entity_count; i+=1) {
+            nactor_cm_del(cm, actors_to_be_deleted[i]);
+        }
+    }
+    printf("Ending actor CM GC with size: %d\n",cm->size);
 }
 
 ////////////////////////////////
@@ -161,7 +189,7 @@ void nactor_move_or_attack(nActorComponent *ac, nMap *map, ivec2 delta) {
         }
     }
 
-    // Check to see whether in target position there is an item, in which case, we PICK UP
+    // Check to see whether in target position there is an item, in which case, we PICK UP 
     for (u32 j = 0; j < get_ggs()->acm.size; j+=1) {
         nActorComponent *actor = &get_ggs()->acm.actors[j];
         if (actor->posx == new_pos.x && actor->posy == new_pos.y && actor->kind != ac->kind && (actor->flags & NACTOR_FEATURE_FLAG_PICKABLE) && (ac->flags & NACTOR_FEATURE_FLAG_HAS_CONTAINER)) {
@@ -262,8 +290,8 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
     }
 }
 
-// also shift this component to beginning, so its drawn before HERO
-void nactor_die(nActorComponent *ac) {
+// also shift this component to begining, so its drawn before HERO
+s32 nactor_die(nActorComponent *ac) {
     printf("actor: %s died!\n", ac->name);
     ac->tc = TILESET_SKULL_TILE;
     ac->blocks = 0;
@@ -311,7 +339,7 @@ s32 nactor_take_damage(nActorComponent *ac, s32 damage) {
     return damage;
 }
 
-void nactor_use_item(nActorComponent *ac, u8 item_index) {
+s32 nactor_use_item(nActorComponent *ac, u8 item_index) {
     nActorComponent *item = ac->c.items[item_index];
 
     // ITEM LOGIC
