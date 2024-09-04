@@ -35,7 +35,7 @@ void do_start_menu_gui() {
         // generate a new level
         game_state_generate_new_level();
         // and start the game
-        game_state_status_set(GAME_STATUS_IDLE);
+        game_state_status_set(GAME_STATUS_RUNNING);
     }
     gui_set_next_bg_color(gv4(0.9,0.47,0.36,1)); // #e87a5d
     guiSignal options_sig = gui_button("Options");
@@ -65,7 +65,7 @@ void do_game_gui() {
     //guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
     if (game_state_status_match(GAME_STATUS_START_MENU)) {
         do_start_menu_gui();
-    } else if (game_state_status_match(GAME_STATUS_NEW_TURN) || game_state_status_match(GAME_STATUS_IDLE)) {
+    } else if (game_state_status_match(GAME_STATUS_RUNNING) || game_state_status_match(GAME_STATUS_PAUSED)) {
         do_ingame_gui();
     }
     gui_build_end();

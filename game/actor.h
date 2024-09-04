@@ -109,7 +109,7 @@ nActorComponent *nactor_cm_get(nActorCM *cm, nEntity e);
 void nactor_cm_del(nActorCM *cm, nEntity e);
 void nactor_cm_gc(nActorCM *cm);
 void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas);
-void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn);
+void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 RUNNING);
 void nactor_cm_clear(nActorCM *cm);
 b32 nactor_cm_check_movement_event(nActorCM *cm);
 void nactor_attack(nActorComponent *attacker, nActorComponent *victim);

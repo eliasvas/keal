@@ -256,10 +256,10 @@ void nactor_update(nActorComponent *ac, nMap *map) {
 }
 
 
-void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 new_turn) {
+void nactor_cm_simulate(nActorCM *cm, nMap *map, b32 RUNNING) {
     for (u32 i = 0; i < cm->size; i+=1) {
         cm->actors[i].d.shake_duration = maximum(0.0f, cm->actors[i].d.shake_duration - get_ngs()->dt/1000.0);
-        if (!new_turn)continue;
+        if (!RUNNING)continue;
         if (!cm->actors[i].active)continue;
         nactor_update(&(cm->actors[i]), map);
     }

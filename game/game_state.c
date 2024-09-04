@@ -122,18 +122,22 @@ void game_state_render_dir_arrow(vec2 player_pos) {
 void game_state_update_and_render() {
     do_game_gui();
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
-    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {nactor_cm_gc(&gs.acm);}
-    if (game_state_status_match(GAME_STATUS_START_MENU)) {
-        // mat4 viewm = m4d(1);
-        // nbatch2d_rend_set_view_mat(&gs.batch_rend, viewm);
-        // nbatch2d_rend_begin(&gs.batch_rend, get_nwin);
-        // game_state_render_silly_stuff();
-        // nbatch2d_rend_end(&gs.batch_rend);
-        return;
+    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_EQUALS)) {nactor_cm_gc(&gs.acm);}
+    // if (game_state_status_match(GAME_STATUS_START_MENU)) {
+    //     mat4 viewm = m4d(1);
+    //     nbatch2d_rend_set_view_mat(&gs.batch_rend, viewm);
+    //     nbatch2d_rend_begin(&gs.batch_rend, get_nwin);
+    //     game_state_render_silly_stuff();
+    //     nbatch2d_rend_end(&gs.batch_rend);
+    //     return;
+    // }
+
+    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
+        game_state_status_set(game_state_status_match(GAME_STATUS_PAUSED) ? GAME_STATUS_RUNNING : GAME_STATUS_PAUSED);
     }
 
-    GameStatus status = nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_NEW_TURN : GAME_STATUS_IDLE;
-    game_state_status_set(status);
+    // GameStatus status = GAME_STATUS_RUNNING;//nactor_cm_check_movement_event(&(gs.acm)) ? GAME_STATUS_RUNNING : GAME_STATUS_PAUSED;
+    // game_state_status_set(status);
 
     ivec2 player_pos = iv2(0,0);
     nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), gs.map.player);
@@ -142,21 +146,43 @@ void game_state_update_and_render() {
         player_pos = iv2(player_cmp->posx, player_cmp->posy);
     }
 
-    nactor_cm_simulate(&(gs.acm), &(gs.map), game_state_status_match(GAME_STATUS_NEW_TURN));
-    nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
+    // If game is running, we can simulate!
+    if (game_state_status_match(GAME_STATUS_RUNNING)) {
+        nactor_cm_simulate(&(gs.acm), &(gs.map), game_state_status_match(GAME_STATUS_RUNNING));
+    }
+    // If game paused, do editor stuff (TODO -- we should have some form of tween-animation for this transition)
+    if (game_state_status_match(GAME_STATUS_PAUSED)) {
+        vec2 mp = ninput_get_mouse_pos(get_nim());
+        mp = ndungeon_screen_to_world(&gs.dcam, mp);
+        ivec2 tile = iv2(floor(mp.x), floor(mp.y));
+        nTile *t = nmap_tile_ref(&gs.map, tile.x, tile.y);
+        if (t) {
+            if (gui_input_mb_down(GUI_LMB)) {
+                nmap_dig_region(&gs.map, tile.x, tile.y, tile.x+1, tile.y+1, NTILE_KIND_WALL);
+            }
+            if (gui_input_mb_down(GUI_RMB)) {
+                nmap_dig_region(&gs.map, tile.x, tile.y, tile.x+1, tile.y+1, NTILE_KIND_GROUND);
+            }
+        }
+    }
 
-    if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
-    //ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount - get_nwin()->ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_nwin()->wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
-    //mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
-    ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
-    mat4 view = ndungeon_cam_get_view_mat(&gs.dcam); 
-    nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
-    nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
-    nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));
-    game_state_render_dir_arrow(v2(player_pos.x,player_pos.y));
-    game_state_render_selection_box();
-    nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
-    nbatch2d_rend_end(&gs.batch_rend);
+    if (game_state_status_match(GAME_STATUS_RUNNING) || game_state_status_match(GAME_STATUS_PAUSED)) {
+        nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
+        if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
+        //ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount - get_nwin()->ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_nwin()->wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
+        //mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
+        ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
+        mat4 view = ndungeon_cam_get_view_mat(&gs.dcam); 
+        nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
+        nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
+        nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));
+        game_state_render_dir_arrow(v2(player_pos.x,player_pos.y));
+        if (game_state_status_match(GAME_STATUS_PAUSED)) {
+            game_state_render_selection_box();
+        }
+        nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
+        nbatch2d_rend_end(&gs.batch_rend);
+    }
 }
 
 void game_state_status_set(GameStatus status) {

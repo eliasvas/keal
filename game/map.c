@@ -221,10 +221,13 @@ void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas) {
 
     }
 }
-
+nTile* nmap_tile_ref(nMap *map, s32 x, s32 y) {
+    if (x < 0 || y < 0 || x > map->width || y > map->height)return NULL;
+    return &(map->tiles[x + y*map->width]);
+}
 nTile nmap_tile_at(nMap *map, s32 x, s32 y) {
-    if (x < 0 || y < 0 || x > map->width || y > map->height)return NTILE_WALL;
-    return map->tiles[x + y*map->width];
+    nTile *t = nmap_tile_ref(map,x,y);
+    return (t ? (*t) : NTILE_WALL);
 }
 b32 ndungeon_sub_is_nil(nDungeonSubdivision *s) {
     return (s == 0 || s == &g_nil_ds);
