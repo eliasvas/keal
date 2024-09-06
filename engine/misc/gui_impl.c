@@ -170,6 +170,14 @@ void gui_impl_update() {
         mme.param1 = (s32)mp.y;
         gui_input_push_event(mme);
     }
+    nScrollAmount scroll_amount = ninput_get_scroll_amount_delta(get_nim());
+    if (scroll_amount) {
+        guiInputEventNode se = {0};
+        se.type = GUI_INPUT_EVENT_TYPE_SCROLLWHEEL_EVENT;
+        s32 scroll_y = scroll_amount;
+        se.param0 = scroll_y;
+        gui_input_push_event(se);
+    }
 }
 
 // TODO -- these instance data should be some kind of list in the gui, and COMPOSE a static array for VBO

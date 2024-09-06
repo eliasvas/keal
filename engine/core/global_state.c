@@ -45,10 +45,19 @@ void nglobal_state_init() {
 
 void nglobal_state_frame_begin() {
     global_state.frame_start_ts = get_current_timestamp();
-    //printf("current ts: %llu\n", global_state.frame_start_ts);
+    // Consume input events from window and update GUI state
+    ninput_manager_consume_events_from_window(get_nim(), get_nwin());
+    gui_impl_update();
+
+    // Then clear graphics state/screen
+    ogl_clear_all_state(get_nogl_ctx());
+    ogl_image_clear(NULL);
 }
 
 void nglobal_state_frame_end() {
+    // Render GUI
+    gui_impl_render();
+    // Swap the backbuffers (display to screen)
     nwindow_swap(&global_state.win);
     // FIXME: Why busy wait?
     while (((f64)(get_current_timestamp() - global_state.frame_start_ts))/1000.0 < (1.0/global_state.target_fps)){};

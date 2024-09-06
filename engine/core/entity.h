@@ -1,6 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 #include "engine.h"
+// ref: https://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html
 // TODO -- We probably need an arena per component manager.. to have eveything nice and packed
 
 ////////////////////////////////
@@ -23,7 +24,7 @@ struct nFreeIndexNode {
 #define NGEN_CHUNK_COUNT 2048
 typedef struct nGenArrayChunk nGenArrayChunk;
 struct nGenArrayChunk {
-    u8 *generation; 
+    u8 *generation;
     u32 gen_count; // when gen_count == NGEN_CHUNK_COUNT, we add another chunk to the list here
 
     nGenArrayChunk *next;
@@ -147,7 +148,7 @@ struct nTransformCM {
     // lookup table
     u32 lookup_table_size;
     nEntityComponentIndexPairHashSlot *lookup_table;
- 
+
     // ref to parent nEntityManager (who does allocations for now)
     nEntityManager *em_ref;
 };

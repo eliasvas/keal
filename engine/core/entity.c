@@ -1,5 +1,4 @@
 #include "entity.h"
-// ref: https://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html
 
 void nentity_manager_init(nEntityManager *em) {
     M_ZERO_STRUCT(em);
@@ -99,7 +98,7 @@ void nentity_destroy(nEntityManager *em, nEntity e) {
     nentity_manager_increment_generation_for_index(em, idx);
 
     // push current index in free_index list for reuse
-    nFreeIndexNode *free_idx = push_array(em->arena, nFreeIndexNode, 1); 
+    nFreeIndexNode *free_idx = push_array(em->arena, nFreeIndexNode, 1);
     free_idx->index = idx;
     sll_queue_push(em->free_indices_first, em->free_indices_last, free_idx);
     em->free_indices_count+=1;
@@ -196,7 +195,7 @@ void ntransform_cm_init(nTransformCM *cm, nEntityManager *em) {
     cm->size = 0;
     u32 size_of_data = sizeof(nTransformComponent) + sizeof(nEntity) + sizeof(u32)*4;
     cm->em_ref = em;
-    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap); 
+    cm->buf = arena_push_nz(cm->em_ref->arena, size_of_data * cm->cap);
 
     cm->transform = cm->buf;
     cm->entity = (nEntity*)((u8*)cm->transform + (u64)(sizeof(nTransformComponent)*cm->cap));
@@ -294,7 +293,7 @@ nTransformComponent *ntransform_cm_set_local(nTransformCM *cm, nCompIndex idx, m
     assert(NCOMPONENT_INDEX_VALID(idx));
     cm->transform[idx].local = local;
     nCompIndex parent_idx = cm->parent[idx];
-    mat4 parent_wm = NCOMPONENT_INDEX_VALID(parent_idx) ? cm->transform[parent_idx].world : m4d(1.0); 
+    mat4 parent_wm = NCOMPONENT_INDEX_VALID(parent_idx) ? cm->transform[parent_idx].world : m4d(1.0);
 
     ntransform_cm_transform(cm, parent_wm, idx);
     return &(cm->transform[idx]);
@@ -360,7 +359,7 @@ void ntransform_cm_del(nTransformCM *cm, nEntity e) {
     // then delete entity e (the parent)
     // swap with last index
     if (cm->size) {
-        ntransform_swap_indices(cm, idx, cm->size-1); 
+        ntransform_swap_indices(cm, idx, cm->size-1);
         cm->size-=1;
         // remove lookup table entry
         nEntityComponentIndexPairNode * e_node = ntransform_cm_lookup_node(cm, e);
@@ -385,4 +384,3 @@ void ntransform_cm_del(nTransformCM *cm, nEntity e) {
     //     assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, parent)));
     //     assert(!NCOMPONENT_INDEX_VALID(ntransform_cm_lookup(&gs.tcm, child)));
     // }
-    
