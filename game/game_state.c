@@ -78,7 +78,7 @@ void game_state_render_silly_stuff() {
             q.dim.x = 32;
             q.dim.y = 32;
             q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
-            q.angle_rad = sin(get_current_timestamp()/500.0)/3;
+            q.angle_rad = sin(get_current_timestamp_sec()*2)/3;
             vec2 mp = ninput_get_mouse_pos(get_nim());
             if (fabsf(mp.x - q.pos.x - q.dim.x/2) < 10)q.color = v4(1,1,1,1);
             if (fabsf(mp.y - q.pos.y - q.dim.y/2) < 10)q.color = v4(1,1,1,1);

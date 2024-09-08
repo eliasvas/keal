@@ -12,6 +12,27 @@ struct nCircle {
     vec2 pos;
     f32 radius;
 };
-b32 ntest_circle(nCircle a, nCircle b);
+
+typedef enum nColliderKind nColliderKind;
+enum nColliderKind {
+    NCOLLIDER_KIND_AABB,
+    NCOLLIDER_KIND_CIRCLE,
+    NCOLLIDER_KIND_OBB,
+};
+
+// Tagged Union used for generic nCollider type
+typedef struct nCollider nCollider;
+struct nCollider {
+    union {
+        nAABB aabb;
+        nCircle circle;
+    };
+    nColliderKind kind;
+};
+
+b32 ntest_collider(nCollider a, nCollider b);
 b32 ntest_aabb(nAABB a, nAABB b);
+b32 ntest_circle(nCircle a, nCircle b);
+void ntest_colliders();
+
 #endif

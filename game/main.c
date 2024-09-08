@@ -2,20 +2,30 @@
 #include "engine.h"
 #include "game_state.h"
 
-// 3D Blan (Might take a while to start this): First of all we need Models and Armatures to work,
-// I say we use gltf2 for BOTH and make a simple ECS-baed scene system
-// The default scene will be just cubes/spheres with generated PBR materials
-// Then we can also load other scenes (e.g gltf2 samples / sponza) but NOT track them via git
+#define PHYSICS_TEST
+void physics_test_init();
+void physics_test_update_and_render();
 
 void mainLoop(void) {
     nglobal_state_frame_begin();
+
+#ifdef PHYSICS_TEST
+    physics_test_update_and_render();
+#else
     game_state_update_and_render();
+#endif
+
     nglobal_state_frame_end();
 }
 
 int main(int argc, char **argv) {
     nglobal_state_init();
+
+#ifdef PHYSICS_TEST
+    physics_test_init();
+#else
     game_state_init();
+#endif
 
     #ifdef __EMSCRIPTEN__
         EM_ASM({ Module.wasmTable = wasmTable; });

@@ -12,6 +12,15 @@ b32 ntest_circle(nCircle a, nCircle b) {
     return r >= vec2_len(vec2_sub(a.pos, b.pos));
 }
 
+b32 ntest_collider(nCollider a, nCollider b) {
+    if (a.kind == NCOLLIDER_KIND_AABB && a.kind == b.kind) {
+        return ntest_aabb(a.aabb, b.aabb);
+    }
+    if (a.kind == NCOLLIDER_KIND_CIRCLE && a.kind == b.kind) {
+        return ntest_circle(a.circle, b.circle);
+    }
+    return 0;
+}
 
 void ntest_colliders() {
     nAABB a =  {
@@ -33,4 +42,14 @@ void ntest_colliders() {
         .radius = 3,
     };
     assert(ntest_circle(ca,cb));
+
+    nCollider cola = {
+        .aabb = a,
+        .kind = NCOLLIDER_KIND_AABB,
+    };
+    nCollider colb = {
+        .aabb = b,
+        .kind = NCOLLIDER_KIND_AABB,
+    };
+    assert(ntest_collider(cola,colb));
 }
