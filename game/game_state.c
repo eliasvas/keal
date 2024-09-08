@@ -71,7 +71,7 @@ void game_state_render_silly_stuff() {
     for (u32 i = 0; i < (get_nwin()->ww /32); i+=1) {
         for (u32 j = 0; j < (get_nwin()->wh / 32); j+=1) {
             nBatch2DQuad q = {0};
-            guiVec4 c =colors[gen_random(0,14)]; 
+            guiVec4 c =colors[gen_random(0,14)];
             q.color = v4(c.x,c.y,c.z,c.w);
             q.pos.x = 32 * i;
             q.pos.y = 32 * j;
@@ -120,6 +120,7 @@ void game_state_render_dir_arrow(vec2 player_pos) {
 }
 
 void game_state_update_and_render() {
+    ntest_colliders();
     do_game_gui();
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_EQUALS)) {nactor_cm_gc(&gs.acm);}
@@ -169,10 +170,8 @@ void game_state_update_and_render() {
     if (game_state_status_match(GAME_STATUS_RUNNING) || game_state_status_match(GAME_STATUS_PAUSED)) {
         nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
         if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
-        //ivec2 dist_to_mp = iv2(-(player_pos.x *TILESET_DEFAULT_SIZE*gs.zoom_amount - get_nwin()->ww/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2), -(player_pos.y *TILESET_DEFAULT_SIZE*gs.zoom_amount- get_nwin()->wh/2+TILESET_DEFAULT_SIZE*gs.zoom_amount/2));
-        //mat4 view = mat4_mult(mat4_translate(v3(dist_to_mp.x,dist_to_mp.y,0)),mat4_scale(v3(gs.zoom_amount, gs.zoom_amount, 1)));
         ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
-        mat4 view = ndungeon_cam_get_view_mat(&gs.dcam); 
+        mat4 view = ndungeon_cam_get_view_mat(&gs.dcam);
         nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
         nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
         nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));

@@ -42,7 +42,7 @@ INLINE vec3 vec3_lerp(vec3 a, vec3 b, f32 x) {return v3(a.x*(1.0-x) + b.x*x,a.y*
 INLINE f32  vec3_dot(vec3 a, vec3 b)         {return (a.x*b.x)+(a.y*b.y)+(a.z*b.z);}
 INLINE f32  vec3_len(vec3 a)                 {return sqrtf(vec3_dot(a,a));}
 INLINE vec3 vec3_norm(vec3 a)                {f32 vl=vec3_len(a);assert(!equalf(vl,0.0,0.01));return vec3_divf(a,vl);}
-INLINE vec3 vec3_cross(vec3 a,vec3 b)        {vec3 res; res.x=(a.y*b.z)-(a.z*b.y); res.y=(a.z*b.x)-(a.x*b.z); res.z=(a.x*b.y)-(a.y*b.x); return (res);} 
+INLINE vec3 vec3_cross(vec3 a,vec3 b)        {vec3 res; res.x=(a.y*b.z)-(a.z*b.y); res.y=(a.z*b.x)-(a.x*b.z); res.z=(a.x*b.y)-(a.y*b.x); return (res);}
 
 typedef union vec4
 {
@@ -65,14 +65,14 @@ INLINE vec4 vec4_norm(vec4 a)                {f32 vl=vec4_len(a);assert(!equalf(
 
 typedef union mat3
 {
-    f32 col[3][3];//{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1} 
-    f32 raw[9]; //{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1} 
+    f32 col[3][3];//{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1}
+    f32 raw[9]; //{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1}
 }mat3;
 
 typedef union mat4
 {
-    f32 col[4][4];//{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1} 
-    f32 raw[16]; //{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1} 
+    f32 col[4][4];//{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1}
+    f32 raw[16]; //{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1}
 }mat4;
 
 INLINE mat4 m4(void)
@@ -160,123 +160,123 @@ INLINE mat4 mat4_inv(mat4 m)
     mat4 inv, inv_out;
     s32 i;
 
-    inv.raw[0] = m.raw[5]  * m.raw[10] * m.raw[15] - 
-             m.raw[5]  * m.raw[11] * m.raw[14] - 
-             m.raw[9]  * m.raw[6]  * m.raw[15] + 
+    inv.raw[0] = m.raw[5]  * m.raw[10] * m.raw[15] -
+             m.raw[5]  * m.raw[11] * m.raw[14] -
+             m.raw[9]  * m.raw[6]  * m.raw[15] +
              m.raw[9]  * m.raw[7]  * m.raw[14] +
-             m.raw[13] * m.raw[6]  * m.raw[11] - 
+             m.raw[13] * m.raw[6]  * m.raw[11] -
              m.raw[13] * m.raw[7]  * m.raw[10];
 
-    inv.raw[4] = -m.raw[4]  * m.raw[10] * m.raw[15] + 
-              m.raw[4]  * m.raw[11] * m.raw[14] + 
-              m.raw[8]  * m.raw[6]  * m.raw[15] - 
-              m.raw[8]  * m.raw[7]  * m.raw[14] - 
-              m.raw[12] * m.raw[6]  * m.raw[11] + 
+    inv.raw[4] = -m.raw[4]  * m.raw[10] * m.raw[15] +
+              m.raw[4]  * m.raw[11] * m.raw[14] +
+              m.raw[8]  * m.raw[6]  * m.raw[15] -
+              m.raw[8]  * m.raw[7]  * m.raw[14] -
+              m.raw[12] * m.raw[6]  * m.raw[11] +
               m.raw[12] * m.raw[7]  * m.raw[10];
 
-    inv.raw[8] = m.raw[4]  * m.raw[9] * m.raw[15] - 
-             m.raw[4]  * m.raw[11] * m.raw[13] - 
-             m.raw[8]  * m.raw[5] * m.raw[15] + 
-             m.raw[8]  * m.raw[7] * m.raw[13] + 
-             m.raw[12] * m.raw[5] * m.raw[11] - 
+    inv.raw[8] = m.raw[4]  * m.raw[9] * m.raw[15] -
+             m.raw[4]  * m.raw[11] * m.raw[13] -
+             m.raw[8]  * m.raw[5] * m.raw[15] +
+             m.raw[8]  * m.raw[7] * m.raw[13] +
+             m.raw[12] * m.raw[5] * m.raw[11] -
              m.raw[12] * m.raw[7] * m.raw[9];
 
-    inv.raw[12] = -m.raw[4]  * m.raw[9] * m.raw[14] + 
+    inv.raw[12] = -m.raw[4]  * m.raw[9] * m.raw[14] +
                m.raw[4]  * m.raw[10] * m.raw[13] +
-               m.raw[8]  * m.raw[5] * m.raw[14] - 
-               m.raw[8]  * m.raw[6] * m.raw[13] - 
-               m.raw[12] * m.raw[5] * m.raw[10] + 
+               m.raw[8]  * m.raw[5] * m.raw[14] -
+               m.raw[8]  * m.raw[6] * m.raw[13] -
+               m.raw[12] * m.raw[5] * m.raw[10] +
                m.raw[12] * m.raw[6] * m.raw[9];
 
-    inv.raw[1] = -m.raw[1]  * m.raw[10] * m.raw[15] + 
-              m.raw[1]  * m.raw[11] * m.raw[14] + 
-              m.raw[9]  * m.raw[2] * m.raw[15] - 
-              m.raw[9]  * m.raw[3] * m.raw[14] - 
-              m.raw[13] * m.raw[2] * m.raw[11] + 
+    inv.raw[1] = -m.raw[1]  * m.raw[10] * m.raw[15] +
+              m.raw[1]  * m.raw[11] * m.raw[14] +
+              m.raw[9]  * m.raw[2] * m.raw[15] -
+              m.raw[9]  * m.raw[3] * m.raw[14] -
+              m.raw[13] * m.raw[2] * m.raw[11] +
               m.raw[13] * m.raw[3] * m.raw[10];
 
-    inv.raw[5] = m.raw[0]  * m.raw[10] * m.raw[15] - 
-             m.raw[0]  * m.raw[11] * m.raw[14] - 
-             m.raw[8]  * m.raw[2] * m.raw[15] + 
-             m.raw[8]  * m.raw[3] * m.raw[14] + 
-             m.raw[12] * m.raw[2] * m.raw[11] - 
+    inv.raw[5] = m.raw[0]  * m.raw[10] * m.raw[15] -
+             m.raw[0]  * m.raw[11] * m.raw[14] -
+             m.raw[8]  * m.raw[2] * m.raw[15] +
+             m.raw[8]  * m.raw[3] * m.raw[14] +
+             m.raw[12] * m.raw[2] * m.raw[11] -
              m.raw[12] * m.raw[3] * m.raw[10];
 
-    inv.raw[9] = -m.raw[0]  * m.raw[9] * m.raw[15] + 
-              m.raw[0]  * m.raw[11] * m.raw[13] + 
-              m.raw[8]  * m.raw[1] * m.raw[15] - 
-              m.raw[8]  * m.raw[3] * m.raw[13] - 
-              m.raw[12] * m.raw[1] * m.raw[11] + 
+    inv.raw[9] = -m.raw[0]  * m.raw[9] * m.raw[15] +
+              m.raw[0]  * m.raw[11] * m.raw[13] +
+              m.raw[8]  * m.raw[1] * m.raw[15] -
+              m.raw[8]  * m.raw[3] * m.raw[13] -
+              m.raw[12] * m.raw[1] * m.raw[11] +
               m.raw[12] * m.raw[3] * m.raw[9];
 
-    inv.raw[13] = m.raw[0]  * m.raw[9] * m.raw[14] - 
-              m.raw[0]  * m.raw[10] * m.raw[13] - 
-              m.raw[8]  * m.raw[1] * m.raw[14] + 
-              m.raw[8]  * m.raw[2] * m.raw[13] + 
-              m.raw[12] * m.raw[1] * m.raw[10] - 
+    inv.raw[13] = m.raw[0]  * m.raw[9] * m.raw[14] -
+              m.raw[0]  * m.raw[10] * m.raw[13] -
+              m.raw[8]  * m.raw[1] * m.raw[14] +
+              m.raw[8]  * m.raw[2] * m.raw[13] +
+              m.raw[12] * m.raw[1] * m.raw[10] -
               m.raw[12] * m.raw[2] * m.raw[9];
 
-    inv.raw[2] = m.raw[1]  * m.raw[6] * m.raw[15] - 
-             m.raw[1]  * m.raw[7] * m.raw[14] - 
-             m.raw[5]  * m.raw[2] * m.raw[15] + 
-             m.raw[5]  * m.raw[3] * m.raw[14] + 
-             m.raw[13] * m.raw[2] * m.raw[7] - 
+    inv.raw[2] = m.raw[1]  * m.raw[6] * m.raw[15] -
+             m.raw[1]  * m.raw[7] * m.raw[14] -
+             m.raw[5]  * m.raw[2] * m.raw[15] +
+             m.raw[5]  * m.raw[3] * m.raw[14] +
+             m.raw[13] * m.raw[2] * m.raw[7] -
              m.raw[13] * m.raw[3] * m.raw[6];
 
-    inv.raw[6] = -m.raw[0]  * m.raw[6] * m.raw[15] + 
-              m.raw[0]  * m.raw[7] * m.raw[14] + 
-              m.raw[4]  * m.raw[2] * m.raw[15] - 
-              m.raw[4]  * m.raw[3] * m.raw[14] - 
-              m.raw[12] * m.raw[2] * m.raw[7] + 
+    inv.raw[6] = -m.raw[0]  * m.raw[6] * m.raw[15] +
+              m.raw[0]  * m.raw[7] * m.raw[14] +
+              m.raw[4]  * m.raw[2] * m.raw[15] -
+              m.raw[4]  * m.raw[3] * m.raw[14] -
+              m.raw[12] * m.raw[2] * m.raw[7] +
               m.raw[12] * m.raw[3] * m.raw[6];
 
-    inv.raw[10] = m.raw[0]  * m.raw[5] * m.raw[15] - 
-              m.raw[0]  * m.raw[7] * m.raw[13] - 
-              m.raw[4]  * m.raw[1] * m.raw[15] + 
-              m.raw[4]  * m.raw[3] * m.raw[13] + 
-              m.raw[12] * m.raw[1] * m.raw[7] - 
+    inv.raw[10] = m.raw[0]  * m.raw[5] * m.raw[15] -
+              m.raw[0]  * m.raw[7] * m.raw[13] -
+              m.raw[4]  * m.raw[1] * m.raw[15] +
+              m.raw[4]  * m.raw[3] * m.raw[13] +
+              m.raw[12] * m.raw[1] * m.raw[7] -
               m.raw[12] * m.raw[3] * m.raw[5];
 
-    inv.raw[14] = -m.raw[0]  * m.raw[5] * m.raw[14] + 
-               m.raw[0]  * m.raw[6] * m.raw[13] + 
-               m.raw[4]  * m.raw[1] * m.raw[14] - 
-               m.raw[4]  * m.raw[2] * m.raw[13] - 
-               m.raw[12] * m.raw[1] * m.raw[6] + 
+    inv.raw[14] = -m.raw[0]  * m.raw[5] * m.raw[14] +
+               m.raw[0]  * m.raw[6] * m.raw[13] +
+               m.raw[4]  * m.raw[1] * m.raw[14] -
+               m.raw[4]  * m.raw[2] * m.raw[13] -
+               m.raw[12] * m.raw[1] * m.raw[6] +
                m.raw[12] * m.raw[2] * m.raw[5];
 
-    inv.raw[3] = -m.raw[1] * m.raw[6] * m.raw[11] + 
-              m.raw[1] * m.raw[7] * m.raw[10] + 
-              m.raw[5] * m.raw[2] * m.raw[11] - 
-              m.raw[5] * m.raw[3] * m.raw[10] - 
-              m.raw[9] * m.raw[2] * m.raw[7] + 
+    inv.raw[3] = -m.raw[1] * m.raw[6] * m.raw[11] +
+              m.raw[1] * m.raw[7] * m.raw[10] +
+              m.raw[5] * m.raw[2] * m.raw[11] -
+              m.raw[5] * m.raw[3] * m.raw[10] -
+              m.raw[9] * m.raw[2] * m.raw[7] +
               m.raw[9] * m.raw[3] * m.raw[6];
 
-    inv.raw[7] = m.raw[0] * m.raw[6] * m.raw[11] - 
-             m.raw[0] * m.raw[7] * m.raw[10] - 
-             m.raw[4] * m.raw[2] * m.raw[11] + 
-             m.raw[4] * m.raw[3] * m.raw[10] + 
-             m.raw[8] * m.raw[2] * m.raw[7] - 
+    inv.raw[7] = m.raw[0] * m.raw[6] * m.raw[11] -
+             m.raw[0] * m.raw[7] * m.raw[10] -
+             m.raw[4] * m.raw[2] * m.raw[11] +
+             m.raw[4] * m.raw[3] * m.raw[10] +
+             m.raw[8] * m.raw[2] * m.raw[7] -
              m.raw[8] * m.raw[3] * m.raw[6];
 
-    inv.raw[11] = -m.raw[0] * m.raw[5] * m.raw[11] + 
-               m.raw[0] * m.raw[7] * m.raw[9] + 
-               m.raw[4] * m.raw[1] * m.raw[11] - 
-               m.raw[4] * m.raw[3] * m.raw[9] - 
-               m.raw[8] * m.raw[1] * m.raw[7] + 
+    inv.raw[11] = -m.raw[0] * m.raw[5] * m.raw[11] +
+               m.raw[0] * m.raw[7] * m.raw[9] +
+               m.raw[4] * m.raw[1] * m.raw[11] -
+               m.raw[4] * m.raw[3] * m.raw[9] -
+               m.raw[8] * m.raw[1] * m.raw[7] +
                m.raw[8] * m.raw[3] * m.raw[5];
 
-    inv.raw[15] = m.raw[0] * m.raw[5] * m.raw[10] - 
-              m.raw[0] * m.raw[6] * m.raw[9] - 
-              m.raw[4] * m.raw[1] * m.raw[10] + 
-              m.raw[4] * m.raw[2] * m.raw[9] + 
-              m.raw[8] * m.raw[1] * m.raw[6] - 
+    inv.raw[15] = m.raw[0] * m.raw[5] * m.raw[10] -
+              m.raw[0] * m.raw[6] * m.raw[9] -
+              m.raw[4] * m.raw[1] * m.raw[10] +
+              m.raw[4] * m.raw[2] * m.raw[9] +
+              m.raw[8] * m.raw[1] * m.raw[6] -
               m.raw[8] * m.raw[2] * m.raw[5];
 
-    det = m.raw[0] * inv.raw[0] + m.raw[1] * inv.raw[4] + 
+    det = m.raw[0] * inv.raw[0] + m.raw[1] * inv.raw[4] +
         m.raw[2] * inv.raw[8] + m.raw[3] * inv.raw[12];
 
     if (det == 0) //in case the matrix is non-invertible
-        return m4d(0.f); 
+        return m4d(0.f);
 
     det = 1.f / det;
 
@@ -290,7 +290,7 @@ INLINE mat4 mat4_inv(mat4 m)
 typedef union ivec3
 {
     struct { s32 x,y,z; };
-    struct { s32 r,g,b; }; 
+    struct { s32 r,g,b; };
     s32 raw[3];
 }ivec3;
 

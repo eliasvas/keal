@@ -4,7 +4,7 @@
 #include "map.h"
 
 ////////////////////////////////
-// Composition-based nActor attributes 
+// Composition-based nActor attributes
 ////////////////////////////////
 
 typedef struct nDestructibleData nDestructibleData;
@@ -95,7 +95,7 @@ struct nActorCM {
     nEntityComponentIndexPairHashSlot *lookup_table;
     // To store deleted IndexPairs
     nEntityComponentIndexPairNode *free_nodes;
- 
+
     // ref to parent nEntityManager (who does allocations for now)
     nEntityManager *em_ref;
 };
@@ -114,7 +114,7 @@ void nactor_cm_clear(nActorCM *cm);
 b32 nactor_cm_check_movement_event(nActorCM *cm);
 void nactor_attack(nActorComponent *attacker, nActorComponent *victim);
 s32 nactor_pick_up_item(nActorComponent *ac, nActorComponent *item);
-s32 nactor_use_item(nActorComponent *ac, u8 item_index);
+void nactor_use_item(nActorComponent *ac, u8 item_index);
 
 
 #endif
