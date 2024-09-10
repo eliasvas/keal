@@ -36,7 +36,7 @@ static void sll_stack_test() {
 	u32 sum = 0;
 	u32 last_prime=0;
 
-	TestNode *head=NULL; 
+	TestNode *head=NULL;
 
 	for (u32 i = 0; i < 10; ++i){
 		TestNode *node = push_array(temp.arena, TestNode, 1);
@@ -60,8 +60,8 @@ static void sll_queue_test() {
 	u32 sum = 0;
 	u32 first_prime = 0;
 
-	TestNode *first=NULL; 
-	TestNode *last=NULL; 
+	TestNode *first=NULL;
+	TestNode *last=NULL;
 
 	for (u32 i = 0; i < 10; ++i){
 		TestNode *node = push_array(temp.arena, TestNode, 1);
@@ -86,8 +86,8 @@ static void dll_test() {
 	u32 prime_to_delete = 4;
 	TestNode *prime_to_delete_node=NULL;
 
-	TestNode *first=NULL; 
-	TestNode *last=NULL; 
+	TestNode *first=NULL;
+	TestNode *last=NULL;
 
 	for (u32 i = 0; i < 10; ++i){
 		TestNode *node = push_array(temp.arena, TestNode, 1);

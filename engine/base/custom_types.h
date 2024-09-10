@@ -36,4 +36,8 @@ static u16 U16_MAX = 0xffff;
 static u32 U32_MAX = 0xffffffff;
 static u64 U64_MAX = 0xffffffffffffffffllu;
 
+static f64 F64_MAX = 1.7976931348623158e+308;
+static f64 F64_MIN_POS = 2.2250738585072014e-308;
+static f32 F32_MAX = 3.402823466e+38F;
+static f32 F32_MIN_POS = 1.175494351e-38F;
 #endif
