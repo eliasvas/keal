@@ -1,8 +1,13 @@
 #ifndef PHYS_INC_H
 #define PHYS_INC_H
+/*
+    Features we should support in the future:
+    - Oriented Bounded Boxes
+    - Joints/IK
+    - 3D
+*/
 
 /*
-    This is a simple 2D physics engine, I should learn better physics and make this 3D someday!
     There exist many excellent resources for Game Physics:
     https://github.com/erincatto/box2d-lite (GOAT)
     https://www.amazon.com/Physics-1-Robert-Resnick/dp/0471320579 (Great Textbook)
@@ -15,5 +20,7 @@
 
 #include "collider.h"
 #include "physics_body.h"
+#include "manifold.h"
+#include "world.h"
 
 #endif

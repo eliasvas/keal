@@ -2,7 +2,9 @@
 #define ENTITY_H
 #include "engine.h"
 // ref: https://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html
-// TODO -- We probably need an arena per component manager.. to have eveything nice and packed
+// read this-> its from the guy who wrote Flecs, great resource!
+// https://ajmmertens.medium.com/building-an-ecs-1-where-are-my-entities-and-components-63d07c7da742
+// also https://github.com/SanderMertens/ecs-faq
 
 ////////////////////////////////
 // Entity Manager
