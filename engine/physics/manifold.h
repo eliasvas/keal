@@ -11,5 +11,7 @@ struct nManifold {
 };
 
 b32 nmanifold_aabbs(nManifold *m);
+void nmanifold_apply_impulse(nManifold *m);
+void nmanifold_prestep(nManifold *m, f32 inv_dt);
 
 #endif

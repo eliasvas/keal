@@ -17,6 +17,10 @@
     https://gafferongames.com/post/fix_your_timestep/
     https://www.amazon.com/Real-Time-Collision-Detection-Interactive-Technology/dp/1558607323
 */
+// TODO -- for gameplay purposes we need triggers, meaning entities with colliders that just detect collision and can be customized to for example change screne or do something!
+// TODO -- do we need particles to pass through here? maybe a particle can just be a POINT collision PhysicsBody, we need good optimization though
+// TODO -- lets ditch O(n^2) and do some spatial partitioning or AABBS better no?
+// TODO -- maybe also add layering? (each physics body can have a layer)
 
 #include "collider.h"
 #include "physics_body.h"

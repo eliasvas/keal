@@ -5,7 +5,7 @@
 
 typedef struct nPhysicsBody nPhysicsBody;
 struct nPhysicsBody {
-    //collider data
+    //collider data (can this be a different Thing?)
     union {
         struct AABB_Data {
             vec2 dim;
@@ -15,6 +15,7 @@ struct nPhysicsBody {
         };
     };
     nColliderKind kind;
+    //-------------------------------------------------
     // mass data
     f32 mass;
     f32 inv_mass;
