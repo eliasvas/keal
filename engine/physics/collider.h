@@ -29,10 +29,7 @@ struct nCollider {
     };
     nColliderKind kind;
 };
-
-b32 ntest_collider(nCollider a, nCollider b);
 b32 ntest_aabb(nAABB a, nAABB b);
-b32 ntest_circle(nCircle a, nCircle b);
-void ntest_colliders();
+nAABB ncollider_to_aabb(nCollider *c);
 
 #endif

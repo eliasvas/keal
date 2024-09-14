@@ -20,7 +20,7 @@ INLINE vec2 vec2_divf(vec2 a, f32 b)         {return v2(a.x/b,a.y/b);};
 INLINE vec2 vec2_lerp(vec2 a, vec2 b, f32 x) {return v2(a.x*(1.0-x) + b.x*x,a.y*(1.0-x) + b.y*x);};
 INLINE f32  vec2_dot(vec2 a, vec2 b)         {return (a.x*b.x)+(a.y*b.y);}
 INLINE f32  vec2_len(vec2 a)                 {return sqrtf(vec2_dot(a,a));}
-INLINE vec2 vec2_norm(vec2 a)                {f32 vl=vec2_len(a);assert(!equalf(vl,0.0,0.01));return vec2_divf(a,vl);}
+INLINE vec2 vec2_norm(vec2 a)                {f32 vl=vec2_len(a);return vec2_divf(a,vl);}
 INLINE vec2 vec2_rot(vec2 a, f32 angle_rad)  {return v2(a.x*cos(angle_rad)-a.y*sin(angle_rad), a.x*sin(angle_rad)+a.y*cos(angle_rad));}
 
 

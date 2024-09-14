@@ -120,7 +120,6 @@ void game_state_render_dir_arrow(vec2 player_pos) {
 }
 
 void game_state_update_and_render() {
-    ntest_colliders();
     do_game_gui();
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_EQUALS)) {nactor_cm_gc(&gs.acm);}

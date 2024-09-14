@@ -16,7 +16,7 @@ void nphysics_world_set_debug_draw(nPhysicsWorld *world, b32 debug_draw) {
     world->debug_draw = debug_draw;
 }
 
-// This will produce manifolds
+// This will produce manifolds for all collisions
 void nphysics_world_broadphase(nPhysicsWorld *world) {
     world->manifolds = 0;
     for (u32 i = 0; i < world->body_count; i+=1) {
@@ -25,8 +25,7 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
                 .a = &world->bodies[i],
                 .b = &world->bodies[j],
             };
-            // Here we should let all shapes be somehow
-            if (nmanifold_aabbs(&m)) {
+            if (nmanifold_generate(&m)) {
                 nManifoldNode *node = push_array(get_frame_arena(), nManifoldNode, 1);
                 node->m = m;
                 sll_stack_push(world->manifolds, node);
@@ -38,28 +37,28 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
 // This will solve all manifolds and update forces
 void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
     f32 inv_dt = dt > 0.0f ? 1.0f / dt : 0.0f;
-    // perform broadphase/calculate the manifolds
+    // 1. perform broadphase/calculate the manifolds
     nphysics_world_broadphase(world);
-    //integrate forces
+    // 2. integrate forces
     for (u32 i = 0; i < world->body_count; i+=1)
 	{
 		nPhysicsBody* b = &world->bodies[i];
 		if (b->inv_mass == 0.0f) continue;
 		b->velocity = vec2_add(b->velocity, vec2_multf(vec2_add(v2(0,world->gravity_scale * b->gravity_scale), vec2_multf(b->force, b->inv_mass)),dt));
 	}
-    // do presteps
+    // 3. do presteps (mainly just positional correction)
     for (u32 i = 0; i < world->iterations; i+=1) {
         for (nManifoldNode *m = world->manifolds; m != 0; m = m->next) {
             nmanifold_prestep(&m->m, inv_dt);
         }
     }
-    // do iterations
+    // 4. do impulse iterations
     for (u32 i = 0; i < world->iterations; i+=1) {
         for (nManifoldNode *m = world->manifolds; m != 0; m = m->next) {
             nmanifold_apply_impulse(&m->m);
         }
     }
-    //integrate velocities
+    // 5. integrate velocities
     for (u32 i = 0; i < world->body_count; i+=1)
 	{
 		nPhysicsBody* b = &world->bodies[i];

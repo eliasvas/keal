@@ -10,7 +10,7 @@ struct nManifold {
     vec2 normal;
 };
 
-b32 nmanifold_aabbs(nManifold *m);
+b32 nmanifold_generate(nManifold *m);
 void nmanifold_apply_impulse(nManifold *m);
 void nmanifold_prestep(nManifold *m, f32 inv_dt);
 

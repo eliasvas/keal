@@ -14,7 +14,7 @@ struct nPhysicsBody {
             f32 radius;
         };
     };
-    nColliderKind kind;
+    nColliderKind c_kind;
     //-------------------------------------------------
     // mass data
     f32 mass;
@@ -22,6 +22,7 @@ struct nPhysicsBody {
     // material data
     f32 density;
     f32 restitution;
+    f32 friction;
     // physics stuff
     vec2 position;
     f32 angle;
@@ -32,5 +33,7 @@ struct nPhysicsBody {
 nPhysicsBody nphysics_body_default(void);
 nPhysicsBody nphysics_body_aabb(vec2 dim, f32 m);
 nPhysicsBody nphysics_body_circle(f32 radius, f32 m);
+
+nCollider nphysics_body_get_collider(nPhysicsBody *b);
 
 #endif

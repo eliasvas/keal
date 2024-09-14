@@ -1,9 +1,10 @@
 #include "physics_body.h"
 nPhysicsBody nphysics_body_default(void) {
     nPhysicsBody b = {
-        .kind = NCOLLIDER_KIND_AABB,
+        .c_kind = NCOLLIDER_KIND_AABB,
         .dim = v2(1,1),
         .mass = 0,
+        .friction = 0.8,
         .inv_mass = 0,
         .density = 0,
         .restitution = 0.1,
@@ -19,6 +20,7 @@ nPhysicsBody nphysics_body_aabb(vec2 dim, f32 m) {
     nPhysicsBody body = nphysics_body_default();
     body.mass = m;
     body.dim = dim;
+    body.c_kind = NCOLLIDER_KIND_AABB;
     if (m < F32_MAX) {
         body.inv_mass = 1.0/m;
     } else {
@@ -31,6 +33,7 @@ nPhysicsBody nphysics_body_circle(f32 radius, f32 m) {
     nPhysicsBody body = nphysics_body_default();
     body.mass = m;
     body.radius = radius;
+    body.c_kind = NCOLLIDER_KIND_CIRCLE;
     if (m < F32_MAX) {
         body.inv_mass = 1.0/m;
     } else {
@@ -39,21 +42,22 @@ nPhysicsBody nphysics_body_circle(f32 radius, f32 m) {
     return body;
 }
 
-nCollider nphysics_body_get_collider(nPhysicsBody *body) {
-    nCollider c = {0};
-    c.kind = body->kind;
-    switch (body->kind) {
+nCollider nphysics_body_get_collider(nPhysicsBody *b) {
+    nCollider c = {
+        .kind = b->c_kind,
+    };
+    switch (b->c_kind) {
         case NCOLLIDER_KIND_AABB:
-            c.aabb.min = vec2_sub(body->position, vec2_divf(body->dim,2));
-            c.aabb.max = vec2_add(body->position, vec2_divf(body->dim,2));
+            c.aabb.min = vec2_sub(b->position, vec2_divf(b->dim,2));
+            c.aabb.max = vec2_add(b->position, vec2_divf(b->dim,2));
             break;
         case NCOLLIDER_KIND_CIRCLE:
-            c.circle.radius = body->radius;
-            c.circle.pos = body->position;
+            c.circle.radius = b->radius;
+            c.circle.pos    = b->position;
             break;
         case NCOLLIDER_KIND_OBB:
         default:
-            assert(0 && "OBBs not implemented yet!");
+            assert(0 && "Unknown Collider type!");
     }
     return c;
 }

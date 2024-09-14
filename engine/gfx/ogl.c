@@ -496,7 +496,16 @@ void ogl_image_clear(oglImage *img) {
     ogl_rt_bind(NULL);
 }
 
-//TODO: should a 'type' be introduced, switching on the format is wrong
+// Example usage to make a 2x2 image holding RED,GREEN,BLUE,WHITE colors
+// oglImage rgba_tex = {0};
+// u8 rgba_tex[] =
+//     {
+//         0xFF,0x00,0x00,0xFF,
+//         0x00,0xFF,0x00,0xFF,
+//         0x00,0x00,0xFF,0xFF,
+//         0xFF,0xFF,0xFF,0xFF,
+//     };
+//     ogl_image_init(&rgba_tex, (u8*)white, 2, 2, OGL_IMAGE_FORMAT_RGBA8U)
 b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt) {
     img->width = tex_w;
     img->height = tex_h;
