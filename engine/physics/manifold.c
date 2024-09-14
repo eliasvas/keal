@@ -1,6 +1,16 @@
 #include "manifold.h"
 
-void nmanifold_prestep(nManifold *m, f32 inv_dt) {}
+void nmanifold_prestep(nManifold *m, f32 inv_dt) {
+    // positional correction
+    f32 posc_percent = 0.2;
+    vec2 correction = vec2_multf(m->normal, m->penetration * posc_percent);
+    if (m->a->inv_mass > 0.0f) {
+        m->a->position = vec2_sub(m->a->position, correction);
+    }
+    if (m->b->inv_mass > 0.0f) {
+        m->b->position = vec2_add(m->b->position, correction);
+    }
+}
 
 b32 nmanifold_aabbs(nManifold *m) {
     nPhysicsBody *a = m->a;
@@ -32,7 +42,7 @@ b32 nmanifold_aabbs(nManifold *m) {
 
         if (y_overlap > 0) {
             //find axis of LEAST penetration
-            if (x_overlap > y_overlap) {
+            if (x_overlap < y_overlap) {
                 // point towards B if n goes A->B
                 if (n.x < 0) {
                     m->normal = v2(-1,0);
@@ -66,6 +76,6 @@ void nmanifold_apply_impulse(nManifold *m) {
     j /= (a->inv_mass + b->inv_mass);
     vec2 impulse = vec2_multf(m->normal,j);
 
-    a->velocity = vec2_add(a->velocity, vec2_multf(impulse, a->inv_mass));
-    b->velocity = vec2_sub(b->velocity, vec2_multf(impulse, b->inv_mass));
+    a->velocity = vec2_sub(a->velocity, vec2_multf(impulse, a->inv_mass));
+    b->velocity = vec2_add(b->velocity, vec2_multf(impulse, b->inv_mass));
 }

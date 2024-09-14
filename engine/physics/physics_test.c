@@ -23,7 +23,7 @@ void physics_test_init() {
     ogl_image_init(&white_img, (u8*)white, 1, 1, OGL_IMAGE_FORMAT_RGBA8U);
     nphysics_world_init(&pw);
 
-    b1 = nphysics_body_aabb(v2(50,50), 500);
+    b1 = nphysics_body_aabb(v2(50,50), 10);
     b1.position = v2(get_nwin()->ww/2, get_nwin()->wh/2);
     b1.gravity_scale = 0;
     nphysics_world_add(&pw, &b1);
@@ -33,7 +33,7 @@ void physics_test_update_and_render() {
     nphysics_world_step(&pw, 1/60.0);
 
     vec2 mouse_pos =ninput_get_mouse_pos(get_nim());
-    b2 = nphysics_body_aabb(v2(50,50), 200);
+    b2 = nphysics_body_aabb(v2(50,50), 10);
     b2.position = mouse_pos;
     if (ninput_mkey_pressed(get_nim(), GUI_LMB)) {
         nphysics_world_add(&pw, &b2);

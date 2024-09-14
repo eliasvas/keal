@@ -6,7 +6,7 @@ nPhysicsBody nphysics_body_default(void) {
         .mass = 0,
         .inv_mass = 0,
         .density = 0,
-        .restitution = 0.5,
+        .restitution = 0.1,
         .position = v2(0,0),
         .angle = 0,
         .velocity = v2(0,0),
