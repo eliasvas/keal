@@ -21,6 +21,7 @@
 // TODO -- do we need particles to pass through here? maybe a particle can just be a POINT collision PhysicsBody, we need good optimization though
 // TODO -- lets ditch O(n^2) and do some spatial partitioning or AABBS better no?
 // TODO -- maybe also add layering? (each physics body can have a layer)
+// TODO -- how are users supposed to insert their own logic here huh?? how about we integrate this to ECS
 
 #include "collider.h"
 #include "physics_body.h"

@@ -140,13 +140,13 @@ void nactor_cm_del(nActorCM *cm, nEntity e) {
     }
 }
 void nactor_cm_gc(nActorCM *cm) {
-    printf("Performing actor CM GC with size: %d\n",cm->size);
+    NLOG_DBG("Performing actor CM GC with size: %d\n",cm->size);
     // First count how many actors we should remove
     u32 inactive_count = 0;
     for (u32 i = 0; i < cm->size; i+=1) {
         if (!cm->actors[i].active) {
             inactive_count += 1;
-            printf("actor: [%s] inactive\n", cm->actors[i].name);
+            NLOG_DBG("actor: [%s] inactive\n", cm->actors[i].name);
         }
     }
     if (inactive_count){
@@ -164,7 +164,7 @@ void nactor_cm_gc(nActorCM *cm) {
             nactor_cm_del(cm, actors_to_be_deleted[i]);
         }
     }
-    printf("Ending actor CM GC with size: %d\n",cm->size);
+    NLOG_DBG("Ending actor CM GC with size: %d\n",cm->size);
 }
 
 ////////////////////////////////
@@ -242,7 +242,7 @@ void nactor_update(nActorComponent *ac, nMap *map) {
         case NACTOR_KIND_DOOR:
             player_cmp = nactor_cm_get(&(get_ggs()->acm), get_ggs()->map.player);
             if (player_cmp && player_cmp->posx == ac->posx && player_cmp->posy == ac->posy){
-                printf("NEXT LEVEL!\n");
+                NLOG_DBG("NEXT LEVEL!\n");
                 nactor_cm_clear(&(get_ggs()->acm));
                 nmap_create(&(get_ggs()->map),64,64);
             }
@@ -250,7 +250,7 @@ void nactor_update(nActorComponent *ac, nMap *map) {
         case NACTOR_KIND_ITEM:
             break;
         default:
-            printf("Who is dis guy?!\n");
+            NLOG_DBG("Who is dis guy?!\n");
             break;
     }
 }
@@ -292,11 +292,11 @@ void nactor_cm_render(nActorCM *cm, nBatch2DRenderer *rend, oglImage *atlas) {
 
 // also shift this component to begining, so its drawn before HERO
 void nactor_die(nActorComponent *ac) {
-    printf("actor: %s died!\n", ac->name);
+    NLOG_DBG("actor: %s died!\n", ac->name);
     ac->tc = TILESET_SKULL_TILE;
     ac->blocks = 0;
     if (strcmp(ac->name,"player") == 0) {
-        printf("YOU DIED\n");
+        NLOG_DBG("YOU DIED\n");
         nactor_cm_clear(&(get_ggs()->acm));
         nmap_create(&(get_ggs()->map),64,64);
     }
@@ -313,7 +313,7 @@ s32 nactor_pick_up_item(nActorComponent *ac, nActorComponent *item) {
                 }
             }
         }else {
-            printf("inventory full!\n");
+            NLOG_DBG("inventory full!\n");
         }
     }
     return 0;
@@ -343,7 +343,7 @@ void nactor_use_item(nActorComponent *ac, u8 item_index) {
     nActorComponent *item = ac->c.items[item_index];
 
     // ITEM LOGIC
-    printf("item: %s used!\n", item->name);
+    NLOG_DBG("item: %s used!\n", item->name);
     nEntity item_entity = nactor_cm_lookup_entity_from_ptr(&(get_ggs()->acm), item);
     if (strcmp(item->name, "hlt-potion") == 0) {
         nactor_heal(ac, 10);

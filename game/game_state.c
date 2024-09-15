@@ -30,7 +30,7 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
     stbi_set_flip_vertically_on_load(1);
     unsigned char* image = stbi_load(path, &w, &h, &comp, STBI_rgb_alpha);
     if(stbi_failure_reason()) {
-        printf("Failed reading image: %s\n", stbi_failure_reason());
+        NLOG_ERR("Failed reading image: %s\n", stbi_failure_reason());
     }
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGBA8U));

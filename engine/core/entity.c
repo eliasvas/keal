@@ -176,7 +176,7 @@ void ndebug_name_cm_update(nDebugNameCM *cm) {
     nDebugNameComponent c = {0};
     for (u32 slot = 0; slot < cm->debug_table_size; slot+=1){
         for (nDebugNameComponentNode *node = cm->debug_table[slot].hash_first; node!=0; node = node->next) {
-            printf("entity [%d] has debug name [%s]\n", node->entity, node->debug_name.name);
+            NLOG_DBG("entity [%d] has debug name [%s]\n", node->entity, node->debug_name.name);
         }
     }
 }

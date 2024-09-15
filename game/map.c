@@ -112,7 +112,7 @@ void nmap_subdivide(nMap *map, nDungeonSubdivision *p) {
 
 void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1, nTileKind kind) {
     assert(x0 >= 0 && y0 >= 0 && x1 <= map->width && y1 <= map->height);
-    //printf("digging %d %d %d %d\n", x0, y0, x1, y1);
+    //NLOG_DBG("digging %d %d %d %d\n", x0, y0, x1, y1);
     nTile dest = {.kind = kind, .explored = 0, .color = v4(1,1,1,1)};
 
     if (kind == NTILE_KIND_WALL) {
@@ -341,7 +341,7 @@ void nmap_gen_corridors(nMap *map, nDungeonSubdivision *p) {
 void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
     for (nDungeonSubdivision *child = p->first; !ndungeon_sub_is_nil(child); child = child->next) {
         if (ndungeon_sub_is_leaf(child)) {
-            //printf("child %d %d %d %d!\n", child->x, child->y, child->w, child->h);
+            //NLOG_DBG("child %d %d %d %d!\n", child->x, child->y, child->w, child->h);
             if (gen_rand01() < 0.75) {
                 s32 w = child->w;
                 s32 h = child->h;
@@ -395,12 +395,12 @@ void nmap_print_dungeon_bsp(nDungeonSubdivision *ds, u32 depth) {
 	if (ndungeon_sub_is_nil(ds))return;
 
 	if (depth == 0) {
-		printf("[%d:%d:%d:%d : %d]\n",ds->x, ds->y, ds->w, ds->h, depth);
+		NLOG_DBG("[%d:%d:%d:%d : %d]\n",ds->x, ds->y, ds->w, ds->h, depth);
 	}else {
 		for (u32 i = 1; i < depth; ++i) {
-			printf("\t");
+			NLOG_DBG("\t");
 		}
-		printf("+----[%d:%d:%d:%d : %d]\n",ds->x, ds->y, ds->w, ds->h, depth);
+		NLOG_DBG("+----[%d:%d:%d:%d : %d]\n",ds->x, ds->y, ds->w, ds->h, depth);
 	}
     for (nDungeonSubdivision *child = ds->first; !ndungeon_sub_is_nil(child); child = child->next) {
 		nmap_print_dungeon_bsp(child, depth+1);

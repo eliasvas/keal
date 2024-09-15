@@ -6,13 +6,13 @@
 void naudio_impl_context_init(nAudioContext *actx) {
     // Initialize SDL AUDIO
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        fprintf(stderr, "SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+        NLOG_ERR("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
         return;
     }
 
     int audio_rate = 22050; Uint16 audio_format = AUDIO_S16SYS; int audio_channels = 2; int chunk_count = 4096;
     //int audio_rate = 44100; Uint16 audio_format = AUDIO_S16SYS; int audio_channels = 2; int chunk_count = 4096;
-    if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, chunk_count) != 0) { fprintf(stderr, "Unable to initialize audio: %s\n", Mix_GetError()); exit(1); }
+    if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, chunk_count) != 0) { NLOG_ERR("Unable to initialize audio: %s\n", Mix_GetError()); exit(1); }
 }
 
 void naudio_impl_context_deinit(nAudioContext *actx) {

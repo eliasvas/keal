@@ -25,7 +25,7 @@ b32 nwindow_impl_create(nWindow *win) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     #endif
-    
+
     u32 flags = SDL_WINDOW_OPENGL;
     if (win->opt & N_WINDOW_OPT_RESIZABLE) {
         flags |= SDL_WINDOW_RESIZABLE;
@@ -38,7 +38,7 @@ b32 nwindow_impl_create(nWindow *win) {
 
     SDL_GLContext glcontext = SDL_GL_CreateContext(window);
     if (!glcontext) {
-        SDL_Log("Error creating GL context!");
+        NLOG_ERR("Error creating GL context!");
         return 0;
     }
     SDL_GL_MakeCurrent(window,glcontext);
@@ -49,16 +49,16 @@ b32 nwindow_impl_create(nWindow *win) {
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorv);
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorv);
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profilem);
-        SDL_Log("OpenGL %d.%d (ES=%s)", majorv, minorv, (SDL_GL_CONTEXT_PROFILE_ES == profilem) ? "true" : "compatibility");
+        NLOG_INFO("OpenGL %d.%d (ES=%s)", majorv, minorv, (SDL_GL_CONTEXT_PROFILE_ES == profilem) ? "true" : "compatibility");
     }
 
     SDL_ShowWindow(window);
     {
         int width, height;
         SDL_GetWindowSize(window, &width, &height);
-        SDL_Log("Window size: %ix%i", width, height);
+        NLOG_INFO("Window size: %dx%d", width, height);
     }
-    SDL_Log("SDL window [%s] created succesfully!", win->name);
+    NLOG_INFO("SDL window [%s] created succesfully!", win->name);
     return 1;
 }
 

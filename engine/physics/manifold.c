@@ -39,23 +39,19 @@ b32 nmanifold_gen_aabb_circle(nManifold *m) {
     nPhysicsBody *a = m->a;
     nPhysicsBody *b = m->b;
 
-    // Vector from A to B
     vec2 n = vec2_sub(b->position, a->position);
     nAABB a_aabb = nphysics_body_get_collider(a).aabb;
     nCircle b_circle = nphysics_body_get_collider(b).circle;
 
-    // Get half extents of AABB
     f32 x_extent = (a_aabb.max.x - a_aabb.min.x) / 2.0f;
     f32 y_extent = (a_aabb.max.y - a_aabb.min.y) / 2.0f;
 
-    // Clamp point to closest on AABB
     vec2 closest = n;
     closest.x = clamp(closest.x, -x_extent, x_extent);
     closest.y = clamp(closest.y, -y_extent, y_extent);
 
     b32 inside = 0;
 
-    // Check if the circle's center is inside the AABB
     if (equalf(n.x, closest.x, 0.001f) && equalf(n.y, closest.y, 0.001f)) {
         inside = 1;
         // Find the closest edge direction for pushing the circle out
@@ -66,32 +62,25 @@ b32 nmanifold_gen_aabb_circle(nManifold *m) {
         }
     }
 
-    // Calculate the vector from the closest point to the circle's center
     vec2 normal = vec2_sub(n, closest);
-    f32 d = vec2_dot(normal, normal);  // Squared distance
+    f32 d = vec2_dot(normal, normal);
     f32 r = b_circle.radius;
 
-    // If the distance is larger than the radius, no collision
     if (d > r * r && !inside) {
         return 0;
     }
 
-    // Calculate actual distance if needed
     d = sqrtf(d);
-
-    // If inside, invert the normal and compute penetration
     if (inside) {
-        // Circle center is inside the AABB
-        m->normal = vec2_norm(vec2_multf(normal, -1.0f));  // Pointing outward from the box
-        m->penetration = r - d;  // Penetration is radius minus distance
+        m->normal = vec2_norm(vec2_multf(normal, -1.0f));
+        m->penetration = r - d;
     } else {
-        // Circle is outside the AABB, so normal points outward
         if (d != 0) {
             m->normal = vec2_norm(normal);
         } else {
-            m->normal = (vec2){1.0f, 0.0f};  // If distance is zero, use an arbitrary normal
+            m->normal = (vec2){1.0f, 0.0f};
         }
-        m->penetration = r - d;  // Overlap distance
+        m->penetration = r - d;
     }
 
     return 1;

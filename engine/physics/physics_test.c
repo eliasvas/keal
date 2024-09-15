@@ -20,7 +20,7 @@ void rend_collider(nCollider *collider, vec4 color) {
 }
 
 void physics_test_init() {
-    printf("Hello physics!\n");
+    NLOG_INFO("Hello physics!\n");
     u8 white[] = { 0xFF,0xFF,0xFF,0xFF };
     ogl_image_init(&white_img, (u8*)white, 1, 1, OGL_IMAGE_FORMAT_RGBA8U);
 
@@ -55,7 +55,7 @@ void physics_test_init() {
 }
 
 void physics_test_update_and_render() {
-    //printf("vel= %f %f\n", pw.bodies[0].velocity.x, pw.bodies[0].velocity.y);
+    //NLOG_INFO("vel= %f %f\n", pw.bodies[0].velocity.x, pw.bodies[0].velocity.y);
     nphysics_world_step(&pw, nglobal_state_get_dt()/1000.0);
 
     vec2 mouse_pos = ninput_get_mouse_pos(get_nim());

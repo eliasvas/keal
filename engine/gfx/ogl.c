@@ -1,4 +1,5 @@
 #include "base/base_inc.h"
+#include "core/log.h"
 #include "ogl.h"
 #define OGL_CAST_GLUINTPTR(x) ((GLuint*)((u64)(&x)))
 #define OGL_CAST_GLUINT(x) ((GLuint)((u64)(x)))
@@ -210,7 +211,7 @@ GLenum gl_check_err(const char *file, int line) {
             case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
             default: break;
         }
-        printf("GL ERROR: %s | %s | %d\n", error, file, line);
+        NLOG_ERR("GL ERROR: %s | %s | %d\n", error, file, line);
         last_ec = ec;
     }
     return last_ec;
@@ -279,7 +280,7 @@ b32 gl_check_gl_shader_link_errors(GLuint sp_handle) {
         //defer free(info_data);
         u8 info_data[256] = {0};
         glGetProgramInfoLog (sp_handle, info_len, &info_len, info_data);
-        printf("Shader link error: %s\n", info_data);
+        NLOG_ERR("Shader link error: %s\n", info_data);
     }
     return (success == 0);
 }
@@ -294,7 +295,7 @@ b32 gl_check_gl_shader_compile_errors(GLuint sp_handle) {
         //defer free(info_data);
         u8 info_data[256] = {0};
         glGetShaderInfoLog (sp_handle, info_len, &info_len, info_data);
-        printf("Shader compilation error: %s\n", info_data);
+        NLOG_ERR("Shader compilation error: %s\n", info_data);
     }
     return (success == 0);
 }
