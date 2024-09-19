@@ -30,19 +30,35 @@ typedef u32 nComponentMask;
 #define NCOMPONENT_MASK_SET_SLOT(mask, slot) (mask = (mask | (0x1 << slot)))
 #define NCOMPONENT_MASK_DEL_SLOT(mask, slot) (mask = mask & (~(0x1 << slot)))
 
-typedef uint32_t nEntityID;
+//  [ 32b | 32b ] -> [ generation | index ]
+typedef u64 nEntityID;
+#define NENTITY_GET_INDEX(entity) (entity & U32_MAX)
+#define NENTITY_GET_GENERATION(entity) ((entity >> 32) & U32_MAX)
+#define NENTITY_INCREMENT_GENERATION(entity) (((NENTITY_GET_GENERATION(entity)+1)<<32) | NENTITY_GET_INDEX(entity))
+#define NENTITY_INCREMENT_INDEX(entity) ((NENTITY_GET_GENERATION(entity) << 32) | (NENTITY_GET_INDEX(entity)+1))
+
 typedef struct nComponentArray nComponentArray;
 struct nComponentArray {
     int elem_size;  // total size of each component
     void *data;     // allocated data
 };
 
+typedef struct nEntityFreeSlotNode nEntityFreeSlotNode;
+struct nEntityFreeSlotNode {
+    nEntityID id;
+    nEntityFreeSlotNode *next;
+};
+
 typedef struct nEntityMgr nEntityMgr;
 struct nEntityMgr {
     nComponentArray components[NMAX_COMPONENTS];
-    nComponentMask  *bitset; //indicates whether EntityID i has component j
+    nComponentMask  *bitset; // indicates whether nEntityID i has component j
+    // TODO -- this is no updated
     u32 comp_array_len;
     u32 comp_array_cap;
+    // entity index reuse
+    nEntityFreeSlotNode *available_slots; // ready to be reused slots
+    nEntityFreeSlotNode *free_slots; // free slot memory we can use
 };
 
 nEntityID nem_make();
@@ -64,13 +80,13 @@ nEntityID nem_make();
         }                                                               \
         u32 elem_size = sizeof(comp_type);                              \
         (em)->components[index].elem_size = elem_size;                  \
-        (em)->components[index].data = push_array(get_global_arena(), comp_type, elem_size*NMAX_ENTITIES);\
+        (em)->components[index].data = push_array_nz(get_global_arena(), comp_type, elem_size*NMAX_ENTITIES);\
         if (!(em)->components[index].data) {                             \
             assert(0 && "Cant allocate component memory");              \
         }                                                               \
     } while (0)
     
-#define NENTITY_MANAGER_HAS_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_GET_SLOT((em)->bitset[entity],GetTypeID_##comp_type())    
+#define NENTITY_MANAGER_HAS_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_GET_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],GetTypeID_##comp_type())    
 
 #define NENTITY_MANAGER_ADD_COMPONENT(em, entity, comp_type)    \
     do {                                                                \
@@ -78,19 +94,20 @@ nEntityID nem_make();
         if (index >= NMAX_COMPONENTS || (em)->components[index].data == NULL) { \
             assert(0 && "Component type not registered");               \
         }                                                               \
-        if (entity >= NMAX_ENTITIES) {                                  \
+        if (NENTITY_GET_INDEX(entity) >= NMAX_ENTITIES) {                                  \
             assert(0 && "invalid entity id");                           \
         }                                                               \
-        if (NCOMPONENT_MASK_GET_SLOT((em)->bitset[index], index)) {      \
+        if (NENTITY_MANAGER_HAS_COMPONENT(em,entity,comp_type)) {      \
             NLOG_ERR("Component <%s> already set for entity %d", #comp_type, entity);\
         } else {                                                               \
-            void *dest = (char *)(em)->components[index].data + entity * (em)->components[index].elem_size; \
+            void *dest = (char *)(em)->components[index].data + NENTITY_GET_INDEX(entity) * (em)->components[index].elem_size; \
             memset(dest, 0, (em)->components[index].elem_size);                  \
-            NCOMPONENT_MASK_SET_SLOT((em)->bitset[entity],index); \
+            NCOMPONENT_MASK_SET_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],index); \
         } \
     } while (0)
 
-#define NENTITY_MANAGER_GET_COMPONENT(em, entity, comp_type) (comp_type *)((char *)(em)->components[GetTypeID_##comp_type()].data + entity * (em)->components[GetTypeID_##comp_type()].elem_size);
+#define NENTITY_MANAGER_GET_COMPONENT(em, entity, comp_type) (comp_type *)((char *)(em)->components[GetTypeID_##comp_type()].data + NENTITY_GET_INDEX(entity) * (em)->components[GetTypeID_##comp_type()].elem_size);
+#define NENTITY_MANAGER_DEL_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_DEL_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],GetTypeID_##comp_type())    
 
 void entity_test();
 nEntityMgr* get_em();
