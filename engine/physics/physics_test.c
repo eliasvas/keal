@@ -20,6 +20,7 @@ void rend_collider(nCollider *collider, vec4 color) {
 }
 
 void physics_test_init() {
+    entity_test();
     NLOG_INFO("Hello physics!\n");
     u8 white[] = { 0xFF,0xFF,0xFF,0xFF };
     ogl_image_init(&white_img, (u8*)white, 1, 1, OGL_IMAGE_FORMAT_RGBA8U);

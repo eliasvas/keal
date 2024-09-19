@@ -6,7 +6,7 @@ project(TestGame VERSION 1.0.0 LANGUAGES C)
 
 
 # build the engine
-add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c engine/audio/audio.c engine/audio/audio_SDL_impl.c engine/physics/collider.c engine/physics/physics_body.c engine/physics/physics_test.c engine/physics/world.c engine/physics/manifold.c engine/core/log.c)
+add_library(engine STATIC engine/misc/gui_impl.c engine/core/entity.c engine/core/global_state.c engine/core/window.c engine/core/window_SDL_impl.c engine/core/input.c engine/gfx/ogl.c engine/gfx/rend.c engine/audio/audio.c engine/audio/audio_SDL_impl.c engine/physics/collider.c engine/physics/physics_body.c engine/physics/physics_test.c engine/physics/world.c engine/physics/manifold.c engine/core/log.c engine/ecs/entity.c)
 include_directories(engine ext/gui/gui/include)
 include_directories(engine engine)
 add_subdirectory(ext/gui)
