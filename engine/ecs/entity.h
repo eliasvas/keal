@@ -50,6 +50,16 @@ struct nEntityFreeSlotNode {
 };
 
 typedef struct nEntityMgr nEntityMgr;
+#define NENTITY_MANAGER_TOP_PRIORITY 0
+#define NENTITY_MANAGER_BOTTOM_PRIORITY 10
+typedef struct nEntityMgrSystemNode nEntityMgrSystemNode;
+struct nEntityMgrSystemNode {
+    void (*func)(nEntityMgr *em);
+    u32 priority;
+    nEntityMgrSystemNode *next; 
+    nEntityMgrSystemNode *prev; 
+};
+
 struct nEntityMgr {
     nComponentArray components[NMAX_COMPONENTS];
     nComponentMask  *bitset; // indicates whether nEntityID i has component j
@@ -59,6 +69,10 @@ struct nEntityMgr {
     // entity index reuse
     nEntityFreeSlotNode *available_slots; // ready to be reused slots
     nEntityFreeSlotNode *free_slots; // free slot memory we can use
+    // system management
+    nEntityMgrSystemNode *systems_first;
+    nEntityMgrSystemNode *systems_last;
+    nEntityMgrSystemNode *free_system_nodes; // free nodes we can use instead of allocating
 };
 
 nEntityID nem_make();
@@ -109,7 +123,33 @@ nEntityID nem_make();
 #define NENTITY_MANAGER_GET_COMPONENT(em, entity, comp_type) (comp_type *)((char *)(em)->components[GetTypeID_##comp_type()].data + NENTITY_GET_INDEX(entity) * (em)->components[GetTypeID_##comp_type()].elem_size);
 #define NENTITY_MANAGER_DEL_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_DEL_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],GetTypeID_##comp_type())    
 
+#define NENTITY_MANAGER_ADD_SYSTEM(em, cb, prio) \
+    do {                                                     \
+        nEntityMgrSystemNode *node = (em)->free_system_nodes; \
+        if (node) {   \
+            sll_stack_pop((em)->free_system_nodes);   \
+        } else { \
+            node = push_array(get_global_arena(), nEntityMgrSystemNode, 1); \
+        } \
+        node->func = cb; \
+        node->priority = prio; \
+        dll_push_back((em)->systems_first, (em)->systems_last, node); \
+    } while (0)
+
+#define NENTITY_MANAGER_DEL_SYSTEM(em, cb) \
+    do { \
+        for (nEntityMgrSystemNode *node = (em)->systems_first; node != 0; node = node->next) { \
+            if (node->func == cb){ \
+                dll_remove((em)->systems_first, (em)->systems_last, node); \
+                M_ZERO_STRUCT(node); \
+                sll_stack_push((em)->free_system_nodes, node); \
+                break; \
+            } \
+        } \
+    } while (0)
+
 void entity_test();
 nEntityMgr* get_em();
+void nem_update(nEntityMgr *em);
 
 #endif

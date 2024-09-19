@@ -34,6 +34,7 @@ nEntityID nem_make(nEntityMgr *em) {
         sll_stack_push(em->free_slots, slot);
         return id;
     }
+    em->comp_array_len = entity_count+1;
     return entity_count++;
 }
 
@@ -44,6 +45,32 @@ void nem_del(nEntityMgr *em, nEntityID entity) {
     nEntityFreeSlotNode *next_free_slot = nem_get_free_entity_slot(em);
     next_free_slot->id = NENTITY_INCREMENT_GENERATION(entity);
     sll_stack_push(em->available_slots, next_free_slot);
+}
+
+void nem_update(nEntityMgr *em) {
+    for (u32 prio = NENTITY_MANAGER_TOP_PRIORITY; prio <= NENTITY_MANAGER_BOTTOM_PRIORITY; prio+=1) {
+        for (nEntityMgrSystemNode *node = em->systems_first; node != 0; node = node->next) {
+            if (prio == node->priority) {
+                node->func(em);
+            }
+        }
+    }
+}
+
+void update_first(nEntityMgr *em) {
+    // for every entity
+    for (u32 i = 0; i < em->comp_array_len; i+=1) {
+        nEntityID entity = i;
+        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, Position)) {
+            NLOG_INFO("Entity <%d> has Position component!", entity);
+        } else {
+            NLOG_INFO("Entity <%d> doesnt have Position component!", entity);
+        }
+    }
+}
+
+void update_second(nEntityMgr *em) {
+    NLOG_INFO("I came seconde!");
 }
 
 void entity_test() {
@@ -77,4 +104,9 @@ void entity_test() {
         assert(NENTITY_GET_GENERATION(entity) == i);
         nem_del(get_em(), entity);
     }
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_second, 2);
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_first, 1);
+    nem_update(get_em());
+    NENTITY_MANAGER_DEL_SYSTEM(get_em(), update_first);
+    nem_update(get_em());
 }
