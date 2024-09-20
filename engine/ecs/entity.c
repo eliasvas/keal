@@ -78,6 +78,7 @@ void entity_test() {
 
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), Position);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), Health);
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
     nEntityID id = nem_make(get_em()); // create entity
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, Position); // add component
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, Position); // add component (this will fail)

@@ -76,6 +76,7 @@ struct nEntityMgr {
 };
 
 nEntityID nem_make();
+void nem_del(nEntityMgr *em, nEntityID entity);
 
 #include "comp_def.inl"
 
