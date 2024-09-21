@@ -2,7 +2,7 @@
 #include "engine.h"
 #include "game_state.h"
 
-#define PHYSICS_TEST
+// #define PHYSICS_TEST
 void physics_test_init();
 void physics_test_update_and_render();
 

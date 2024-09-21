@@ -5,6 +5,5 @@
 #include "log.h"
 #include "window.h"
 #include "input.h"
-#include "entity.h"
 
 #endif

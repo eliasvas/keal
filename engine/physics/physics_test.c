@@ -94,16 +94,15 @@ void physics_test_init() {
     physics_test_init_textures();
     
     NENTITY_MANAGER_INIT(get_em());
-    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), Position);
-    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), Health);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
 
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_update_func, 1);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_far_away_delete_entities_func, 2);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_render_func, 3);
 
     // innit a square in the middle with positive velocity on X axis (it goes right) 
-    nEntity middle_square = nem_make(get_em());
+    nEntityID middle_square = nem_make(get_em());
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), middle_square, nPhysicsBody);
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), middle_square, nPhysicsBody);
     *b = nphysics_body_aabb(v2(40,40), 300);

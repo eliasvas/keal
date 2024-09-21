@@ -1,8 +1,6 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 #include "engine.h"
-#include "actor.h"
-#include "map.h"
 #include "dungeon_cam.h"
 #include "game_gui.h"
 
@@ -23,12 +21,8 @@ struct GameState {
     oglImage atlas;
     oglImage white;
 
-    nEntityManager em;
-    nTransformCM tcm;
-    nActorCM acm;
-    nMap map;
-
     nDungeonCam dcam;
+
     f32 animation_speed;
 };
 

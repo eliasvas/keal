@@ -61,10 +61,10 @@ void update_first(nEntityMgr *em) {
     // for every entity
     for (u32 i = 0; i < em->comp_array_len; i+=1) {
         nEntityID entity = i;
-        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, Position)) {
-            NLOG_INFO("Entity <%d> has Position component!", entity);
+        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite)) {
+            NLOG_INFO("Entity <%d> has Sprite component!", entity);
         } else {
-            NLOG_INFO("Entity <%d> doesnt have Position component!", entity);
+            NLOG_INFO("Entity <%d> doesnt have Sprite component!", entity);
         }
     }
 }
@@ -76,18 +76,16 @@ void update_second(nEntityMgr *em) {
 void entity_test() {
     NENTITY_MANAGER_INIT(get_em());
 
-    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), Position);
-    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), Health);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
     nEntityID id = nem_make(get_em()); // create entity
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, Position); // add component
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, Position); // add component (this will fail)
-    Position *p = (Position*)NENTITY_MANAGER_GET_COMPONENT(get_em(), id, Position); //modify component data
-    p->x = 5;
-    p->y = 10;
-    p = NENTITY_MANAGER_GET_COMPONENT(get_em(), id, Position);
-    printf("Position: (%d, %d)\n", p->x, p->y);
-    assert(p->x == 5);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, nSprite); // add component
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, nSprite); // add component (this will fail)
+    nSprite *p = (nSprite*)NENTITY_MANAGER_GET_COMPONENT(get_em(), id, nSprite); //modify component data
+    p->color.x = 1.0;
+    p = NENTITY_MANAGER_GET_COMPONENT(get_em(), id, nSprite);
+    printf("Sprite color : (%f, %f, %f, %f)\n", p->color.x, p->color.y, p->color.z, p->color.w);
+    assert(p->color.x == 1.0);
 
     u32 mask = 0;
     NCOMPONENT_MASK_SET_SLOT(mask, 0);
