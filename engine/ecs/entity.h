@@ -121,7 +121,7 @@ void nem_del(nEntityMgr *em, nEntityID entity);
         } \
     } while (0)
 
-#define NENTITY_MANAGER_GET_COMPONENT(em, entity, comp_type) (comp_type *)((char *)(em)->components[GetTypeID_##comp_type()].data + NENTITY_GET_INDEX(entity) * (em)->components[GetTypeID_##comp_type()].elem_size);
+#define NENTITY_MANAGER_GET_COMPONENT(em, entity, comp_type) (comp_type *)((char *)(em)->components[GetTypeID_##comp_type()].data + NENTITY_GET_INDEX(entity) * (em)->components[GetTypeID_##comp_type()].elem_size)
 #define NENTITY_MANAGER_DEL_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_DEL_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],GetTypeID_##comp_type())    
 
 #define NENTITY_MANAGER_ADD_SYSTEM(em, cb, prio) \

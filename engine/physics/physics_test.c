@@ -94,6 +94,7 @@ void physics_test_init() {
     physics_test_init_textures();
     
     NENTITY_MANAGER_INIT(get_em());
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nEntityTag);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
 

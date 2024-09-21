@@ -3,10 +3,10 @@
 #include "tileset4922.inl"
 
 void ndungeon_cam_update(nDungeonCam *cam, vec2 player_pos) {
-    if (player_pos.x - cam->pos.x > cam->max_off.x) cam->pos.x +=1;
-    if (player_pos.x + cam->max_off.x < cam->pos.x) cam->pos.x -=1;
-    if (player_pos.y - cam->pos.y > cam->max_off.y) cam->pos.y +=1;
-    if (player_pos.y + cam->max_off.y < cam->pos.y) cam->pos.y -=1;
+    if (player_pos.x - cam->pos.x > cam->max_off.x) cam->pos.x +=0.1;
+    if (player_pos.x + cam->max_off.x < cam->pos.x) cam->pos.x -=0.1;
+    if (player_pos.y - cam->pos.y > cam->max_off.y) cam->pos.y +=0.1;
+    if (player_pos.y + cam->max_off.y < cam->pos.y) cam->pos.y -=0.1;
 }
 void ndungeon_cam_set(nDungeonCam *cam, vec2 pos, vec2 max_off, f32 zoom) {
     cam->pos = pos;

@@ -12,7 +12,7 @@ nSprite nsprite_make(vec4 start_tc, u32 frame_count, u32 fps, vec4 color) {
 
 vec4 nsprite_get_current_tc(nSprite *sprite) {
     vec4 tc = sprite->start_tc;
-    tc.x += floor(sprite->frame);
+    tc.x += floor(sprite->frame)*tc.z;
     return tc;
 }
 
@@ -21,5 +21,5 @@ void nsprite_update(nSprite *sprite, f32 dt) {
     if (sprite->progress > 1.0) {
         sprite->progress -= 1.0;
     }
-    sprite->frame =  dt / (1.0 / sprite->fps);
+    sprite->frame = sprite->progress * sprite->frame_count;
 }

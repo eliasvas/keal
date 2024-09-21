@@ -22,8 +22,7 @@ struct GameState {
     oglImage white;
 
     nDungeonCam dcam;
-
-    f32 animation_speed;
+    nEntityID player;
 };
 
 void game_state_status_set(GameStatus status);
