@@ -33,7 +33,6 @@ void update_and_render_sprites(nEntityMgr *em) {
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_DOWN)) {
                     b->velocity.y+=300*dt; // speed * dt
                 }
-
             }
         }
 
@@ -47,10 +46,10 @@ void update_and_render_sprites(nEntityMgr *em) {
             nBatch2DQuad q = {0};
             q.color = s->color;
             q.tc = tc;
-            q.pos.x = b->position.x - b->dim.x/2;
-            q.pos.y = b->position.y - b->dim.y/2;
-            q.dim.x = b->dim.x/2;
-            q.dim.y = b->dim.y/2;
+            q.pos.x = b->position.x - b->dim.x/2.0;
+            q.pos.y = b->position.y - b->dim.y/2.0;
+            q.dim.x = b->dim.x;
+            q.dim.y = b->dim.y;
             q.angle_rad = 0;
             nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
         }
@@ -83,7 +82,7 @@ extern void nphysics_world_update_func(nEntityMgr *em);
 
 void game_state_init() {
     game_state_status_set(GAME_STATUS_STARTUP);
-    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(0.3,0.3), 1);
+    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 10);
     game_state_init_images();
 
     NENTITY_MANAGER_INIT(get_em());
@@ -102,11 +101,24 @@ void game_state_init() {
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
     *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0,0,1));
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
-    *b = nphysics_body_aabb(v2(100,100), 200*gen_rand01());
-    b->position = v2(100,100);
+    *b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    b->position = v2(0,0);
     b->gravity_scale = 0;
     nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nEntityTag);
     *player_tag = NENTITY_TAG_PLAYER;
+
+    // init enemy entity
+    nEntityID enemy = nem_make(get_em());
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 0, 1, v4(0,0,1,1));
+    nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
+    *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    be->position = v2(20,0);
+    be->gravity_scale = 0;
+
+
 }
 
 void game_state_deinit() {
@@ -170,15 +182,22 @@ void game_state_render_dir_arrow(vec2 player_pos) {
 }
 
 void game_state_update_and_render() {
+
+    vec2 screen_coords =  ndungeon_cam_screen_to_world(&gs.dcam, ninput_get_mouse_pos(get_nim()));
     do_game_gui();
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
 
     if (game_state_status_match(GAME_STATUS_RUNNING)) {
         nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
-        vec2 player_pos = v2(b->position.x + b->dim.x/2, b->position.y + b->dim.y/2);
+        vec2 player_pos = v2(b->position.x, b->position.y);
+        NLOG_ERR("camera coords: %f %f", gs.dcam.pos.x, gs.dcam.pos.y);
+        NLOG_ERR("world coords: %f %f", screen_coords.x, screen_coords.y);
+        NLOG_ERR("player pos : %f %f", player_pos.x, player_pos.y);
+
+
         nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
         if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
-        //ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
+        ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
         // ----
         nem_update(get_em());
     }

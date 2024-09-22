@@ -76,6 +76,12 @@ void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
 		b->position = vec2_add(b->position, vec2_multf(b->velocity, dt));
 		b->force = v2(0.0f, 0.0f);
 	}
+    // 6. Do FAKE friction (TODO -- remove this ASAP)
+    for (u32 i = 0; i < world->body_count; i+=1) {
+        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
+		nPhysicsBody* b = &world->bodies[i];
+        b->velocity = vec2_divf(b->velocity, 1.05);
+    }
 }
 
 nPhysicsBody* nphysics_world_add(nPhysicsWorld *world, nPhysicsBody *body) {

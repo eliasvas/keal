@@ -9,6 +9,8 @@
     our renderer will probably have Command Buffers / Buckets as outlined in https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/
 */
 
+// for the bug with multiple pointers from framebuffer attachments and stuff https://stackoverflow.com/questions/15089703/how-to-get-the-textures-attached-to-a-framebuffer
+
 //#define NO_SDL_GLEXT
 #include <SDL2/SDL_opengl.h>
 #include "ext/GL/glext.h"

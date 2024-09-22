@@ -75,14 +75,12 @@ typedef union mat4
     f32 raw[16]; //{x.x,x.y,x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,p.x,p.y,p.z,1}
 }mat4;
 
-INLINE mat4 m4(void)
-{
+INLINE mat4 m4(void) {
     mat4 res = {0};
     return res;
 }
 
-INLINE mat4 m4d(f32 d)
-{
+INLINE mat4 m4d(f32 d) {
     mat4 res = m4();
     res.col[0][0] = d;
     res.col[1][1] = d;
@@ -90,8 +88,30 @@ INLINE mat4 m4d(f32 d)
     res.col[3][3] = d;
     return res;
 }
-INLINE mat4 mat4_ortho(f32 l, f32 r, f32 b, f32 t, f32 n, f32 f)
-{
+
+INLINE mat4 mat4_look_at(vec3 eye, vec3 center, vec3 f_up) {
+    vec3 f = vec3_norm(vec3_sub(center, eye));
+    vec3 u = vec3_norm(f_up);
+    vec3 s = vec3_norm(vec3_cross(f, u));
+    u = vec3_cross(s, f);
+
+    mat4 res = m4d(1.0);
+    res.col[0][0] = s.x;
+    res.col[1][0] = s.y;
+    res.col[2][0] = s.z;
+    res.col[0][1] = u.x;
+    res.col[1][1] = u.y;
+    res.col[2][1] = u.z;
+    res.col[0][2] = -f.x;
+    res.col[1][2] = -f.y;
+    res.col[2][2] = -f.z;
+    res.col[3][0] = -vec3_dot(s, eye);
+    res.col[3][1] = -vec3_dot(u, eye);
+    res.col[3][2] = vec3_dot(f, eye);
+    return res;
+}
+
+INLINE mat4 mat4_ortho(f32 l, f32 r, f32 b, f32 t, f32 n, f32 f) {
     mat4 res = m4();
     res.col[0][0] = 2.0f / (r - l);
     res.col[1][1] = 2.0f / (t - b);
