@@ -4,10 +4,20 @@
 #include "base/base_inc.h"
 #include "core/core_inc.h"
 
+/*
+    Pretty much, nEntity entity = nem_make(em) will make a new ID which will be used as index for all the entities components,
+    after that you can NENTITY_COMPONENT_MANAGER_ADD_COMPONENT(..) and set appropriate values, also use NENTITYMANAGER_ADD_SYSTEM(..),
+    when nem_del(em, entity) happens, the new ID will be added to a stack with .generation+1 to be used in case a new is instantiated 
+    and a free ID is needed, if the available id stack is empty a new id is generated. When level done and we no longer need entities,
+    just do NENTITY_COMPONENT_MANAGER_CLEAR(em) which will clear everything, except arrays will still be allocated (for now)
+
+    BEWARE -- right now initialization is done ONCE + all allocations (via NENTITY_MANAGER_INIT(..)/NENTITY_MANAGER_REGISTER(..)),
+    BEWARE -- and memory is fixed to hold a maximum of NMAX_ENTITIES, we need to make Pool Allocators to bypass this.
+*/
 
 #define NMAX_COMPONENTS 32
-// TODO -- this should be deleted and space should be allocated via pool allocators on top of our regular arenas
 #define NMAX_ENTITIES 512
+#define NENTITY_INVALID_ID U32_MAX
 
 // type registry to hold <Type,Id>
 static int type_registry[NMAX_COMPONENTS];
@@ -30,7 +40,7 @@ typedef u32 nComponentMask;
 #define NCOMPONENT_MASK_SET_SLOT(mask, slot) (mask = (mask | (0x1 << slot)))
 #define NCOMPONENT_MASK_DEL_SLOT(mask, slot) (mask = mask & (~(0x1 << slot)))
 
-//  [ 32b | 32b ] -> [ generation | index ]
+// nEntityID layout: [ 32b | 32b ] -> [ generation | index ]
 typedef u64 nEntityID;
 #define NENTITY_GET_INDEX(entity) (entity & U32_MAX)
 #define NENTITY_GET_GENERATION(entity) ((entity >> 32) & U32_MAX)
@@ -63,60 +73,73 @@ struct nEntityMgrSystemNode {
 struct nEntityMgr {
     nComponentArray components[NMAX_COMPONENTS];
     nComponentMask  *bitset; // indicates whether nEntityID i has component j
-    // TODO -- this is no updated
+    nEntityID *entity; // current active entity for that ID
     u32 comp_array_len;
     u32 comp_array_cap;
-    // entity index reuse
+    // for entity index reuse
     nEntityFreeSlotNode *available_slots; // ready to be reused slots
     nEntityFreeSlotNode *free_slots; // free slot memory we can use
-    // system management
+    // for system management
     nEntityMgrSystemNode *systems_first;
     nEntityMgrSystemNode *systems_last;
     nEntityMgrSystemNode *free_system_nodes; // free nodes we can use instead of allocating
 };
 
-nEntityID nem_make();
+nEntityID nem_make(nEntityMgr *em);
 void nem_del(nEntityMgr *em, nEntityID entity);
+b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
 
 #include "comp_def.inl"
 
-#define NENTITY_MANAGER_INIT(em)        \
-    do {                                \
-        (em)->comp_array_len = 0;           \
-        (em)->comp_array_cap = NMAX_ENTITIES;\
-        (em)->bitset = push_array(get_global_arena(), u32, NMAX_ENTITIES);\
+#define NENTITY_MANAGER_INIT(em) \
+    do { \
+        (em)->comp_array_len = 0; \
+        (em)->comp_array_cap = NMAX_ENTITIES; \
+        (em)->bitset = push_array(get_global_arena(), u32, NMAX_ENTITIES); \
+        (em)->entity = push_array(get_global_arena(), u64, NMAX_ENTITIES); \
     } while (0)
 
-#define NENTITY_MANAGER_COMPONENT_REGISTER(em, comp_type)       \
-    do {                                                                \
-        int index = GetTypeID_##comp_type();                            \
-        if (index >= NMAX_COMPONENTS) {                                 \
-            assert(0 && "Component index out of bounds");               \
-        }                                                               \
-        u32 elem_size = sizeof(comp_type);                              \
-        (em)->components[index].elem_size = elem_size;                  \
-        (em)->components[index].data = push_array_nz(get_global_arena(), comp_type, elem_size*NMAX_ENTITIES);\
-        if (!(em)->components[index].data) {                             \
-            assert(0 && "Cant allocate component memory");              \
-        }                                                               \
+#define NENTITY_MANAGER_CLEAR(em) \
+    do { \
+        for (u64 i = 0; i < (em)->comp_array_len; i+=1) { \
+            nEntityID entity = (em)->entity[NENTITY_GET_INDEX(i)]; \
+            nem_del(em, entity); \
+        } \
+    } while (0)
+
+#define NENTITY_MANAGER_COMPONENT_REGISTER(em, comp_type) \
+    do { \
+        int index = GetTypeID_##comp_type(); \
+        if (index >= NMAX_COMPONENTS) { \
+            assert(0 && "Component index out of bounds"); \
+        } \
+        u32 elem_size = sizeof(comp_type); \
+        (em)->components[index].elem_size = elem_size; \
+        (em)->components[index].data = push_array_nz(get_global_arena(), comp_type, elem_size*NMAX_ENTITIES); \
+        if (!(em)->components[index].data) { \
+            assert(0 && "Cant allocate component memory"); \
+        } \
     } while (0)
     
 #define NENTITY_MANAGER_HAS_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_GET_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],GetTypeID_##comp_type())    
 
-#define NENTITY_MANAGER_ADD_COMPONENT(em, entity, comp_type)    \
-    do {                                                                \
-        int index = GetTypeID_##comp_type();                            \
+#define NENTITY_MANAGER_ADD_COMPONENT(em, entity, comp_type) \
+    do { \
+        int index = GetTypeID_##comp_type(); \
         if (index >= NMAX_COMPONENTS || (em)->components[index].data == NULL) { \
-            assert(0 && "Component type not registered");               \
-        }                                                               \
-        if (NENTITY_GET_INDEX(entity) >= NMAX_ENTITIES) {                                  \
-            assert(0 && "invalid entity id");                           \
-        }                                                               \
-        if (NENTITY_MANAGER_HAS_COMPONENT(em,entity,comp_type)) {      \
-            NLOG_ERR("Component <%s> already set for entity %d", #comp_type, entity);\
-        } else {                                                               \
+            assert(0 && "Component type not registered"); \
+        } \
+        if (!nem_entity_valid(em, entity)) { \
+            assert(0 && "entity is not valid anymore! also this check should be in more ops"); \
+        } \
+        if (NENTITY_GET_INDEX(entity) >= NMAX_ENTITIES) { \
+            assert(0 && "invalid entity id"); \
+        } \
+        if (NENTITY_MANAGER_HAS_COMPONENT(em,entity,comp_type)) { \
+            NLOG_ERR("Component <%s> already set for entity %d", #comp_type, entity); \
+        } else { \
             void *dest = (char *)(em)->components[index].data + NENTITY_GET_INDEX(entity) * (em)->components[index].elem_size; \
-            memset(dest, 0, (em)->components[index].elem_size);                  \
+            memset(dest, 0, (em)->components[index].elem_size); \
             NCOMPONENT_MASK_SET_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],index); \
         } \
     } while (0)
@@ -125,10 +148,10 @@ void nem_del(nEntityMgr *em, nEntityID entity);
 #define NENTITY_MANAGER_DEL_COMPONENT(em, entity, comp_type) NCOMPONENT_MASK_DEL_SLOT((em)->bitset[NENTITY_GET_INDEX(entity)],GetTypeID_##comp_type())    
 
 #define NENTITY_MANAGER_ADD_SYSTEM(em, cb, prio) \
-    do {                                                     \
+    do { \
         nEntityMgrSystemNode *node = (em)->free_system_nodes; \
-        if (node) {   \
-            sll_stack_pop((em)->free_system_nodes);   \
+        if (node) { \
+            sll_stack_pop((em)->free_system_nodes); \
         } else { \
             node = push_array(get_global_arena(), nEntityMgrSystemNode, 1); \
         } \

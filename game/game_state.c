@@ -82,7 +82,6 @@ extern void nphysics_world_update_func(nEntityMgr *em);
 
 void game_state_init() {
     game_state_status_set(GAME_STATUS_STARTUP);
-    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 10);
     game_state_init_images();
 
     NENTITY_MANAGER_INIT(get_em());
@@ -93,32 +92,6 @@ void game_state_init() {
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_and_render_sprites, 2);
 
     game_state_status_set(GAME_STATUS_START_MENU);
-
-    // init player entity
-    gs.player = nem_make(get_em());
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nPhysicsBody);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nSprite);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0,0,1));
-    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
-    *b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
-    b->position = v2(0,0);
-    b->gravity_scale = 0;
-    nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nEntityTag);
-    *player_tag = NENTITY_TAG_PLAYER;
-
-    // init enemy entity
-    nEntityID enemy = nem_make(get_em());
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 0, 1, v4(0,0,1,1));
-    nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
-    *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
-    be->position = v2(20,0);
-    be->gravity_scale = 0;
-
-
 }
 
 void game_state_deinit() {
@@ -148,19 +121,19 @@ void game_state_render_silly_stuff() {
         }
     }
 }
-void game_state_render_selection_box() {
-    // nBatch2DQuad q = {0};
-    // vec2 mp = ninput_get_mouse_pos(get_nim());
-    // mp = ndungeon_screen_to_world(&gs.dcam, mp);
-    // q.color = v4(1,1,1,1);
-    // q.pos.x = TILESET_DEFAULT_SIZE * (floor(mp.x));
-    // q.pos.y = TILESET_DEFAULT_SIZE * (floor(mp.y));
-    // q.dim.x = TILESET_DEFAULT_SIZE;
-    // q.dim.y = TILESET_DEFAULT_SIZE;
-    // q.tc = TILESET_SELECTION_BOX_TILE;
-    // q.angle_rad = 0;
-    // nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-}
+// void game_state_render_selection_box() {
+//     nBatch2DQuad q = {0};
+//     vec2 mp = ninput_get_mouse_pos(get_nim());
+//     mp = ndungeon_screen_to_world(&gs.dcam, mp);
+//     q.color = v4(1,1,1,1);
+//     q.pos.x = 10 * (floor(mp.x));
+//     q.pos.y = 10 * (floor(mp.y));
+//     q.dim.x = 10;
+//     q.dim.y = 10;
+//     q.tc = TILESET_SELECTION_BOX_TILE;
+//     q.angle_rad = 0;
+//     nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
+// }
 
 void game_state_render_dir_arrow(vec2 player_pos) {
     // nBatch2DQuad q = {0};
@@ -190,13 +163,13 @@ void game_state_update_and_render() {
     if (game_state_status_match(GAME_STATUS_RUNNING)) {
         nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
         vec2 player_pos = v2(b->position.x, b->position.y);
-        NLOG_ERR("camera coords: %f %f", gs.dcam.pos.x, gs.dcam.pos.y);
-        NLOG_ERR("world coords: %f %f", screen_coords.x, screen_coords.y);
-        NLOG_ERR("player pos : %f %f", player_pos.x, player_pos.y);
+        // NLOG_ERR("camera coords: %f %f", gs.dcam.pos.x, gs.dcam.pos.y);
+        // NLOG_ERR("world coords: %f %f", screen_coords.x, screen_coords.y);
+        // NLOG_ERR("player pos : %f %f", player_pos.x, player_pos.y);
 
 
         nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
-        if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
+        if (scroll_y) { gs.dcam.zoom += signof(scroll_y) * 1; }
         ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
         // ----
         nem_update(get_em());
@@ -205,22 +178,6 @@ void game_state_update_and_render() {
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
         game_state_status_set(game_state_status_match(GAME_STATUS_PAUSED) ? GAME_STATUS_RUNNING : GAME_STATUS_PAUSED);
     }
-    // if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_EQUALS)) {nactor_cm_gc(&gs.acm);}
-    // if (game_state_status_match(GAME_STATUS_START_MENU)) {
-    //     mat4 viewm = m4d(1);
-    //     nbatch2d_rend_set_view_mat(&gs.batch_rend, viewm);
-    //     nbatch2d_rend_begin(&gs.batch_rend, get_nwin);
-    //     game_state_render_silly_stuff();
-    //     nbatch2d_rend_end(&gs.batch_rend);
-    //     return;
-    // }
-
-    // ivec2 player_pos = iv2(0,0);
-    // nActorComponent *player_cmp = nactor_cm_get(&(gs.acm), gs.map.player);
-    // if (player_cmp) {
-    //     nmap_compute_fov(&(gs.map), player_cmp->posx, player_cmp->posy, 3);
-    //     player_pos = iv2(player_cmp->posx, player_cmp->posy);
-    // }
 
     // // If game is running, we can simulate!
     // if (game_state_status_match(GAME_STATUS_RUNNING)) {
@@ -241,22 +198,6 @@ void game_state_update_and_render() {
     //         }
     //     }
     // }
-
-    // if (game_state_status_match(GAME_STATUS_RUNNING) || game_state_status_match(GAME_STATUS_PAUSED)) {
-    //     nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
-    //     if (scroll_y) { gs.dcam.zoom += scroll_y * 0.1; }
-    //     ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
-    //     mat4 view = ndungeon_cam_get_view_mat(&gs.dcam);
-    //     nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
-    //     nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
-    //     nmap_render(&(gs.map), &(gs.batch_rend), &(gs.atlas));
-    //     game_state_render_dir_arrow(v2(player_pos.x,player_pos.y));
-    //     if (game_state_status_match(GAME_STATUS_PAUSED)) {
-    //         game_state_render_selection_box();
-    //     }
-    //     nactor_cm_render(&(gs.acm), &(gs.batch_rend), &(gs.atlas));
-    //     nbatch2d_rend_end(&gs.batch_rend);
-    // }
 }
 
 void game_state_status_set(GameStatus status) {
@@ -268,6 +209,30 @@ b32  game_state_status_match(GameStatus status) {
 }
 
 void game_state_generate_new_level() {
-    //nactor_cm_clear(&(get_ggs()->acm));
-    //nmap_create_ex(&gs.map, 64,64, 8,0.4,0.6);
+    NENTITY_MANAGER_CLEAR(get_em());
+    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 10);
+
+    // init player entity
+    gs.player = nem_make(get_em());
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nPhysicsBody);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nSprite);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0,0,1));
+    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
+    *b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    b->position = v2(0,0);
+    b->gravity_scale = 0;
+    nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nEntityTag);
+    *player_tag = NENTITY_TAG_PLAYER;
+
+    // init enemy entity
+    nEntityID enemy = nem_make(get_em());
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 0, 1, v4(0,0,1,1));
+    nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
+    *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    be->position = v2(20,0);
+    be->gravity_scale = 0;
 }

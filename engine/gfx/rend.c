@@ -58,6 +58,7 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
         quad_index += 1;
     }
 
+    if (vertex_count == 0)return;
     // make an immediate vertex buffer
     oglBuf vbo = ogl_buf_make(OGL_BUF_KIND_VERTEX, vertices, vertex_count, sizeof(nBatch2DVertex));
 
