@@ -55,7 +55,7 @@ else()
 endif()
 
 #build the game executable
-add_executable(game game/main.c game/dungeon_cam.c game/game_state.c game/game_gui.c)
+add_executable(game game/main.c game/dungeon_cam.c game/game_state.c game/game_gui.c game/map.c)
 target_include_directories(game PUBLIC engine)
 target_link_libraries(game PUBLIC engine)
 if (DEFINED EMSCRIPTEN)

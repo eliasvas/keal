@@ -35,21 +35,18 @@ struct nMap {
 
     f32 max_room_enemies;
 
-    nEntity player;
-
     ivec2 last_center;
 };
 
 void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_factor, f32 max_room_factor);
 void nmap_create(nMap *map, u32 w, u32 h);
-void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas);
+void nmap_add_tiles_as_entities(nMap *map);
 nTile nmap_tile_at(nMap *map, s32 x, s32 y);
 nTile* nmap_tile_ref(nMap *map, s32 x, s32 y);
 void nmap_compute_fov(nMap *map, s32 px, s32 py, s32 fovRadius);
 b32 nmap_tile_is_walkable(nMap *map, s32 x, s32 y);
 void nmap_dig_region(nMap *map, s32 x0, s32 y0, s32 x1, s32 y1, nTileKind kind);
 
-// Will take an already created (allocated) map and generate a new Dungeon!
-void nmap_generate(nMap *map);
+void nmap_generate();
 
 #endif

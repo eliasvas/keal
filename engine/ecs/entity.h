@@ -16,7 +16,7 @@
 */
 
 #define NMAX_COMPONENTS 32
-#define NMAX_ENTITIES 512
+#define NMAX_ENTITIES 2048
 #define NENTITY_INVALID_ID U32_MAX
 
 // type registry to hold <Type,Id>

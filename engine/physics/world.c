@@ -35,6 +35,7 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
                 .a = &world->bodies[i],
                 .b = &world->bodies[j],
             };
+            if (m.a->collider_off || m.b->collider_off)continue;
             if (nmanifold_generate(&m)) {
                 nManifoldNode *node = push_array(get_frame_arena(), nManifoldNode, 1);
                 node->m = m;

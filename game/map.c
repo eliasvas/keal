@@ -1,5 +1,4 @@
 #include "map.h"
-#include "actor.h"
 #include "game_state.h"
 
 
@@ -150,15 +149,7 @@ b32 nmap_tile_is_wall(nMap *map, s32 x, s32 y) {
 }
 
 b32 nmap_tile_is_walkable(nMap *map, s32 x, s32 y) {
-    b32 overlapping_actors_movable = 1;
-    for (u32 i = 0; i < get_ggs()->acm.size; i+=1) {
-        nActorComponent *actor = &get_ggs()->acm.actors[i];
-        if (actor->posx == x && actor->posy == y) {
-            overlapping_actors_movable &= !(get_ggs()->acm.actors[i].blocks);
-        }
-    }
-
-    return (!nmap_tile_is_wall(map, x, y) && overlapping_actors_movable);
+    return (!nmap_tile_is_wall(map, x, y));
 }
 
 
@@ -182,10 +173,11 @@ void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_fac
     map->max_room_enemies = 3;
     map->tiles = push_array_nz(get_ngs()->global_arena, nTile, w*h);
     nmap_generate(map);
+    nmap_add_tiles_as_entities(map);
 }
 
 void nmap_create(nMap *map, u32 w, u32 h) {
-    nmap_create_ex(map, w, h, 8, 0.4, 0.6);
+    nmap_create_ex(map, w, h, 4, 0.4, 0.6);
 }
 
 vec4 nmap_calc_tile_tc(nMap *map, s32 x, s32 y) {
@@ -197,26 +189,28 @@ vec4 nmap_calc_tile_tc(nMap *map, s32 x, s32 y) {
     off.y += (nmap_tile_is_wall(map, x,y+1));
     off.y -= (nmap_tile_is_wall(map, x,y-1));
 
-    // if (off.x == 0 && off.y == 0) {
-    //     return TILESET_WALL_TILE;
-    // }
-
     return TILESET_DUNGEON_TILE(off.x,off.y);
 }
 
-void nmap_render(nMap *map, nBatch2DRenderer *rend, oglImage *atlas) {
+void nmap_add_tiles_as_entities(nMap *map) {
     for (u32 x = 0; x < map->width; x+=1) {
         for (u32 y = 0; y < map->height; y+=1) {
-            nBatch2DQuad q = {
-                .color = vec4_divf(nmap_tile_at(map,x,y).color,(nmap_tile_is_explored(map, x, y)) ? 1.0f : 2.0f),
-                .pos.x = x*TILESET_DEFAULT_SIZE,
-                .pos.y = y*TILESET_DEFAULT_SIZE,
-                .dim.x = TILESET_DEFAULT_SIZE,
-                .dim.y = TILESET_DEFAULT_SIZE,
-                .tc    = nmap_calc_tile_tc(map, x, y),
-                .angle_rad = 0,
-            };
-            nbatch2d_rend_add_quad(rend, q, atlas);
+            nEntityID tile = nem_make(get_em());
+            NENTITY_MANAGER_ADD_COMPONENT(get_em(), tile, nPhysicsBody);
+            NENTITY_MANAGER_ADD_COMPONENT(get_em(), tile, nSprite);
+            NENTITY_MANAGER_ADD_COMPONENT(get_em(), tile, nEntityTag);
+            *NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(nmap_calc_tile_tc(map, x, y), 0, 1, nmap_tile_is_wall(map, x, y) ? v4(0.3,0.3,0.3,1) : v4(1,1,1,0.5));
+            //*NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
+            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nPhysicsBody);
+            *b = nphysics_body_aabb(v2(10,10), F32_MAX);
+            b->position = v2(x*10,y*10);
+            b->gravity_scale = 0;
+            nEntityTag *tile_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(),tile, nEntityTag);
+            *tile_tag= NENTITY_TAG_MAP;
+            if (!nmap_tile_is_wall(map, x, y)) {
+                b->collider_off = 1;
+                // enable collisions
+            }
         }
 
     }
@@ -236,91 +230,6 @@ b32 ndungeon_sub_is_nil(nDungeonSubdivision *s) {
 b32 ndungeon_sub_is_leaf(nDungeonSubdivision *s) {
     return (s->child_count == 0);
 }
-
-
-nEntity nmap_add_door(nMap *map, s32 x, s32 y) {
-    nEntity door = nentity_create(&(get_ggs()->em));
-    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), door);
-    ac->active = 1;
-    ac->color = v4(0,0,1,1);
-    ac->kind = NACTOR_KIND_DOOR;
-    ac->posx = x;
-    ac->posy = y;
-    ac->tc = TILESET_DOOR_TILE;
-    ac->blocks = 0;
-    M_ZERO_STRUCT(&ac->c);
-    ac->flags = 0;
-    sprintf(ac->name, "door");
-    return door;
-}
-
-
-nEntity nmap_add_player(nMap *map, s32 x, s32 y) {
-    nEntity player = nentity_create(&(get_ggs()->em));
-    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), player);
-    ac->active = 1;
-    ac->color = v4(0.5,0.3,0.7,1);
-    ac->kind = NACTOR_KIND_PLAYER;
-    ac->posx = x;
-    ac->posy = y;
-    ac->tc = TILESET_PLAYER_TILE;
-    ac->blocks = 1;
-    ac->d = ndestructible_data_make(10,2,0.3);
-    ac->a = nattack_data_make(3);
-    M_ZERO_STRUCT(&ac->c);
-    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE | NACTOR_FEATURE_FLAG_HAS_CONTAINER;
-    sprintf(ac->name, "player");
-    return player;
-}
-
-nEntity nmap_add_enemy(nMap *map, s32 x, s32 y) {
-    nEntity enemy = nentity_create(&(get_ggs()->em));
-    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), enemy);
-    ac->kind = NACTOR_KIND_ENEMY;
-    ac->posx = x;
-    ac->posy = y;
-    ac->blocks = 1;
-    ac->d = ndestructible_data_make(10,1,0.3);
-    ac->a = nattack_data_make(5);
-    ac->active = 1;
-    M_ZERO_STRUCT(&ac->c);
-    ac->flags = NACTOR_FEATURE_FLAG_ATTACKER | NACTOR_FEATURE_FLAG_DESTRUCTIBLE | NACTOR_FEATURE_FLAG_SHAKEABLE;
-    if (gen_random(0,100) < 70) {
-        sprintf(ac->name, "skelly");
-        ac->color = v4(0.9,0.9,0.9,1);
-        ac->tc = TILESET_SKELLY_TILE;
-    }else {
-        sprintf(ac->name, "troll");
-        ac->color = v4(0.8,0.5,0.7,1);
-        ac->tc = TILESET_TROLL_TILE;
-    }
-    return enemy;
-}
-
-nEntity nmap_add_item(nMap *map, s32 x, s32 y) {
-    nEntity enemy = nentity_create(&(get_ggs()->em));
-    nActorComponent *ac = nactor_cm_add(&(get_ggs()->acm), enemy);
-    ac->active = 1;
-    ac->kind = NACTOR_KIND_ITEM;
-    ac->posx = x;
-    ac->posy = y;
-    ac->blocks = 0;
-    ac->d = ndestructible_data_make(10,1,0.3);
-    ac->a = nattack_data_make(10);
-    M_ZERO_STRUCT(&ac->c);
-    ac->flags = NACTOR_FEATURE_FLAG_PICKABLE;
-    if (gen_random(0,100) < 70) {
-        sprintf(ac->name, "hlt-potion");
-        ac->color = v4(0.9,0.2,0.2,1);
-        ac->tc = TILESET_POTION_TILE;
-    }else {
-        sprintf(ac->name, "str-potion");
-        ac->color = v4(0.3,0.9,0.8,1);
-        ac->tc = TILESET_POTION_TILE;
-    }
-    return enemy;
-}
-
 
 // TODO -- there is a bug here when we are making corridors, sometimes a corridor is off by 1 (right corners only)
 void nmap_gen_corridors(nMap *map, nDungeonSubdivision *p) {
@@ -353,35 +262,8 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                 child->center = iv2(child->x + child->w/2.0, child->y + child->h/2.0);
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_GROUND);
 
-                // Add player to first dungeon's first block
-                //if (map->player ==)
-                nActorComponent *player_cmp = nactor_cm_get(&(get_ggs()->acm), map->player);
-                if (!player_cmp) {
-                    map->player = nmap_add_player(map, child->x, child->y);
-                }
-
-
-                // Generate randomized enemies
-                s32 enemy_num = gen_random(0, map->max_room_enemies+1);
-                while (enemy_num) {
-                    s32 x = gen_random(child->x, child->x + child->w+1);
-                    s32 y = gen_random(child->y, child->y + child->h+1);
-                    if (nmap_tile_is_walkable(map, x,y)) {
-                        nmap_add_enemy(map,x,y);
-                    }
-                    enemy_num-=1;
-                }
-
-                // Generate randomized items
-                s32 item_num = gen_random(0, map->max_room_enemies+1);
-                while (item_num) {
-                    s32 x = gen_random(child->x, child->x + child->w+1);
-                    s32 y = gen_random(child->y, child->y + child->h+1);
-                    if (nmap_tile_is_walkable(map, x,y)) {
-                        nmap_add_item(map,x,y);
-                    }
-                    item_num-=1;
-                }
+                nPhysicsBody *pb = NENTITY_MANAGER_GET_COMPONENT(get_em(), get_ggs()->player, nPhysicsBody);
+                pb->position = v2(child->x*10, child->y*10);
             }else {
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_WALL);
             }
@@ -419,16 +301,4 @@ void nmap_generate(nMap *map) {
     nmap_subdivide(map, dungeon);
     nmap_gen_rooms(map, dungeon);
     nmap_gen_corridors(map, dungeon);
-
-    // Generate randomized door for end of level
-    s32 door_x= gen_random(0, map->width);
-    s32 door_y = gen_random(0, map->height);
-    while (!nmap_tile_is_walkable(map, door_x, door_y)) {
-        door_x= gen_random(0, map->width);
-        door_y = gen_random(0, map->height);
-    }
-    nmap_add_door(map, door_x, door_y);
-
-
-    //nmap_print_dungeon_bsp(dungeon, 0);
 }

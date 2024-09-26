@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "game_state.h"
+#include "map.h"
 #include "engine.h"
 #include "tileset4922.inl"
 
@@ -9,12 +10,14 @@ GameState *get_ggs() {
     return &gs;
 }
 
+#define COLLIDER_VISUALIZATION 1
+
 void update_and_render_sprites(nEntityMgr *em) {
     nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
     mat4 view = ndungeon_cam_get_view_mat(&gs.dcam);
     nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
-    for (u32 i = 0; i < em->comp_array_len; i+=1) {
-        nEntityID entity = i;
+    for (s32 i = em->comp_array_len-1; i >= 0; i-=1) {
+        nEntityID entity = (u32)i;
 
         // simulate movement input stuff only for player
         if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
@@ -42,7 +45,6 @@ void update_and_render_sprites(nEntityMgr *em) {
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
             nsprite_update(s, nglobal_state_get_dt() / 1000.0);
             vec4 tc = nsprite_get_current_tc(s);
-
             nBatch2DQuad q = {0};
             q.color = s->color;
             q.tc = tc;
@@ -53,6 +55,29 @@ void update_and_render_sprites(nEntityMgr *em) {
             q.angle_rad = 0;
             nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
         }
+
+#if COLLIDER_VISUALIZATION
+        // render the stuff
+        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
+            if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->collider_off)continue;
+            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
+            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+            nsprite_update(s, nglobal_state_get_dt() / 1000.0);
+            vec4 tc = nsprite_get_current_tc(s);
+            nBatch2DQuad q = {0};
+            q.color = v4(1,0,0,0.3);
+            q.tc = TILESET_SOLID_TILE;
+            //q.tc = TILESET_CIRCLE_TILE;
+            //q.tc = TILESET_OUTLINE_TILE;
+            q.pos.x = b->position.x - b->dim.x/2.0;
+            q.pos.y = b->position.y - b->dim.y/2.0;
+            q.dim.x = b->dim.x;
+            q.dim.y = b->dim.y;
+            q.angle_rad = 0;
+            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
+        }
+#endif
+
     }
     nbatch2d_rend_end(&gs.batch_rend);
 }
@@ -155,7 +180,6 @@ void game_state_render_dir_arrow(vec2 player_pos) {
 }
 
 void game_state_update_and_render() {
-
     vec2 screen_coords =  ndungeon_cam_screen_to_world(&gs.dcam, ninput_get_mouse_pos(get_nim()));
     do_game_gui();
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
@@ -165,7 +189,7 @@ void game_state_update_and_render() {
         vec2 player_pos = v2(b->position.x, b->position.y);
         // NLOG_ERR("camera coords: %f %f", gs.dcam.pos.x, gs.dcam.pos.y);
         // NLOG_ERR("world coords: %f %f", screen_coords.x, screen_coords.y);
-        // NLOG_ERR("player pos : %f %f", player_pos.x, player_pos.y);
+        //NLOG_ERR("player pos : %f %f", player_pos.x, player_pos.y);
 
 
         nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
@@ -211,13 +235,12 @@ b32  game_state_status_match(GameStatus status) {
 void game_state_generate_new_level() {
     NENTITY_MANAGER_CLEAR(get_em());
     ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 10);
-
     // init player entity
     gs.player = nem_make(get_em());
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nPhysicsBody);
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nSprite);
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0,0,1));
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1));
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
     *b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
     b->position = v2(0,0);
@@ -230,9 +253,15 @@ void game_state_generate_new_level() {
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 0, 1, v4(0,0,1,1));
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
     nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
     *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
     be->position = v2(20,0);
     be->gravity_scale = 0;
+
+    // generate a NEW map
+    nMap map = {0};
+    nmap_create(&map, 12, 12);
+
+
 }

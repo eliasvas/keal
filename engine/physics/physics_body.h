@@ -29,6 +29,9 @@ struct nPhysicsBody {
     vec2 velocity;
     vec2 force;
     f32 gravity_scale;
+
+    // HACKY
+    b32 collider_off;
 };
 nPhysicsBody nphysics_body_default(void);
 nPhysicsBody nphysics_body_aabb(vec2 dim, f32 m);
