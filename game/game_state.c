@@ -24,17 +24,28 @@ void update_and_render_sprites(nEntityMgr *em) {
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
             f32 dt = nglobal_state_get_dt()/1000.0;
             if (*(NENTITY_MANAGER_GET_COMPONENT(em, entity, nEntityTag)) == NENTITY_TAG_PLAYER) {
+                b32 face_right = 1;
+                b32 vmov= 0;
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_RIGHT)) {
                     b->velocity.x+=300*dt; // speed * dt
+                    face_right = 1;
+                    vmov=1;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_LEFT)) {
                     b->velocity.x-=300*dt; // speed * dt
+                    face_right = 0;
+                    vmov=1;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_UP)) {
                     b->velocity.y-=300*dt; // speed * dt
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_DOWN)) {
                     b->velocity.y+=300*dt; // speed * dt
+                }
+                if (vmov && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite)) {
+                    nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
+                    s->vflip = !face_right;
+                    //s->hflip = (direction.y == 1);
                 }
             }
         }
@@ -47,11 +58,13 @@ void update_and_render_sprites(nEntityMgr *em) {
             vec4 tc = nsprite_get_current_tc(s);
             nBatch2DQuad q = {0};
             q.color = s->color;
+            // we convert our collider to a bounding box (which is used for rendering dimensions)
             q.tc = tc;
-            q.pos.x = b->position.x - b->dim.x/2.0;
-            q.pos.y = b->position.y - b->dim.y/2.0;
-            q.dim.x = b->dim.x;
-            q.dim.y = b->dim.y;
+            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius*2, b->radius*2) : b->dim;
+            q.pos.x = b->position.x - sprite_dim.x/2.0;
+            q.pos.y = b->position.y - sprite_dim.y/2.0;
+            q.dim.x = sprite_dim.x;
+            q.dim.y = sprite_dim.y;
             q.angle_rad = 0;
             nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
         }
@@ -66,13 +79,12 @@ void update_and_render_sprites(nEntityMgr *em) {
             vec4 tc = nsprite_get_current_tc(s);
             nBatch2DQuad q = {0};
             q.color = v4(1,0,0,0.3);
-            q.tc = TILESET_SOLID_TILE;
-            //q.tc = TILESET_CIRCLE_TILE;
-            //q.tc = TILESET_OUTLINE_TILE;
-            q.pos.x = b->position.x - b->dim.x/2.0;
-            q.pos.y = b->position.y - b->dim.y/2.0;
-            q.dim.x = b->dim.x;
-            q.dim.y = b->dim.y;
+            q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
+            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius*2, b->radius*2) : b->dim;
+            q.pos.x = b->position.x - sprite_dim.x/2.0;
+            q.pos.y = b->position.y - sprite_dim.y/2.0;
+            q.dim.x = sprite_dim.x;
+            q.dim.y = sprite_dim.y;
             q.angle_rad = 0;
             nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
         }
@@ -146,38 +158,6 @@ void game_state_render_silly_stuff() {
         }
     }
 }
-// void game_state_render_selection_box() {
-//     nBatch2DQuad q = {0};
-//     vec2 mp = ninput_get_mouse_pos(get_nim());
-//     mp = ndungeon_screen_to_world(&gs.dcam, mp);
-//     q.color = v4(1,1,1,1);
-//     q.pos.x = 10 * (floor(mp.x));
-//     q.pos.y = 10 * (floor(mp.y));
-//     q.dim.x = 10;
-//     q.dim.y = 10;
-//     q.tc = TILESET_SELECTION_BOX_TILE;
-//     q.angle_rad = 0;
-//     nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-// }
-
-void game_state_render_dir_arrow(vec2 player_pos) {
-    // nBatch2DQuad q = {0};
-    // vec2 mp = ninput_get_mouse_pos(get_nim());
-    // mp = ndungeon_screen_to_world(&gs.dcam, mp);
-    // mp = vec2_sub(mp, player_pos);
-    // mp = vec2_norm(mp);
-    // f32 dist = 1.0;
-    // f32 x_off = dist * mp.x;
-    // f32 y_off = dist * mp.y;
-    // q.color = v4(1,1,1,1);
-    // q.pos.x = TILESET_DEFAULT_SIZE * (player_pos.x + x_off);
-    // q.pos.y = TILESET_DEFAULT_SIZE * (player_pos.y + y_off);
-    // q.dim.x = TILESET_DEFAULT_SIZE;
-    // q.dim.y = TILESET_DEFAULT_SIZE;
-    // q.tc = TILESET_RARROW_TILE;
-    // q.angle_rad = atan2(y_off, x_off);
-    // nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-}
 
 void game_state_update_and_render() {
     vec2 screen_coords =  ndungeon_cam_screen_to_world(&gs.dcam, ninput_get_mouse_pos(get_nim()));
@@ -242,22 +222,23 @@ void game_state_generate_new_level() {
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
     *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1));
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
-    *b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    //*b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    *b = nphysics_body_circle(5, 200*gen_rand01());
     b->position = v2(0,0);
     b->gravity_scale = 0;
     nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nEntityTag);
     *player_tag = NENTITY_TAG_PLAYER;
 
-    // init enemy entity
-    nEntityID enemy = nem_make(get_em());
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
-    nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
-    *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
-    be->position = v2(20,0);
-    be->gravity_scale = 0;
+    // // init enemy entity
+    // nEntityID enemy = nem_make(get_em());
+    // NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
+    // NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
+    // NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    // *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
+    // nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
+    // *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
+    // be->position = v2(20,0);
+    // be->gravity_scale = 0;
 
     // generate a NEW map
     nMap map = {0};

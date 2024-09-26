@@ -54,7 +54,6 @@ b32 nmanifold_gen_aabb_circle(nManifold *m) {
 
     if (equalf(n.x, closest.x, 0.001f) && equalf(n.y, closest.y, 0.001f)) {
         inside = 1;
-        // Find the closest edge direction for pushing the circle out
         if (fabs(n.x) > fabs(n.y)) {
             closest.x = (closest.x > 0) ? x_extent : -x_extent;
         } else {
@@ -81,7 +80,7 @@ b32 nmanifold_gen_aabb_circle(nManifold *m) {
             m->normal = (vec2){1.0f, 0.0f};
         }
         m->penetration = r - d;
-    }
+    } 
 
     return 1;
 }

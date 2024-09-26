@@ -17,6 +17,9 @@ struct nSprite {
     // These data change each frame to DO animation
     f32 frame;
     f32 progress;
+    // flip stuff
+    b32 hflip;
+    b32 vflip;
 };
 
 nSprite nsprite_make(vec4 start_tc, u32 frame_count, u32 fps, vec4 color);

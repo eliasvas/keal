@@ -13,6 +13,14 @@ nSprite nsprite_make(vec4 start_tc, u32 frame_count, u32 fps, vec4 color) {
 vec4 nsprite_get_current_tc(nSprite *sprite) {
     vec4 tc = sprite->start_tc;
     tc.x += floor(sprite->frame)*tc.z;
+    if (sprite->vflip) {
+        tc.x += tc.z;
+        tc.z *= -1.0;
+    }
+    if (sprite->hflip) {
+        tc.y += tc.w;
+        tc.w *= -1.0;
+    }
     return tc;
 }
 
