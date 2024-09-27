@@ -36,6 +36,16 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
                 .b = &world->bodies[j],
             };
             if (m.a->collider_off || m.b->collider_off)continue;
+            if (m.a->inv_mass == 0.0 && m.b->inv_mass == 0.0)continue;
+            // broadphase narrow-down 
+            {
+                nCollider a_col = nphysics_body_get_collider(m.a);
+                nCollider b_col = nphysics_body_get_collider(m.b);
+                nAABB a_box = ncollider_to_aabb(&a_col);
+                nAABB b_box = ncollider_to_aabb(&b_col);
+                if (!ntest_aabb(a_box,b_box))continue;
+            }
+
             if (nmanifold_generate(&m)) {
                 nManifoldNode *node = push_array(get_frame_arena(), nManifoldNode, 1);
                 node->m = m;

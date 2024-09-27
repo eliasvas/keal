@@ -27,20 +27,20 @@ void update_and_render_sprites(nEntityMgr *em) {
                 b32 face_right = 1;
                 b32 vmov= 0;
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_RIGHT)) {
-                    b->velocity.x+=300*dt; // speed * dt
+                    b->velocity.x+=50*dt; // speed * dt
                     face_right = 1;
                     vmov=1;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_LEFT)) {
-                    b->velocity.x-=300*dt; // speed * dt
+                    b->velocity.x-=50*dt; // speed * dt
                     face_right = 0;
                     vmov=1;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_UP)) {
-                    b->velocity.y-=300*dt; // speed * dt
+                    b->velocity.y-=50*dt; // speed * dt
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_DOWN)) {
-                    b->velocity.y+=300*dt; // speed * dt
+                    b->velocity.y+=50*dt; // speed * dt
                 }
                 if (vmov && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite)) {
                     nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
@@ -60,7 +60,8 @@ void update_and_render_sprites(nEntityMgr *em) {
             q.color = s->color;
             // we convert our collider to a bounding box (which is used for rendering dimensions)
             q.tc = tc;
-            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius*2, b->radius*2) : b->dim;
+            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->half_dim;
+            sprite_dim = vec2_multf(sprite_dim, 2);
             q.pos.x = b->position.x - sprite_dim.x/2.0;
             q.pos.y = b->position.y - sprite_dim.y/2.0;
             q.dim.x = sprite_dim.x;
@@ -80,7 +81,8 @@ void update_and_render_sprites(nEntityMgr *em) {
             nBatch2DQuad q = {0};
             q.color = v4(1,0,0,0.3);
             q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
-            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius*2, b->radius*2) : b->dim;
+            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->half_dim;
+            sprite_dim = vec2_multf(sprite_dim, 2);
             q.pos.x = b->position.x - sprite_dim.x/2.0;
             q.pos.y = b->position.y - sprite_dim.y/2.0;
             q.dim.x = sprite_dim.x;
@@ -132,31 +134,7 @@ void game_state_init() {
 }
 
 void game_state_deinit() {
-    // ntransform_cm_deinit(&gs.tcm, &gs.em);
-    // nentity_manager_destroy(&gs.em);
-}
-
-// TODO -- Make these fade in/out based not only on current but previous sprites!
-void game_state_render_silly_stuff() {
-    rand_init();
-    guiVec4 colors[15] = { gv4(0.95f, 0.61f, 0.73f, 1.0f), gv4(0.55f, 0.81f, 0.95f, 1.0f), gv4(0.68f, 0.85f, 0.90f, 1.0f), gv4(0.67f, 0.88f, 0.69f, 1.0f), gv4(1.00f, 0.78f, 0.49f, 1.0f), gv4(0.98f, 0.93f, 0.36f, 1.0f), gv4(1.00f, 0.63f, 0.48f, 1.0f), gv4(0.55f, 0.81f, 0.25f, 1.0f), gv4(0.85f, 0.44f, 0.84f, 1.0f), gv4(0.94f, 0.90f, 0.55f, 1.0f), gv4(0.80f, 0.52f, 0.25f, 1.0f), gv4(0.70f, 0.13f, 0.13f, 1.0f), gv4(0.56f, 0.93f, 0.56f, 1.0f), gv4(0.93f, 0.51f, 0.93f, 1.0f), gv4(0.95f, 0.61f, 0.73f, 1.0f), };
-    for (u32 i = 0; i < (get_nwin()->ww /32); i+=1) {
-        for (u32 j = 0; j < (get_nwin()->wh / 32); j+=1) {
-            nBatch2DQuad q = {0};
-            guiVec4 c =colors[gen_random(0,14)];
-            q.color = v4(c.x,c.y,c.z,c.w);
-            q.pos.x = 32 * i;
-            q.pos.y = 32 * j;
-            q.dim.x = 32;
-            q.dim.y = 32;
-            q.tc = v4(TILESET_RES_W*TILESET_STEP_X*gen_random(0,32), TILESET_RES_H*TILESET_STEP_Y*gen_random(0,32), TILESET_RES_W*TILESET_STEP_X, -TILESET_RES_H*TILESET_STEP_Y);
-            q.angle_rad = sin(get_current_timestamp_sec()*2)/3;
-            vec2 mp = ninput_get_mouse_pos(get_nim());
-            if (fabsf(mp.x - q.pos.x - q.dim.x/2) < 10)q.color = v4(1,1,1,1);
-            if (fabsf(mp.y - q.pos.y - q.dim.y/2) < 10)q.color = v4(1,1,1,1);
-            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-        }
-    }
+    // TBA
 }
 
 void game_state_update_and_render() {
@@ -173,7 +151,7 @@ void game_state_update_and_render() {
 
 
         nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
-        if (scroll_y) { gs.dcam.zoom += signof(scroll_y) * 1; }
+        if (scroll_y) { gs.dcam.zoom += signof(scroll_y) * 4; }
         ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
         // ----
         nem_update(get_em());
@@ -214,7 +192,7 @@ b32  game_state_status_match(GameStatus status) {
 
 void game_state_generate_new_level() {
     NENTITY_MANAGER_CLEAR(get_em());
-    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 10);
+    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 50);
     // init player entity
     gs.player = nem_make(get_em());
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nPhysicsBody);
@@ -223,26 +201,13 @@ void game_state_generate_new_level() {
     *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1));
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
     //*b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
-    *b = nphysics_body_circle(5, 200*gen_rand01());
+    *b = nphysics_body_circle(0.5, 20);
     b->position = v2(0,0);
     b->gravity_scale = 0;
     nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nEntityTag);
     *player_tag = NENTITY_TAG_PLAYER;
 
-    // // init enemy entity
-    // nEntityID enemy = nem_make(get_em());
-    // NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
-    // NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
-    // NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    // *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
-    // nPhysicsBody *be = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
-    // *be = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
-    // be->position = v2(20,0);
-    // be->gravity_scale = 0;
-
     // generate a NEW map
     nMap map = {0};
-    nmap_create(&map, 12, 12);
-
-
+    nmap_create(&map, 32, 32);
 }

@@ -202,8 +202,8 @@ void nmap_add_tiles_as_entities(nMap *map) {
             *NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(nmap_calc_tile_tc(map, x, y), 0, 1, nmap_tile_is_wall(map, x, y) ? v4(0.3,0.3,0.3,1) : v4(1,1,1,0.5));
             //*NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nPhysicsBody);
-            *b = nphysics_body_aabb(v2(10,10), F32_MAX);
-            b->position = v2(x*10,y*10);
+            *b = nphysics_body_aabb(v2(0.5,0.5), F32_MAX);
+            b->position = v2(x*1,y*1);
             b->gravity_scale = 0;
             nEntityTag *tile_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(),tile, nEntityTag);
             *tile_tag= NENTITY_TAG_MAP;
@@ -263,7 +263,7 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_GROUND);
 
                 nPhysicsBody *pb = NENTITY_MANAGER_GET_COMPONENT(get_em(), get_ggs()->player, nPhysicsBody);
-                pb->position = v2(child->x*10, child->y*10);
+                pb->position = v2(child->x*1, child->y*1);
             }else {
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_WALL);
             }

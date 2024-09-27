@@ -2,7 +2,7 @@
 nPhysicsBody nphysics_body_default(void) {
     nPhysicsBody b = {
         .c_kind = NCOLLIDER_KIND_AABB,
-        .dim = v2(1,1),
+        .half_dim = v2(1,1),
         .mass = 0,
         .friction = 0.8,
         .inv_mass = 0,
@@ -16,10 +16,10 @@ nPhysicsBody nphysics_body_default(void) {
     };
     return b;
 }
-nPhysicsBody nphysics_body_aabb(vec2 dim, f32 m) {
+nPhysicsBody nphysics_body_aabb(vec2 half_dim, f32 m) {
     nPhysicsBody body = nphysics_body_default();
     body.mass = m;
-    body.dim = dim;
+    body.half_dim = half_dim;
     body.c_kind = NCOLLIDER_KIND_AABB;
     if (m < F32_MAX) {
         body.inv_mass = 1.0/m;
@@ -48,8 +48,8 @@ nCollider nphysics_body_get_collider(nPhysicsBody *b) {
     };
     switch (b->c_kind) {
         case NCOLLIDER_KIND_AABB:
-            c.aabb.min = vec2_sub(b->position, vec2_divf(b->dim,2));
-            c.aabb.max = vec2_add(b->position, vec2_divf(b->dim,2));
+            c.aabb.min = vec2_sub(b->position, b->half_dim);
+            c.aabb.max = vec2_add(b->position, b->half_dim);
             break;
         case NCOLLIDER_KIND_CIRCLE:
             c.circle.radius = b->radius;

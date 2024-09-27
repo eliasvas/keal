@@ -8,7 +8,7 @@ struct nPhysicsBody {
     //collider data (can this be a different Thing?)
     union {
         struct AABB_Data {
-            vec2 dim;
+            vec2 half_dim;
         };
         struct Circle_Data {
             f32 radius;
@@ -34,7 +34,7 @@ struct nPhysicsBody {
     b32 collider_off;
 };
 nPhysicsBody nphysics_body_default(void);
-nPhysicsBody nphysics_body_aabb(vec2 dim, f32 m);
+nPhysicsBody nphysics_body_aabb(vec2 half_dim, f32 m);
 nPhysicsBody nphysics_body_circle(f32 radius, f32 m);
 
 nCollider nphysics_body_get_collider(nPhysicsBody *b);
