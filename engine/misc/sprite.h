@@ -20,6 +20,8 @@ struct nSprite {
     // flip stuff
     b32 hflip;
     b32 vflip;
+    // whether to keep playing
+    b32 repeat;
 };
 
 nSprite nsprite_make(vec4 start_tc, u32 frame_count, u32 fps, vec4 color);

@@ -51,7 +51,6 @@ typedef u64 nEntityID;
 
 // BEWARE this event queue is allocated on frame storage, so no event caching beyong a single frame is currently supported
 // TODO -- can we have specific event listeners/queues and not use one BIG global one (this is slow as fuck)
-
 typedef struct nEntityEvent nEntityEvent;
 struct nEntityEvent {
     nEntityID entity_a;
@@ -59,13 +58,11 @@ struct nEntityEvent {
     u32 flags;
     u32 extra_flags;
 };
-
 typedef struct nEntityEventNode nEntityEventNode;
 struct nEntityEventNode {
     nEntityEvent e;
     nEntityEventNode *next;
 };
-
 typedef struct nEntityEventMgr nEntityEventMgr;
 struct nEntityEventMgr {
     nEntityEventNode *first;
@@ -120,6 +117,10 @@ b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
 
 #include "comp_def.inl"
 
+// TODO -- why do we crash with the line below uncommented??!
+//#define NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, index) ((em)->entity[NENTITY_GET_INDEX(index)])
+#define NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, index) index
+
 #define NENTITY_MANAGER_INIT(em) \
     do { \
         (em)->comp_array_len = 0; \
@@ -131,7 +132,7 @@ b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
 #define NENTITY_MANAGER_CLEAR(em) \
     do { \
         for (u64 i = 0; i < (em)->comp_array_len; i+=1) { \
-            nEntityID entity = (em)->entity[NENTITY_GET_INDEX(i)]; \
+            nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,i); \
             nem_del(em, entity); \
         } \
     } while (0)

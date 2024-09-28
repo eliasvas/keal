@@ -2,117 +2,17 @@
 #include "game_state.h"
 #include "map.h"
 #include "engine.h"
+#include "comp.h"
 #include "tileset4922.inl"
+// TODO -- VERY VERY VERY important, please please please reamove as many singletons as possible, pass 'parents' as *self
 
-static GameState gs = {0};
+GameState gs = {0};
 
 GameState *get_ggs() {
     return &gs;
 }
 
-#define COLLIDER_VISUALIZATION 1
 
-void resolve_collision_events(nEntityMgr *em) {
-    nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite);
-    for (nEntityEventNode *en = em->event_mgr.first; en != 0; en = en->next) {
-        nEntityID ea = en->e.entity_a;
-        nEntityID eb = en->e.entity_b;
-        if (ea == gs.player || eb == gs.player) {
-            s->frame = 5;
-            s->fps = 0;
-            break;
-        }
-    }
-}
-
-void update_and_render_sprites(nEntityMgr *em) {
-    nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
-    mat4 view = ndungeon_cam_get_view_mat(&gs.dcam);
-    nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
-    for (s64 i = em->comp_array_len-1; i >= 0; i-=1) {
-        nEntityID entity = (s64)i;
-
-        // simulate movement input stuff only for player
-        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
-            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-            f32 dt = nglobal_state_get_dt()/1000.0;
-            if (*(NENTITY_MANAGER_GET_COMPONENT(em, entity, nEntityTag)) == NENTITY_TAG_PLAYER) {
-                b32 face_right = 1;
-                b32 vmov= 0;
-                if (ninput_key_down(get_nim(),NKEY_SCANCODE_RIGHT)) {
-                    b->velocity.x+=50*dt; // speed * dt
-                    face_right = 1;
-                    vmov=1;
-                    s->fps = 2;
-                }
-                if (ninput_key_down(get_nim(),NKEY_SCANCODE_LEFT)) {
-                    b->velocity.x-=50*dt; // speed * dt
-                    face_right = 0;
-                    vmov=1;
-                    s->fps = 2;
-                }
-                if (ninput_key_down(get_nim(),NKEY_SCANCODE_UP)) {
-                    b->velocity.y-=50*dt; // speed * dt
-                    s->fps = 2;
-                }
-                if (ninput_key_down(get_nim(),NKEY_SCANCODE_DOWN)) {
-                    b->velocity.y+=50*dt; // speed * dt
-                    s->fps = 2;
-                }
-                if (vmov && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite)) {
-                    nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-                    s->vflip = !face_right;
-                    //s->hflip = (direction.y == 1);
-                }
-            }
-        }
-
-        // render the stuff
-        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
-            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nsprite_update(s, nglobal_state_get_dt() / 1000.0);
-            vec4 tc = nsprite_get_current_tc(s);
-            nBatch2DQuad q = {0};
-            q.color = s->color;
-            // we convert our collider to a bounding box (which is used for rendering dimensions)
-            q.tc = tc;
-            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->half_dim;
-            sprite_dim = vec2_multf(sprite_dim, 2);
-            q.pos.x = b->position.x - sprite_dim.x/2.0;
-            q.pos.y = b->position.y - sprite_dim.y/2.0;
-            q.dim.x = sprite_dim.x;
-            q.dim.y = sprite_dim.y;
-            q.angle_rad = 0;
-            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-        }
-
-#if COLLIDER_VISUALIZATION
-        // render the stuff
-        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
-            if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->collider_off)continue;
-            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nsprite_update(s, nglobal_state_get_dt() / 1000.0);
-            vec4 tc = nsprite_get_current_tc(s);
-            nBatch2DQuad q = {0};
-            q.color = v4(1,0,0,0.3);
-            q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
-            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->half_dim;
-            sprite_dim = vec2_multf(sprite_dim, 2);
-            q.pos.x = b->position.x - sprite_dim.x/2.0;
-            q.pos.y = b->position.y - sprite_dim.y/2.0;
-            q.dim.x = sprite_dim.x;
-            q.dim.y = sprite_dim.y;
-            q.angle_rad = 0;
-            nbatch2d_rend_add_quad(&gs.batch_rend, q, &gs.atlas);
-        }
-#endif
-
-    }
-    nbatch2d_rend_end(&gs.batch_rend);
-}
 
 oglImage game_load_rgba_image_from_disk(const char *path) {
     oglImage img;
@@ -147,7 +47,8 @@ void game_state_init() {
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_update_func, 1);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), resolve_collision_events, 2);
-    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_and_render_sprites, 3);
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), game_ai_system, 3);
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), render_sprites_system, 4);
 
     game_state_status_set(GAME_STATUS_START_MENU);
 }
@@ -179,26 +80,6 @@ void game_state_update_and_render() {
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
         game_state_status_set(game_state_status_match(GAME_STATUS_PAUSED) ? GAME_STATUS_RUNNING : GAME_STATUS_PAUSED);
     }
-
-    // // If game is running, we can simulate!
-    // if (game_state_status_match(GAME_STATUS_RUNNING)) {
-    //     nactor_cm_simulate(&(gs.acm), &(gs.map), game_state_status_match(GAME_STATUS_RUNNING));
-    // }
-    // // If game paused, do editor stuff (TODO -- we should have some form of tween-animation for this transition)
-    // if (game_state_status_match(GAME_STATUS_PAUSED)) {
-    //     vec2 mp = ninput_get_mouse_pos(get_nim());
-    //     mp = ndungeon_screen_to_world(&gs.dcam, mp);
-    //     ivec2 tile = iv2(floor(mp.x), floor(mp.y));
-    //     nTile *t = nmap_tile_ref(&gs.map, tile.x, tile.y);
-    //     if (t) {
-    //         if (gui_input_mb_down(GUI_LMB)) {
-    //             nmap_dig_region(&gs.map, tile.x, tile.y, tile.x+1, tile.y+1, NTILE_KIND_WALL);
-    //         }
-    //         if (gui_input_mb_down(GUI_RMB)) {
-    //             nmap_dig_region(&gs.map, tile.x, tile.y, tile.x+1, tile.y+1, NTILE_KIND_GROUND);
-    //         }
-    //     }
-    // }
 }
 
 void game_state_status_set(GameStatus status) {

@@ -32,11 +32,11 @@ nEntityID nem_make(nEntityMgr *em) {
         nEntityID id = slot->id;
         M_ZERO_STRUCT(slot);
         sll_stack_push(em->free_slots, slot);
-        NLOG_ERR("entity %llu created/reused", id);
+        //NLOG_ERR("entity %llu created/reused", id);
         em->entity[NENTITY_GET_INDEX(id)] = id;
         return id;
     }
-    NLOG_ERR("entity %llu created", entity_count);
+    //NLOG_ERR("entity %llu created", entity_count);
     em->entity[entity_count] = entity_count;
     em->comp_array_len = entity_count+1;
     return entity_count++;
@@ -50,8 +50,8 @@ void nem_del(nEntityMgr *em, nEntityID entity) {
     nEntityFreeSlotNode *next_free_slot = nem_get_free_entity_slot(em);
     next_free_slot->id = NENTITY_INCREMENT_GENERATION(entity);
     sll_stack_push(em->available_slots, next_free_slot);
-    NLOG_ERR("entity %llu destroyed", entity);
-    NLOG_ERR("entity %llu added to cache", next_free_slot->id);
+    //NLOG_ERR("entity %llu destroyed", entity);
+    //NLOG_ERR("entity %llu added to cache", next_free_slot->id);
 }
 
 void nem_update(nEntityMgr *em) {
@@ -119,7 +119,7 @@ void entity_test() {
 }
 
 b32 nem_entity_valid(nEntityMgr *em, nEntityID entity) {
-    return (em->entity[NENTITY_GET_INDEX(entity)] == entity);
+    return (NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,entity) == entity);
 }
 
 void nentity_event_mgr_clear(nEntityEventMgr *ev_mgr) {

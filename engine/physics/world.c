@@ -27,7 +27,7 @@ void nphysics_world_set_debug_draw(nPhysicsWorld *world, b32 debug_draw) {
 // This will produce manifolds for all collisions
 void nphysics_world_broadphase(nPhysicsWorld *world) {
     world->manifolds = 0;
-    for (u32 i = 0; i < world->body_count; i+=1) {
+    for (u64 i = 0; i < world->body_count; i+=1) {
         if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
         for (u32 j = i+1; j < world->body_count; j+=1) {
             if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), j, nPhysicsBody))continue;
@@ -53,8 +53,8 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
 
                 nEntityEvent e = {
                     // TODO -- make an api to get entity from 'index'
-                    .entity_a = get_em()->entity[i],
-                    .entity_b = get_em()->entity[j],
+                    .entity_a = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i),
+                    .entity_b = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), j),
                     .flags = NENTITY_EVENT_KIND_COLLISION,
                     .extra_flags = 0,
                 };
@@ -70,26 +70,27 @@ void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
     // 1. perform broadphase/calculate the manifolds
     nphysics_world_broadphase(world);
     // 2. integrate forces
-    for (u32 i = 0; i < world->body_count; i+=1) {
-        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
+    for (u64 i = 0; i < world->body_count; i+=1) {
+        nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(),i);
+        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), entity, nPhysicsBody))continue;
 		nPhysicsBody* b = &world->bodies[i];
 		if (b->inv_mass == 0.0f) continue;
 		b->velocity = vec2_add(b->velocity, vec2_multf(vec2_add(v2(0,world->gravity_scale * b->gravity_scale), vec2_multf(b->force, b->inv_mass)),dt));
 	}
     // 3. do presteps (mainly just positional correction)
-    for (u32 i = 0; i < world->iterations; i+=1) {
+    for (u64 i = 0; i < world->iterations; i+=1) {
         for (nManifoldNode *m = world->manifolds; m != 0; m = m->next) {
             nmanifold_prestep(&m->m, inv_dt);
         }
     }
     // 4. do impulse iterations
-    for (u32 i = 0; i < world->iterations; i+=1) {
+    for (u64 i = 0; i < world->iterations; i+=1) {
         for (nManifoldNode *m = world->manifolds; m != 0; m = m->next) {
             nmanifold_apply_impulse(&m->m);
         }
     }
     // 5. integrate velocities
-    for (u32 i = 0; i < world->body_count; i+=1) {
+    for (u64 i = 0; i < world->body_count; i+=1) {
         if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
 		nPhysicsBody* b = &world->bodies[i];
 
@@ -97,7 +98,7 @@ void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
 		b->force = v2(0.0f, 0.0f);
 	}
     // 6. Do FAKE friction (TODO -- remove this ASAP)
-    for (u32 i = 0; i < world->body_count; i+=1) {
+    for (u64 i = 0; i < world->body_count; i+=1) {
         if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
 		nPhysicsBody* b = &world->bodies[i];
         b->velocity = vec2_divf(b->velocity, 1.05);
