@@ -177,7 +177,7 @@ void nmap_create_ex(nMap *map, u32 w, u32 h, s32 min_room_size, f32 min_room_fac
 }
 
 void nmap_create(nMap *map, u32 w, u32 h) {
-    nmap_create_ex(map, w, h, 4, 0.4, 0.6);
+    nmap_create_ex(map, w, h, 8, 0.4, 0.6);
 }
 
 vec4 nmap_calc_tile_tc(nMap *map, s32 x, s32 y) {

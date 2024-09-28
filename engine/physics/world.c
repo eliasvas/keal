@@ -50,6 +50,15 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
                 nManifoldNode *node = push_array(get_frame_arena(), nManifoldNode, 1);
                 node->m = m;
                 sll_stack_push(world->manifolds, node);
+
+                nEntityEvent e = {
+                    // TODO -- make an api to get entity from 'index'
+                    .entity_a = get_em()->entity[i],
+                    .entity_b = get_em()->entity[j],
+                    .flags = NENTITY_EVENT_KIND_COLLISION,
+                    .extra_flags = 0,
+                };
+                nentity_event_mgr_add(&get_em()->event_mgr, e);
             }
         }
     }

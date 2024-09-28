@@ -1,4 +1,4 @@
-#include "entity.h"
+#include "ecs/entity.h"
 
 nEntityMgr em = {0};
 
@@ -55,6 +55,7 @@ void nem_del(nEntityMgr *em, nEntityID entity) {
 }
 
 void nem_update(nEntityMgr *em) {
+    nentity_event_mgr_clear(&em->event_mgr);
     for (u32 prio = NENTITY_MANAGER_TOP_PRIORITY; prio <= NENTITY_MANAGER_BOTTOM_PRIORITY; prio+=1) {
         for (nEntityMgrSystemNode *node = em->systems_first; node != 0; node = node->next) {
             if (prio == node->priority) {
@@ -119,4 +120,15 @@ void entity_test() {
 
 b32 nem_entity_valid(nEntityMgr *em, nEntityID entity) {
     return (em->entity[NENTITY_GET_INDEX(entity)] == entity);
+}
+
+void nentity_event_mgr_clear(nEntityEventMgr *ev_mgr) {
+    ev_mgr->first = 0;
+    ev_mgr->last = 0;
+}
+
+void nentity_event_mgr_add(nEntityEventMgr *ev_mgr, nEntityEvent e) {
+    nEntityEventNode *node = push_array(get_frame_arena(), nEntityEventNode, 1);
+    node->e = e;
+    sll_queue_push(ev_mgr->first, ev_mgr->last, node);
 }

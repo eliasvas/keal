@@ -12,16 +12,30 @@ GameState *get_ggs() {
 
 #define COLLIDER_VISUALIZATION 1
 
+void resolve_collision_events(nEntityMgr *em) {
+    nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite);
+    for (nEntityEventNode *en = em->event_mgr.first; en != 0; en = en->next) {
+        nEntityID ea = en->e.entity_a;
+        nEntityID eb = en->e.entity_b;
+        if (ea == gs.player || eb == gs.player) {
+            s->frame = 5;
+            s->fps = 0;
+            break;
+        }
+    }
+}
+
 void update_and_render_sprites(nEntityMgr *em) {
     nbatch2d_rend_begin(&gs.batch_rend, get_nwin());
     mat4 view = ndungeon_cam_get_view_mat(&gs.dcam);
     nbatch2d_rend_set_view_mat(&gs.batch_rend, view);
-    for (s32 i = em->comp_array_len-1; i >= 0; i-=1) {
-        nEntityID entity = (u32)i;
+    for (s64 i = em->comp_array_len-1; i >= 0; i-=1) {
+        nEntityID entity = (s64)i;
 
         // simulate movement input stuff only for player
         if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
             f32 dt = nglobal_state_get_dt()/1000.0;
             if (*(NENTITY_MANAGER_GET_COMPONENT(em, entity, nEntityTag)) == NENTITY_TAG_PLAYER) {
                 b32 face_right = 1;
@@ -30,17 +44,21 @@ void update_and_render_sprites(nEntityMgr *em) {
                     b->velocity.x+=50*dt; // speed * dt
                     face_right = 1;
                     vmov=1;
+                    s->fps = 2;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_LEFT)) {
                     b->velocity.x-=50*dt; // speed * dt
                     face_right = 0;
                     vmov=1;
+                    s->fps = 2;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_UP)) {
                     b->velocity.y-=50*dt; // speed * dt
+                    s->fps = 2;
                 }
                 if (ninput_key_down(get_nim(),NKEY_SCANCODE_DOWN)) {
                     b->velocity.y+=50*dt; // speed * dt
+                    s->fps = 2;
                 }
                 if (vmov && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite)) {
                     nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
@@ -128,7 +146,8 @@ void game_state_init() {
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_update_func, 1);
-    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_and_render_sprites, 2);
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), resolve_collision_events, 2);
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_and_render_sprites, 3);
 
     game_state_status_set(GAME_STATUS_START_MENU);
 }

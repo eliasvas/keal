@@ -1,7 +1,7 @@
 #ifndef ECS_INC_H
 #define ECS_INC_H
 
-#include "entity.h"
+#include "ecs/entity.h"
 
 /*
     Loads of great resources for Entity Component Systems:

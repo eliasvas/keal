@@ -25,6 +25,7 @@ vec4 nsprite_get_current_tc(nSprite *sprite) {
 }
 
 void nsprite_update(nSprite *sprite, f32 dt) {
+    if (sprite->fps == 0.0)return;
     sprite->progress +=  dt / (1.0 / sprite->fps);
     if (sprite->progress > 1.0) {
         sprite->progress -= 1.0;

@@ -1,5 +1,5 @@
-#ifndef NENTITY2_H
-#define NENTITY2_H
+#ifndef NENTITY_H
+#define NENTITY_H
 
 #include "base/base_inc.h"
 #include "core/core_inc.h"
@@ -13,6 +13,7 @@
 
     BEWARE -- right now initialization is done ONCE + all allocations (via NENTITY_MANAGER_INIT(..)/NENTITY_MANAGER_REGISTER(..)),
     BEWARE -- and memory is fixed to hold a maximum of NMAX_ENTITIES, we need to make Pool Allocators to bypass this.
+    TODO -- maybe instead of pointers we return CompontentHandle's and provide a Component *ch_get(ComponentType, ComponentHandle)
 */
 
 #define NMAX_COMPONENTS 32
@@ -46,6 +47,32 @@ typedef u64 nEntityID;
 #define NENTITY_GET_GENERATION(entity) ((entity >> 32) & U32_MAX)
 #define NENTITY_INCREMENT_GENERATION(entity) (((NENTITY_GET_GENERATION(entity)+1)<<32) | NENTITY_GET_INDEX(entity))
 #define NENTITY_INCREMENT_INDEX(entity) ((NENTITY_GET_GENERATION(entity) << 32) | (NENTITY_GET_INDEX(entity)+1))
+
+
+// BEWARE this event queue is allocated on frame storage, so no event caching beyong a single frame is currently supported
+// TODO -- can we have specific event listeners/queues and not use one BIG global one (this is slow as fuck)
+
+typedef struct nEntityEvent nEntityEvent;
+struct nEntityEvent {
+    nEntityID entity_a;
+    nEntityID entity_b; // this is optional
+    u32 flags;
+    u32 extra_flags;
+};
+
+typedef struct nEntityEventNode nEntityEventNode;
+struct nEntityEventNode {
+    nEntityEvent e;
+    nEntityEventNode *next;
+};
+
+typedef struct nEntityEventMgr nEntityEventMgr;
+struct nEntityEventMgr {
+    nEntityEventNode *first;
+    nEntityEventNode *last;
+};
+void nentity_event_mgr_clear(nEntityEventMgr *ev_mgr);
+void nentity_event_mgr_add(nEntityEventMgr *ev_mgr, nEntityEvent e);
 
 typedef struct nComponentArray nComponentArray;
 struct nComponentArray {
@@ -83,6 +110,8 @@ struct nEntityMgr {
     nEntityMgrSystemNode *systems_first;
     nEntityMgrSystemNode *systems_last;
     nEntityMgrSystemNode *free_system_nodes; // free nodes we can use instead of allocating
+    // for events
+    nEntityEventMgr event_mgr;
 };
 
 nEntityID nem_make(nEntityMgr *em);
