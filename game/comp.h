@@ -9,12 +9,14 @@ struct nHealthComponent {
 };
 nHealthComponent nhealth_component_make(s32 max_health);
 b32 nhealth_component_alive(nHealthComponent *hc);
-
+void nhealth_component_enc(nHealthComponent *hc);
+void nhealth_component_dec(nHealthComponent *hc);
 
 typedef struct nAIComponent nAIComponent;
 struct nAIComponent {
     u32 state;
     u64 timestamp;
+    u64 invinsibility_sec;
     b32 dead;
 };
 #define NAI_COMPONENT_DEFAULT 0

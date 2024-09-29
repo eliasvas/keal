@@ -45,6 +45,8 @@ void game_state_init() {
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nEntityTag);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nHealthComponent);
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nAIComponent);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_update_func, 1);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), resolve_collision_events, 2);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), game_ai_system, 3);
@@ -98,7 +100,11 @@ void game_state_generate_new_level() {
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nPhysicsBody);
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nSprite);
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1));
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nHealthComponent);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nAIComponent);
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1.0));
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nHealthComponent) = nhealth_component_make(3); 
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nAIComponent) = nai_component_default();
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
     //*b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
     *b = nphysics_body_circle(0.5, 20);

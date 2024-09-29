@@ -213,7 +213,7 @@ void nmap_add_tiles_as_entities(nMap *map) {
             NENTITY_MANAGER_ADD_COMPONENT(get_em(), tile, nPhysicsBody);
             NENTITY_MANAGER_ADD_COMPONENT(get_em(), tile, nSprite);
             NENTITY_MANAGER_ADD_COMPONENT(get_em(), tile, nEntityTag);
-            *NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(nmap_calc_tile_tc(map, x, y), 0, 1, nmap_tile_is_wall(map, x, y) ? v4(0.3,0.3,0.3,1) : v4(1,1,1,0.5));
+            *NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(nmap_calc_tile_tc(map, x, y), 0, 1, nmap_tile_is_wall(map, x, y) ? v4(0.3,0.3,0.3,1) : v4(0.4,0.4,0.4,1));
             //*NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nSprite) = nsprite_make(TILESET_SKELLY_TILE, 1, 1, v4(0,0,1,1));
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), tile, nPhysicsBody);
             *b = nphysics_body_aabb(v2(0.5,0.5), F32_MAX);

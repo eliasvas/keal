@@ -5,6 +5,11 @@ typedef struct nPhysicsBody nPhysicsBody;
 REGISTER_TYPE(nPhysicsBody)
 typedef struct nSprite nSprite;
 REGISTER_TYPE(nSprite)
+typedef struct nHealthComponent nHealthComponent;
+REGISTER_TYPE(nHealthComponent)
+typedef struct nAIComponent nAIComponent;
+REGISTER_TYPE(nAIComponent)
+
 
 // Should these be here?? Maybe we should use this just in gameplay code
 typedef enum NENTITY_TAG NENTITY_TAG; 
