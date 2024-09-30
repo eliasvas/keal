@@ -41,6 +41,7 @@ void nglobal_state_frame_begin();
 void nglobal_state_frame_end();
 void nglobal_state_set_target_fps(f64 target_fps);
 f64  nglobal_state_get_dt();
+f64  nglobal_state_get_dt_sec();
 
 
 // Let's one global instead of singletons

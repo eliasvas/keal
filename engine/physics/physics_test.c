@@ -24,7 +24,7 @@ void nphysics_world_update_func(nEntityMgr *em);
 void nphysics_world_render_func(nEntityMgr *em) {
     nPhysicsWorld world = {0};
     u32 rendered_objects_count = 0;
-    nphysics_world_init_from_em(&world);
+    nphysics_world_init(em, &world);
     vec4 color = v4(1,1,1,1);
     for (u32 i = 0; i < world.body_count; i+=1) {
         if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
@@ -51,7 +51,7 @@ void nphysics_world_render_func(nEntityMgr *em) {
 void nphysics_world_far_away_delete_entities_func(nEntityMgr *em) {
     nPhysicsWorld world = {0};
     u32 rendered_objects_count = 0;
-    nphysics_world_init_from_em(&world);
+    nphysics_world_init(em, &world);
     vec4 color = v4(1,1,1,1);
     for (u32 i = 0; i < world.body_count; i+=1) {
         if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;

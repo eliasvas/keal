@@ -5,9 +5,10 @@
 #include "collider.h"
 #include "ecs/ecs_inc.h"
 
-// Maybe this could be the low-level physics engine and
-// for gameplay stuff we could have PhysicsManager which
-// has a nPhysicsWorld but does also entity stuff
+/*
+    This kindof IS the physics engine, right now we are just
+    doing an update through the ECS via the update_func!
+*/
 
 typedef struct nManifoldNode nManifoldNode;
 struct nManifoldNode {
@@ -27,12 +28,10 @@ struct nPhysicsWorld {
     f32 gravity_scale;
     u32 iterations;
 };
-void nphysics_world_init(nPhysicsWorld *world);
-void nphysics_world_init_from_em(nPhysicsWorld *world);
-void nphysics_world_step(nPhysicsWorld *world, f32 dt);
-void nphysics_world_set_debug_draw(nPhysicsWorld *world, b32 debug_draw);
 
-nPhysicsBody* nphysics_world_add(nPhysicsWorld *world, nPhysicsBody *body);
-b32 nphysics_world_del(nPhysicsWorld *world, nPhysicsBody *body);
+typedef struct nEntityMgr nEntityMgr;
+void nphysics_world_init(nEntityMgr *em, nPhysicsWorld *world);
+void nphysics_world_step(nEntityMgr *em, nPhysicsWorld *world, f32 dt);
+void nphysics_world_update_func(nEntityMgr *em);
 
 #endif

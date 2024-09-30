@@ -12,8 +12,6 @@ GameState *get_ggs() {
     return &gs;
 }
 
-
-
 oglImage game_load_rgba_image_from_disk(const char *path) {
     oglImage img;
     s32 w,h,comp;
@@ -34,8 +32,6 @@ void game_state_init_images() {
     u32 white = 0xFFFF;
     ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
 }
-
-extern void nphysics_world_update_func(nEntityMgr *em);
 
 void game_state_init() {
     game_state_status_set(GAME_STATUS_STARTUP);

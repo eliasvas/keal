@@ -3,6 +3,7 @@
 #include "game_state.h"
 
 // #define PHYSICS_TEST
+// #define GRAPHICS_TEST 
 void physics_test_init();
 void physics_test_update_and_render();
 
@@ -11,6 +12,8 @@ void mainLoop(void) {
 
 #ifdef PHYSICS_TEST
     physics_test_update_and_render();
+#elif GRAPHICS_TEST
+    assert(0);
 #else
     game_state_update_and_render();
 #endif

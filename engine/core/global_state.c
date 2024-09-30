@@ -75,6 +75,9 @@ void nglobal_state_set_target_fps(f64 target_fps) {
 f64 nglobal_state_get_dt() {
     return global_state.dt;
 }
+f64 nglobal_state_get_dt_sec() {
+    return nglobal_state_get_dt()/1000.0;
+}
 
 nWindow *get_nwin() {
     return &global_state.win;

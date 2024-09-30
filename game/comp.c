@@ -42,7 +42,7 @@ void ai_component_enemy_update(nEntityMgr *em, nEntityID enemy) {
     nPhysicsBody *b_enemy = NENTITY_MANAGER_GET_COMPONENT(em, enemy, nPhysicsBody);
     vec2 dist = vec2_sub(b_player->position, b_enemy->position);
     f32 enemy_speed = 20;
-    f32 dt = nglobal_state_get_dt()/1000.0;
+    f32 dt = nglobal_state_get_dt_sec();
     // TODO -- maybe this 5 should be part of nAIComponent or some enemy logic
     if (vec2_len(dist) < 5) {
         dist = vec2_norm(dist);
@@ -53,7 +53,7 @@ void ai_component_enemy_update(nEntityMgr *em, nEntityID enemy) {
 void ai_component_player_update(nEntityMgr *em, nEntityID player) {
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, player, nPhysicsBody);
     nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, player, nSprite);
-    f32 dt = nglobal_state_get_dt()/1000.0;
+    f32 dt = nglobal_state_get_dt_sec();
     f32 player_speed = 50.0;
     b32 face_right = 1;
     b32 hmov = 0;
@@ -74,6 +74,9 @@ void ai_component_player_update(nEntityMgr *em, nEntityID player) {
 }
 
 void game_ai_system(nEntityMgr *em) {
+    // do default game AI
+
+    // branch of to logic for certain AI kinds (player/enemy/projectile)
     for (s64 i = 0; i < em->comp_array_len; i+=1) {
         nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i);
         nEntityTag tag = *(NENTITY_MANAGER_GET_COMPONENT(em, entity, nEntityTag));
@@ -84,6 +87,8 @@ void game_ai_system(nEntityMgr *em) {
             case NENTITY_TAG_ENEMY: 
                 ai_component_enemy_update(em, entity);
                 break;
+            // case NENTITY_TAG_PROJECTILE: 
+            // case NENTITY_TAG_DOOR: 
             default:
                 break;
         } 
@@ -103,7 +108,7 @@ void render_sprites_system(nEntityMgr *em) {
         if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
             nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nsprite_update(s, nglobal_state_get_dt() / 1000.0);
+            nsprite_update(s, nglobal_state_get_dt_sec());
             vec4 tc = nsprite_get_current_tc(s);
             nBatch2DQuad q = {0};
             q.color = s->color;
@@ -145,7 +150,7 @@ void render_sprites_system(nEntityMgr *em) {
             if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->collider_off)continue;
             nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nsprite_update(s, nglobal_state_get_dt() / 1000.0);
+            nsprite_update(s, nglobal_state_get_dt_sec());
             vec4 tc = nsprite_get_current_tc(s);
             nBatch2DQuad q = {0};
             q.color = v4(1,0,0,0.3);

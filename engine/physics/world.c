@@ -1,36 +1,21 @@
 #include "phys_inc.h"
 
-void nphysics_world_init_from_em(nPhysicsWorld *world) {
+void nphysics_world_init(nEntityMgr *em, nPhysicsWorld *world) {
     M_ZERO_STRUCT(world);
-    world->body_cap = get_em()->comp_array_len;
-    world->body_count = get_em()->comp_array_len;
-    world->bodies = get_em()->components[GetTypeID_nPhysicsBody()].data;
+    world->body_cap = em->comp_array_len;
+    world->body_count = em->comp_array_len;
+    world->bodies = em->components[GetTypeID_nPhysicsBody()].data;
     world->gravity_scale = 10;
     world->iterations = 2;
-}
-
-void nphysics_world_init(nPhysicsWorld *world) {
-    M_ZERO_STRUCT(world);
-    nphysics_world_set_debug_draw(world, 1);
-    world->body_cap = 1024;
-    world->bodies = push_array(get_global_arena(), nPhysicsBody, world->body_cap);
-    world->body_count = 0;
-    world->gravity_scale = 10;
-    // we do many iterations to solve interactions that wouldn't necessarily happen
-    world->iterations = 2;
-}
-
-void nphysics_world_set_debug_draw(nPhysicsWorld *world, b32 debug_draw) {
-    world->debug_draw = debug_draw;
 }
 
 // This will produce manifolds for all collisions
-void nphysics_world_broadphase(nPhysicsWorld *world) {
+void nphysics_world_broadphase(nEntityMgr *em, nPhysicsWorld *world) {
     world->manifolds = 0;
     for (u64 i = 0; i < world->body_count; i+=1) {
-        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
+        if (!NENTITY_MANAGER_HAS_COMPONENT(em, i, nPhysicsBody))continue;
         for (u32 j = i+1; j < world->body_count; j+=1) {
-            if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), j, nPhysicsBody))continue;
+            if (!NENTITY_MANAGER_HAS_COMPONENT(em, j, nPhysicsBody))continue;
             nManifold m = {
                 .a = &world->bodies[i],
                 .b = &world->bodies[j],
@@ -53,26 +38,26 @@ void nphysics_world_broadphase(nPhysicsWorld *world) {
 
                 nEntityEvent e = {
                     // TODO -- make an api to get entity from 'index'
-                    .entity_a = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i),
-                    .entity_b = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), j),
+                    .entity_a = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, i),
+                    .entity_b = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, j),
                     .flags = NENTITY_EVENT_KIND_COLLISION,
                     .extra_flags = 0,
                 };
-                nentity_event_mgr_add(&get_em()->event_mgr, e);
+                nentity_event_mgr_add(&em->event_mgr, e);
             }
         }
     }
 }
 
 // This will solve all manifolds and update forces
-void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
+void nphysics_world_step(nEntityMgr *em, nPhysicsWorld *world, f32 dt) {
     f32 inv_dt = dt > 0.0f ? 1.0f / dt : 0.0f;
     // 1. perform broadphase/calculate the manifolds
-    nphysics_world_broadphase(world);
+    nphysics_world_broadphase(em, world);
     // 2. integrate forces
     for (u64 i = 0; i < world->body_count; i+=1) {
-        nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(),i);
-        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), entity, nPhysicsBody))continue;
+        nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,i);
+        if (!NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody))continue;
 		nPhysicsBody* b = &world->bodies[i];
 		if (b->inv_mass == 0.0f) continue;
 		b->velocity = vec2_add(b->velocity, vec2_multf(vec2_add(v2(0,world->gravity_scale * b->gravity_scale), vec2_multf(b->force, b->inv_mass)),dt));
@@ -91,7 +76,7 @@ void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
     }
     // 5. integrate velocities
     for (u64 i = 0; i < world->body_count; i+=1) {
-        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
+        if (!NENTITY_MANAGER_HAS_COMPONENT(em, i, nPhysicsBody))continue;
 		nPhysicsBody* b = &world->bodies[i];
 
 		b->position = vec2_add(b->position, vec2_multf(b->velocity, dt));
@@ -99,30 +84,17 @@ void nphysics_world_step(nPhysicsWorld *world, f32 dt) {
 	}
     // 6. Do FAKE friction (TODO -- remove this ASAP)
     for (u64 i = 0; i < world->body_count; i+=1) {
-        if (!NENTITY_MANAGER_HAS_COMPONENT(get_em(), i, nPhysicsBody))continue;
+        if (!NENTITY_MANAGER_HAS_COMPONENT(em, i, nPhysicsBody))continue;
 		nPhysicsBody* b = &world->bodies[i];
         b->velocity = vec2_divf(b->velocity, 1.05);
     }
 }
 
-nPhysicsBody* nphysics_world_add(nPhysicsWorld *world, nPhysicsBody *body) {
-    assert(world->body_count+1 < world->body_cap);
-    world->bodies[world->body_count] = *body;
-    world->body_count+=1;
-    return &world->bodies[world->body_count];
-}
-
-b32 nphysics_world_del(nPhysicsWorld *world, nPhysicsBody *body) {
-    // TBA
-    return 0;
-}
-
-
-// For ECS
+// We make a world from the EntityManager's nPhysicsBody components and 'step' to simulate
 void nphysics_world_update_func(nEntityMgr *em) {
     nPhysicsWorld world = {0};
-    nphysics_world_init_from_em(&world);
-    nphysics_world_step(&world, nglobal_state_get_dt()/1000.0);
+    nphysics_world_init(em, &world);
+    nphysics_world_step(em, &world, nglobal_state_get_dt_sec());
 }
 
 

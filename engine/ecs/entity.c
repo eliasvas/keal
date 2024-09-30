@@ -1,9 +1,9 @@
 #include "ecs/entity.h"
 
-nEntityMgr em = {0};
+nEntityMgr emgr = {0};
 
 nEntityMgr* get_em() {
-    return &em;
+    return &emgr;
 }
 
 nEntityFreeSlotNode* nem_get_available_entity_slot(nEntityMgr *em) {
@@ -82,16 +82,17 @@ void update_second(nEntityMgr *em) {
 }
 
 void entity_test() {
-    NENTITY_MANAGER_INIT(get_em());
+    nEntityMgr em = {0};
+    NENTITY_MANAGER_INIT(&em);
 
-    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nPhysicsBody);
-    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
-    nEntityID id = nem_make(get_em()); // create entity
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, nSprite); // add component
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), id, nSprite); // add component (this will fail)
-    nSprite *p = (nSprite*)NENTITY_MANAGER_GET_COMPONENT(get_em(), id, nSprite); //modify component data
+    NENTITY_MANAGER_COMPONENT_REGISTER(&em, nPhysicsBody);
+    NENTITY_MANAGER_COMPONENT_REGISTER(&em, nSprite);
+    nEntityID id = nem_make(&em); // create entity
+    NENTITY_MANAGER_ADD_COMPONENT(&em, id, nSprite); // add component
+    NENTITY_MANAGER_ADD_COMPONENT(&em, id, nSprite); // add component (this will fail)
+    nSprite *p = (nSprite*)NENTITY_MANAGER_GET_COMPONENT(&em, id, nSprite); //modify component data
     p->color.x = 1.0;
-    p = NENTITY_MANAGER_GET_COMPONENT(get_em(), id, nSprite);
+    p = NENTITY_MANAGER_GET_COMPONENT(&em, id, nSprite);
     printf("Sprite color : (%f, %f, %f, %f)\n", p->color.x, p->color.y, p->color.z, p->color.w);
     assert(p->color.x == 1.0);
 
@@ -106,16 +107,16 @@ void entity_test() {
     assert(mask == 1);
 
     for (u32 i = 0; i < 10; i+=1) {
-        nEntityID entity = nem_make(get_em());
+        nEntityID entity = nem_make(&em);
         assert(NENTITY_GET_INDEX(entity) == 1);
         assert(NENTITY_GET_GENERATION(entity) == i);
-        nem_del(get_em(), entity);
+        nem_del(&em, entity);
     }
-    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_second, 2);
-    NENTITY_MANAGER_ADD_SYSTEM(get_em(), update_first, 1);
-    nem_update(get_em());
-    NENTITY_MANAGER_DEL_SYSTEM(get_em(), update_first);
-    nem_update(get_em());
+    NENTITY_MANAGER_ADD_SYSTEM(&em, update_second, 2);
+    NENTITY_MANAGER_ADD_SYSTEM(&em, update_first, 1);
+    nem_update(&em);
+    NENTITY_MANAGER_DEL_SYSTEM(&em, update_first);
+    nem_update(&em);
 }
 
 b32 nem_entity_valid(nEntityMgr *em, nEntityID entity) {
