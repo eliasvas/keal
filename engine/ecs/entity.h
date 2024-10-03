@@ -88,7 +88,7 @@ typedef struct nEntityMgr nEntityMgr;
 #define NENTITY_MANAGER_BOTTOM_PRIORITY 10
 typedef struct nEntityMgrSystemNode nEntityMgrSystemNode;
 struct nEntityMgrSystemNode {
-    void (*func)(nEntityMgr *em);
+    void (*func)(nEntityMgr *em, void *ctx);
     u32 priority;
     nEntityMgrSystemNode *next; 
     nEntityMgrSystemNode *prev; 
@@ -204,6 +204,8 @@ b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
 
 void entity_test();
 nEntityMgr* get_em();
-void nem_update(nEntityMgr *em);
+
+// this ctx is probably just the GameState (we cant expose it here though since we're inside the engine)
+void nem_update(nEntityMgr *em, void *ctx);
 
 #endif

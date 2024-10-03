@@ -23,8 +23,8 @@ struct nAIComponent {
 
 nAIComponent nai_component_default(void);
 
-void game_ai_system(nEntityMgr *em);
-void render_sprites_system(nEntityMgr *em);
-void resolve_collision_events(nEntityMgr *em);
+void game_ai_system(nEntityMgr *em, void *ctx);
+void render_sprites_system(nEntityMgr *em, void *ctx);
+void resolve_collision_events(nEntityMgr *em, void *ctx);
 
 #endif

@@ -54,18 +54,37 @@ void nem_del(nEntityMgr *em, nEntityID entity) {
     //NLOG_ERR("entity %llu added to cache", next_free_slot->id);
 }
 
-void nem_update(nEntityMgr *em) {
+void nem_update(nEntityMgr *em, void *ctx) {
     nentity_event_mgr_clear(&em->event_mgr);
     for (u32 prio = NENTITY_MANAGER_TOP_PRIORITY; prio <= NENTITY_MANAGER_BOTTOM_PRIORITY; prio+=1) {
         for (nEntityMgrSystemNode *node = em->systems_first; node != 0; node = node->next) {
             if (prio == node->priority) {
-                node->func(em);
+                node->func(em, ctx);
             }
         }
     }
 }
 
-void update_first(nEntityMgr *em) {
+b32 nem_entity_valid(nEntityMgr *em, nEntityID entity) {
+    return (NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,entity) == entity);
+}
+
+void nentity_event_mgr_clear(nEntityEventMgr *ev_mgr) {
+    ev_mgr->first = 0;
+    ev_mgr->last = 0;
+}
+
+void nentity_event_mgr_add(nEntityEventMgr *ev_mgr, nEntityEvent e) {
+    nEntityEventNode *node = push_array(get_frame_arena(), nEntityEventNode, 1);
+    node->e = e;
+    sll_queue_push(ev_mgr->first, ev_mgr->last, node);
+}
+
+/////////////////////////////////
+// Here lies the entity manager test code
+/////////////////////////////////
+
+void update_first(nEntityMgr *em, void *ctx) {
     // for every entity
     for (u32 i = 0; i < em->comp_array_len; i+=1) {
         nEntityID entity = i;
@@ -77,7 +96,7 @@ void update_first(nEntityMgr *em) {
     }
 }
 
-void update_second(nEntityMgr *em) {
+void update_second(nEntityMgr *em, void *ctx) {
     NLOG_INFO("I came seconde!");
 }
 
@@ -114,22 +133,8 @@ void entity_test() {
     }
     NENTITY_MANAGER_ADD_SYSTEM(&em, update_second, 2);
     NENTITY_MANAGER_ADD_SYSTEM(&em, update_first, 1);
-    nem_update(&em);
+    nem_update(&em, 0);
     NENTITY_MANAGER_DEL_SYSTEM(&em, update_first);
-    nem_update(&em);
+    nem_update(&em, 0);
 }
 
-b32 nem_entity_valid(nEntityMgr *em, nEntityID entity) {
-    return (NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,entity) == entity);
-}
-
-void nentity_event_mgr_clear(nEntityEventMgr *ev_mgr) {
-    ev_mgr->first = 0;
-    ev_mgr->last = 0;
-}
-
-void nentity_event_mgr_add(nEntityEventMgr *ev_mgr, nEntityEvent e) {
-    nEntityEventNode *node = push_array(get_frame_arena(), nEntityEventNode, 1);
-    node->e = e;
-    sll_queue_push(ev_mgr->first, ev_mgr->last, node);
-}

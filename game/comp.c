@@ -2,7 +2,6 @@
 #include "game_state.h"
 #include "tileset4922.inl"
 
-extern GameState game_state;
 // TODO -- COLLIDER_VISUALIZATION should probably be an option in GameState
 //#define COLLIDER_VISUALIZATION 1
 
@@ -36,8 +35,8 @@ nAIComponent nai_component_default(void) {
     return ai;
 }
 
-void ai_component_enemy_update(nEntityMgr *em, nEntityID enemy) {
-    nEntityID player = game_state.player;
+void ai_component_enemy_update(nEntityMgr *em, GameState *gs, nEntityID enemy) {
+    nEntityID player = gs->player;
     nPhysicsBody *b_player = NENTITY_MANAGER_GET_COMPONENT(em, player, nPhysicsBody);
     nPhysicsBody *b_enemy = NENTITY_MANAGER_GET_COMPONENT(em, enemy, nPhysicsBody);
     vec2 dist = vec2_sub(b_player->position, b_enemy->position);
@@ -73,7 +72,8 @@ void ai_component_player_update(nEntityMgr *em, nEntityID player) {
     ai->invinsibility_sec = maximum(0.0, ai->invinsibility_sec - dt);
 }
 
-void game_ai_system(nEntityMgr *em) {
+void game_ai_system(nEntityMgr *em, void *ctx) {
+    GameState *gs = (GameState*)ctx;
     // do default game AI
 
     // branch of to logic for certain AI kinds (player/enemy/projectile)
@@ -85,7 +85,7 @@ void game_ai_system(nEntityMgr *em) {
                 ai_component_player_update(em, entity);
                 break;
             case NENTITY_TAG_ENEMY: 
-                ai_component_enemy_update(em, entity);
+                ai_component_enemy_update(em, gs, entity);
                 break;
             // case NENTITY_TAG_PROJECTILE: 
             // case NENTITY_TAG_DOOR: 
@@ -96,10 +96,12 @@ void game_ai_system(nEntityMgr *em) {
 }
 
 
-void render_sprites_system(nEntityMgr *em) {
-    nbatch2d_rend_begin(&game_state.batch_rend, get_nwin());
-    mat4 view = ndungeon_cam_get_view_mat(&game_state.dcam);
-    nbatch2d_rend_set_view_mat(&game_state.batch_rend, view);
+void render_sprites_system(nEntityMgr *em, void *ctx) {
+    GameState *gs = (GameState*)ctx;
+
+    nbatch2d_rend_begin(&gs->batch_rend, get_nwin());
+    mat4 view = ndungeon_cam_get_view_mat(&gs->dcam);
+    nbatch2d_rend_set_view_mat(&gs->batch_rend, view);
     for (s64 i = em->comp_array_len; i>=0; i-=1) {
         nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i);
 
@@ -120,7 +122,7 @@ void render_sprites_system(nEntityMgr *em) {
             q.dim.x = sprite_dim.x;
             q.dim.y = sprite_dim.y;
             q.angle_rad = 0;
-            nbatch2d_rend_add_quad(&game_state.batch_rend, q, &game_state.atlas);
+            nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
             // if entity has health, draw that as well
             if (NENTITY_MANAGER_HAS_COMPONENT(em,entity, nHealthComponent)) {
                 nHealthComponent *h = NENTITY_MANAGER_GET_COMPONENT(em, entity, nHealthComponent);
@@ -138,7 +140,7 @@ void render_sprites_system(nEntityMgr *em) {
                     q.dim.x = heart_sprite_dim;
                     q.dim.y = heart_sprite_dim;
                     q.angle_rad = 0;
-                    nbatch2d_rend_add_quad(&game_state.batch_rend, q, &game_state.atlas);
+                    nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
                 }
             }
         }
@@ -161,14 +163,16 @@ void render_sprites_system(nEntityMgr *em) {
             q.dim.x = sprite_dim.x;
             q.dim.y = sprite_dim.y;
             q.angle_rad = 0;
-            nbatch2d_rend_add_quad(&game_state.batch_rend, q, &game_state.atlas);
+            nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
         }
 #endif
     }
-    nbatch2d_rend_end(&game_state.batch_rend);
+    nbatch2d_rend_end(&gs->batch_rend);
 }
 
-void resolve_collision_events(nEntityMgr *em) {
+void resolve_collision_events(nEntityMgr *em, void *ctx) {
+    GameState *gs = (GameState*)ctx;
+
     for (nEntityEventNode *en = em->event_mgr.first; en != 0; en = en->next) {
         nEntityTag tag_a = *(NENTITY_MANAGER_GET_COMPONENT(em, en->e.entity_a, nEntityTag));
         nEntityTag tag_b = *(NENTITY_MANAGER_GET_COMPONENT(em, en->e.entity_b, nEntityTag));

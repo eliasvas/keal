@@ -91,7 +91,7 @@ void nphysics_world_step(nEntityMgr *em, nPhysicsWorld *world, f32 dt) {
 }
 
 // We make a world from the EntityManager's nPhysicsBody components and 'step' to simulate
-void nphysics_world_update_func(nEntityMgr *em) {
+void nphysics_world_update_func(nEntityMgr *em, void *ctx) {
     nPhysicsWorld world = {0};
     nphysics_world_init(em, &world);
     nphysics_world_step(em, &world, nglobal_state_get_dt_sec());

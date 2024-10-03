@@ -73,7 +73,7 @@ void game_state_update_and_render(GameState *gs) {
         if (scroll_y) { gs->dcam.zoom += signof(scroll_y) * 4; }
         ndungeon_cam_update(&gs->dcam, v2(player_pos.x, player_pos.y));
         // ----
-        nem_update(get_em());
+        nem_update(get_em(), gs);
     }
 
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {

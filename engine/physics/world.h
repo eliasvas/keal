@@ -32,6 +32,6 @@ struct nPhysicsWorld {
 typedef struct nEntityMgr nEntityMgr;
 void nphysics_world_init(nEntityMgr *em, nPhysicsWorld *world);
 void nphysics_world_step(nEntityMgr *em, nPhysicsWorld *world, f32 dt);
-void nphysics_world_update_func(nEntityMgr *em);
+void nphysics_world_update_func(nEntityMgr *em, void *ctx);
 
 #endif

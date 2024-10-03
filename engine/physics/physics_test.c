@@ -19,9 +19,9 @@ void rend_collider(nCollider *collider, vec4 color) {
     nbatch2d_rend_add_quad(&rend, q, (collider->kind == NCOLLIDER_KIND_CIRCLE) ? &circle_img : &white_img);
 }
 
-void nphysics_world_update_func(nEntityMgr *em);
+void nphysics_world_update_func(nEntityMgr *em, void *ctx);
 
-void nphysics_world_render_func(nEntityMgr *em) {
+void nphysics_world_render_func(nEntityMgr *em, void *ctx) {
     nPhysicsWorld world = {0};
     u32 rendered_objects_count = 0;
     nphysics_world_init(em, &world);
@@ -48,7 +48,7 @@ void nphysics_world_render_func(nEntityMgr *em) {
     NLOG_INFO("Objects rendered: %d", rendered_objects_count);
 }
 
-void nphysics_world_far_away_delete_entities_func(nEntityMgr *em) {
+void nphysics_world_far_away_delete_entities_func(nEntityMgr *em, void *ctx) {
     nPhysicsWorld world = {0};
     u32 rendered_objects_count = 0;
     nphysics_world_init(em, &world);
@@ -134,7 +134,7 @@ void physics_test_update_and_render() {
     nbatch2d_rend_set_view_mat(&rend, view);
     nbatch2d_rend_begin(&rend, get_nwin());
 
-    nem_update(get_em());
+    nem_update(get_em(), 0);
 
     nbatch2d_rend_end(&rend);
 }
