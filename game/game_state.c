@@ -4,13 +4,7 @@
 #include "engine.h"
 #include "comp.h"
 #include "tileset4922.inl"
-// TODO -- VERY VERY VERY important, please please please reamove as many singletons as possible, pass 'parents' as *self
 
-GameState gs = {0};
-
-GameState *get_ggs() {
-    return &gs;
-}
 
 oglImage game_load_rgba_image_from_disk(const char *path) {
     oglImage img;
@@ -27,15 +21,15 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
 }
 
 
-void game_state_init_images() {
-    gs.atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
+void game_state_init_images(GameState *gs) {
+    gs->atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
     u32 white = 0xFFFF;
-    ogl_image_init(&gs.white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
+    ogl_image_init(&gs->white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
 }
 
-void game_state_init() {
-    game_state_status_set(GAME_STATUS_STARTUP);
-    game_state_init_images();
+void game_state_init(GameState *gs) {
+    game_state_status_set(gs, GAME_STATUS_STARTUP);
+    game_state_init_images(gs);
 
     NENTITY_MANAGER_INIT(get_em());
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nEntityTag);
@@ -48,68 +42,80 @@ void game_state_init() {
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), game_ai_system, 3);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), render_sprites_system, 4);
 
-    game_state_status_set(GAME_STATUS_START_MENU);
+    game_state_status_set(gs, GAME_STATUS_START_MENU);
+
+    gs->panel_dim = iv2(200,200);
+    gs->music_enabled = 1;
+    gs->effects_enabled = 1;
+    gs->fullscreen_enabled = 0;
+    gs->endless_mode_enabled = 1;
+    gs->hud_enabled = 1;
 }
 
-void game_state_deinit() {
+void game_state_deinit(GameState *gs) {
     // TBA
 }
 
-void game_state_update_and_render() {
-    vec2 screen_coords =  ndungeon_cam_screen_to_world(&gs.dcam, ninput_get_mouse_pos(get_nim()));
-    do_game_gui();
-    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(GAME_STATUS_START_MENU);}
+void game_state_update_and_render(GameState *gs) {
+    vec2 screen_coords =  ndungeon_cam_screen_to_world(&gs->dcam, ninput_get_mouse_pos(get_nim()));
+    do_game_gui(gs);
+    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_ESCAPE)) {game_state_status_set(gs, GAME_STATUS_START_MENU);}
 
-    if (game_state_status_match(GAME_STATUS_RUNNING)) {
-        nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
+    if (game_state_status_match(gs, GAME_STATUS_RUNNING)) {
+        nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nPhysicsBody);
         vec2 player_pos = v2(b->position.x, b->position.y);
-        // NLOG_ERR("camera coords: %f %f", gs.dcam.pos.x, gs.dcam.pos.y);
+        // NLOG_ERR("camera coords: %f %f", gs->dcam.pos.x, gs->dcam.pos.y);
         // NLOG_ERR("world coords: %f %f", screen_coords.x, screen_coords.y);
         //NLOG_ERR("player pos : %f %f", player_pos.x, player_pos.y);
 
 
         nScrollAmount scroll_y = ninput_get_scroll_amount_delta(get_nim());
-        if (scroll_y) { gs.dcam.zoom += signof(scroll_y) * 4; }
-        ndungeon_cam_update(&gs.dcam, v2(player_pos.x, player_pos.y));
+        if (scroll_y) { gs->dcam.zoom += signof(scroll_y) * 4; }
+        ndungeon_cam_update(&gs->dcam, v2(player_pos.x, player_pos.y));
         // ----
         nem_update(get_em());
     }
 
     if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
-        game_state_status_set(game_state_status_match(GAME_STATUS_PAUSED) ? GAME_STATUS_RUNNING : GAME_STATUS_PAUSED);
+        game_state_status_set(gs, game_state_status_match(gs,GAME_STATUS_PAUSED) ? GAME_STATUS_RUNNING : GAME_STATUS_PAUSED);
     }
 }
 
-void game_state_status_set(GameStatus status) {
-    gs.status = status;
+void game_state_status_set(GameState *gs, GameStatus status) {
+    gs->status = status;
 }
 
-b32  game_state_status_match(GameStatus status) {
-    return (gs.status == status);
+b32  game_state_status_match(GameState *gs, GameStatus status) {
+    return (gs->status == status);
 }
 
-void game_state_generate_new_level() {
+void game_state_generate_new_level(GameState *gs) {
     NENTITY_MANAGER_CLEAR(get_em());
-    ndungeon_cam_set(&gs.dcam, v2(0,0), v2(10,10), 50);
+    ndungeon_cam_set(&gs->dcam, v2(0,0), v2(10,10), 50);
     // init player entity
-    gs.player = nem_make(get_em());
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nPhysicsBody);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nSprite);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nHealthComponent);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs.player, nAIComponent);
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1.0));
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nHealthComponent) = nhealth_component_make(3); 
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nAIComponent) = nai_component_default();
-    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nPhysicsBody);
+    gs->player = nem_make(get_em());
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs->player, nPhysicsBody);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs->player, nSprite);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs->player, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs->player, nHealthComponent);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), gs->player, nAIComponent);
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nSprite) = nsprite_make(TILESET_ANIM_PLAYER_TILE, 5, 2, v4(1,0.3,0.3,1.0));
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nHealthComponent) = nhealth_component_make(3); 
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nAIComponent) = nai_component_default();
+    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nPhysicsBody);
     //*b = nphysics_body_aabb(v2(10,10), 200*gen_rand01());
     *b = nphysics_body_circle(0.5, 20);
     b->position = v2(0,0);
     b->gravity_scale = 0;
-    nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs.player, nEntityTag);
+    nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nEntityTag);
     *player_tag = NENTITY_TAG_PLAYER;
 
     // generate a NEW map
     nMap map = {0};
     nmap_create(&map, 32, 32);
+
+    // transfer player to first available tile
+    nPhysicsBody *pb = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nPhysicsBody);
+    pb->position = v2(map.player_start_pos.x, map.player_start_pos.y);
+                 
 }

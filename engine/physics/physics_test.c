@@ -130,7 +130,7 @@ void physics_test_update_and_render() {
     }
 
     f64 ct = get_current_timestamp_sec();
-    mat4 view = m4d(1.0);//ndungeon_cam_get_view_mat(&gs.dcam);
+    mat4 view = m4d(1.0);
     nbatch2d_rend_set_view_mat(&rend, view);
     nbatch2d_rend_begin(&rend, get_nwin());
 

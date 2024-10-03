@@ -279,8 +279,9 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                 if (gen_rand01() < 0.5) {
                     nmap_spawn_enemy(v2(child->x*1, child->y*1));
                 }else {
-                    nPhysicsBody *pb = NENTITY_MANAGER_GET_COMPONENT(get_em(), get_ggs()->player, nPhysicsBody);
-                    pb->position = v2(child->x*1, child->y*1);
+                    // nPhysicsBody *pb = NENTITY_MANAGER_GET_COMPONENT(get_em(), get_ggs()->player, nPhysicsBody);
+                    // pb->position = v2(child->x*1, child->y*1);
+                    map->player_start_pos = v2(child->x*1, child->y*1);
                 }
 
             }else {

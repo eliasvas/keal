@@ -3,7 +3,7 @@
 #include "game_state.h"
 
 
-void do_game_gui();
+void do_game_gui(GameState *gs);
 
 
 #endif

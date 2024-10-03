@@ -2,7 +2,6 @@
 #define GAME_STATE_H
 #include "engine.h"
 #include "dungeon_cam.h"
-#include "game_gui.h"
 
 typedef enum GameStatus GameStatus;
 enum GameStatus {
@@ -17,21 +16,31 @@ typedef struct GameState GameState;
 struct GameState {
     GameStatus status;
 
+    // resources
     nBatch2DRenderer batch_rend;
     oglImage atlas;
     oglImage white;
-
     nDungeonCam dcam;
+
+    // gameplay options (persistent)
+    ivec2 panel_dim; // for all menus, TODO -- we should make this configurable to screen width/height?
+    b32 music_enabled;
+    b32 effects_enabled;
+    b32 fullscreen_enabled;
+    b32 endless_mode_enabled;
+    b32 hud_enabled;
+
+    // cached player entity
     nEntityID player;
 };
 
-void game_state_status_set(GameStatus status);
-b32  game_state_status_match(GameStatus status);
+void game_state_status_set(GameState *gs, GameStatus status);
+b32  game_state_status_match(GameState *gs, GameStatus status);
 
-void game_state_init();
-void game_state_deinit();
-void game_state_update_and_render();
-void game_state_generate_new_level();
+void game_state_init(GameState *gs);
+void game_state_deinit(GameState *gs);
+void game_state_update_and_render(GameState *gs);
+void game_state_generate_new_level(GameState *gs);
 
 GameState *get_ggs();
 

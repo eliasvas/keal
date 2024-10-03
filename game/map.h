@@ -35,6 +35,9 @@ struct nMap {
 
     f32 max_room_enemies;
 
+    // FIXE -- WHY is this god forsaken thing here???!!
+    vec2 player_start_pos;
+
     ivec2 last_center;
 };
 

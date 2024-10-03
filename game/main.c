@@ -6,9 +6,11 @@
 void physics_test_init();
 void physics_test_update_and_render();
 
-#define GRAPHICS_TEST 1
+//#define GRAPHICS_TEST 1
 void gfx_test_init();
 void gfx_test_update_and_render();
+
+GameState game_state;
 
 void mainLoop(void) {
     nglobal_state_frame_begin();
@@ -18,7 +20,7 @@ void mainLoop(void) {
 #elif GRAPHICS_TEST
     gfx_test_update_and_render();
 #else
-    game_state_update_and_render();
+    game_state_update_and_render(&game_state);
 #endif
 
     nglobal_state_frame_end();
@@ -32,7 +34,7 @@ int main(int argc, char **argv) {
 #elif GRAPHICS_TEST
     gfx_test_init();
 #else
-    game_state_init();
+    game_state_init(&game_state);
 #endif
 
     #ifdef __EMSCRIPTEN__
