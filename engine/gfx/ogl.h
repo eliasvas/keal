@@ -3,11 +3,17 @@
 #include "base/base_inc.h"
 
 /*
-    OverGL: This is a simple graphics abstraction on top of (currently) OpenGL ES 3.0, the main goal is to NOT have VAOs and find a
-    better way to do uniforms (maybe we restrict uniforms to only UBOs/SSBOs?). It remains a 'stateful' API in the sense that
-    you do bind_vertex_buffer(..);bind_index_buffer(..);draw_arrays(..). Making the engine's rendering API stateless is much easier,
-    our renderer will probably have Command Buffers / Buckets as outlined in https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/
+    ogl: this is a simple abstraction over OpenGLES3 that makes the API much more sane, no more global state.
+    The library contains some primitive types for rendering. Namely:
+
+    oglSP - shader program: you use fragment+vertex shaders to create a shader program
+    oglShaderAttrib - shader attrib description: describe whats inside your vertex buffer 
+    oglShaderBindings - shader state: describes all the 'options' for rendering (sets them just before rendering)
+    oglBuf - gpu buffer: your index/vertex/uniform buffer
+    oglImage - texture/fbo: any type of image, can be just a texture or a whole framebuffer!
+    oglPrimitive - rendering primitive: the primitive you wanna use to draw your drawcall
 */
+
 
 // for the bug with multiple pointers from framebuffer attachments and stuff https://stackoverflow.com/questions/15089703/how-to-get-the-textures-attached-to-a-framebuffer
 
@@ -26,6 +32,7 @@ struct oglContext {
 b32 ogl_ctx_init(oglContext *ctx);
 b32 ogl_ctx_deinit(oglContext *ctx);
 void ogl_set_viewport(f32 x, f32 y, f32 w, f32 h);
+void ogl_set_scissor(f32 x, f32 y, f32 w, f32 h);
 // This can be called by the user between draw_arrays, to mitigate global state stuff a bit
 void ogl_clear_all_state(oglContext *ctx);
 

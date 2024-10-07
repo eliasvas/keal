@@ -160,6 +160,10 @@ void ogl_set_viewport(f32 x, f32 y, f32 w, f32 h) {
     glViewport(x,y,w,h);
 }
 
+void ogl_set_scissor(f32 x, f32 y, f32 w, f32 h) {
+    glScissor(x,y,w,h);
+}
+
 void ogl_clear_all_state(oglContext *ctx) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindVertexArray(0);

@@ -14,6 +14,8 @@ For gameplay stuff I implemented a [bitset-based ECS](https://github.com/SanderM
     - probably not.
 - What about assets
     - Currently placeholder art everywhere, we will think about polish later.
+- How do I see the progress
+    - Open items are documented [here](Todo.md)
 
 
 ### Platform support

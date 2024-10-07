@@ -5,6 +5,33 @@
 // TODO -- in the far future, we can use standard GLSL, and depending on 
 //backend (desktop/ES3/ES2/?) to transpile, shouldn't be hard 
 
+static const char *fullscreen_col_vert= 
+"#version 300 es\n"
+"precision mediump float;\n"
+"layout (location = 0) in vec2 in_pos; // NDC screen coords [-1,+1] \n"
+"uniform vec4 color;\n"
+"uniform float zoom_factor;\n"
+"out vec4 c;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(zoom_factor * in_pos.xy, 0.0, 1.0);\n"
+"   c = color;\n"
+"}\n\0";
+
+static const char *fullscreen_col_frag= 
+"#version 300 es\n"
+"precision mediump float;\n"
+"in vec4 c;\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = c;\n"
+"}\n\0";
+
+
+
+
+
 static const char *batch_vert= 
 "#version 300 es\n"
 "precision mediump float;\n"
