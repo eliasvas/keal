@@ -87,6 +87,8 @@ GLFunc( CLEARTEXIMAGE, glClearTexImage);
 GLFunc( DISPATCHCOMPUTE, glDispatchCompute);
 GLFunc( MEMORYBARRIER, glMemoryBarrier);
 void ogl_load_gl_functions(void *(*load_func)()) {
+
+    glDrawBuffers = (PFNGLDRAWBUFFERSPROC)load_func("glDrawBuffers");
     glActiveTexture_dl = (PFNGLACTIVETEXTUREPROC)load_func("glActiveTexture");
     glGenBuffers = (PFNGLGENBUFFERSPROC)load_func("glGenBuffers");
     glBindBuffer = (PFNGLBINDBUFFERPROC)load_func("glBindBuffer");
@@ -129,10 +131,16 @@ void ogl_load_gl_functions(void *(*load_func)()) {
 
     //glActiveTexture = (PFNGLACTIVETEXTUREPROC)load_func("glActiveTexture");
     glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)load_func("glGenerateMipmap");
-    glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)load_func("glGenFrameBuffers");
+    glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)load_func("glGenFramebuffers");
     glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)load_func("glBindFramebuffer");
-    glBlendFuncSeparate= (PFNGLBLENDFUNCSEPARATEPROC)load_func("glBlendFuncSeparate");
-    glBlendEquationSeparate= (PFNGLBLENDEQUATIONSEPARATEPROC)load_func("glBlendEquationSeparate");
+    glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)load_func("glFramebufferTexture2D");
+    glBlendFuncSeparate = (PFNGLBLENDFUNCSEPARATEPROC)load_func("glBlendFuncSeparate");
+    glBlendEquationSeparate = (PFNGLBLENDEQUATIONSEPARATEPROC)load_func("glBlendEquationSeparate");
+    glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)load_func("glBindRenderbuffer");
+    glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)load_func("glRenderbufferStorage");
+    glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)load_func("glGenRenderbuffers");
+    glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)load_func("glFramebufferRenderbuffer");
+    glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)load_func("glCheckFramebufferStatus");
 
     //glDrawArrays = (PFNGLDRAWARRAYSPROC)load_func("glDrawArrays");
     //glDrawElements = (PFNGLDRAWELEMENTSPROC)load_func("glDrawElements");
@@ -140,19 +148,26 @@ void ogl_load_gl_functions(void *(*load_func)()) {
 }
 
 ////////////////////////////////
-// OGL context
+// OGL context (its all inside the .c, because OpenGL is SINGLE threaded)
 ////////////////////////////////
 
-b32 ogl_ctx_init(oglContext *ctx) {
+typedef struct oglContext oglContext;
+struct oglContext {
+    GLuint vao;
+    b32 initialized;
+};
+static oglContext ogl_ctx;
+
+b32 ogl_init() {
     //ogl_load_gl_functions(SDL_GL_GetProcAddress);
     assert(glGenVertexArrays);
-    glGenVertexArrays(1, &ctx->vao);
-    ctx->initialized = 1;
-    return (ctx->vao != 0);
+    glGenVertexArrays(1, &ogl_ctx.vao);
+    ogl_ctx.initialized = 1;
+    return (ogl_ctx.vao != 0);
 }
 
-b32 ogl_ctx_deinit(oglContext *ctx) {
-    glDeleteVertexArrays(1, &ctx->vao);
+b32 ogl_deinit() {
+    glDeleteVertexArrays(1, &ogl_ctx.vao);
     return 1;
 }
 
@@ -164,16 +179,16 @@ void ogl_set_scissor(f32 x, f32 y, f32 w, f32 h) {
     glScissor(x,y,w,h);
 }
 
-void ogl_clear_all_state(oglContext *ctx) {
+void ogl_clear_all_state() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindVertexArray(0);
-    glBindVertexArray(ctx->vao);
+    //glBindVertexArray(0);
+    glBindVertexArray(ogl_ctx.vao);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    for(u32 i = 0; i < OGL_CTX_MAX_ATTRIBS; i+=1){
+    for(u32 i = 0; i < OGL_MAX_ATTRIBS; i+=1){
         glDisableVertexAttribArray(i);
     }
-    for (u32 i = 0; i < OGL_CTX_MAX_TEX_SLOTS; i+=1) {
+    for (u32 i = 0; i < OGL_MAX_TEX_SLOTS; i+=1) {
         glActiveTexture_dl(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
@@ -182,7 +197,7 @@ void ogl_clear_all_state(oglContext *ctx) {
     //...
     //...
     //...
-    glBindVertexArray(ctx->vao);
+    glBindVertexArray(ogl_ctx.vao);
     //glEnable(GL_DEPTH_TEST);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -195,7 +210,6 @@ void ogl_clear_all_state(oglContext *ctx) {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
 }
 
 GLenum gl_check_err(const char *file, int line) {
@@ -209,8 +223,8 @@ GLenum gl_check_err(const char *file, int line) {
             case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
             case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
             case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
-            //case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
-            //case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
+            // case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
+            // case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
             case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
             case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
             default: break;
@@ -401,7 +415,7 @@ b32 ogl_sp_deinit(oglSP *shader) {
 void ogl_sp_add_attrib(oglSP *shader, oglShaderAttrib attrib) {
     shader->attribs[shader->attrib_count] = attrib;
     shader->attrib_count += 1;
-    assert(shader->attrib_count < OGL_CTX_MAX_ATTRIBS);
+    assert(shader->attrib_count < OGL_MAX_ATTRIBS);
 }
 
 void ogl_sp_bind_attribs(oglSP *sp){
@@ -586,6 +600,7 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
             assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+            break;
         default:
             assert(0);
             break;

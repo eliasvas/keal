@@ -37,7 +37,7 @@ void nglobal_state_init() {
 
     nwindow_init(&global_state.win, "Engine Window", 1024, 768, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
     nglobal_state_set_target_fps(60.0);
-    ogl_ctx_init(&global_state.ogl_ctx);
+    ogl_init();
     naudio_context_init(&global_state.actx);
     ninput_manager_init(&global_state.im);
     gui_impl_init();
@@ -50,7 +50,7 @@ void nglobal_state_frame_begin() {
     gui_impl_update();
 
     // Then clear graphics state/screen
-    ogl_clear_all_state(get_nogl_ctx());
+    ogl_clear_all_state();
     ogl_image_clear(NULL);
 }
 
@@ -81,9 +81,6 @@ f64 nglobal_state_get_dt_sec() {
 
 nWindow *get_nwin() {
     return &global_state.win;
-}
-oglContext *get_nogl_ctx() {
-    return &global_state.ogl_ctx;
 }
 nAudioContext *get_nactx() {
     return &global_state.actx;

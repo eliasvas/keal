@@ -26,8 +26,7 @@ struct nGlobalState {
     // input stuff
     nInputManager im;
 
-    // rendering stuff
-    oglContext ogl_ctx;
+    // window stuff (only one window supported currently!)
     nWindow win;
 };
 
@@ -46,7 +45,6 @@ f64  nglobal_state_get_dt_sec();
 
 // Let's one global instead of singletons
 nWindow *get_nwin();
-oglContext *get_nogl_ctx();
 nAudioContext *get_nactx();
 nInputManager *get_nim();
 

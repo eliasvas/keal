@@ -21,20 +21,16 @@
 #include <SDL2/SDL_opengl.h>
 #include "ext/GL/glext.h"
 
-#define OGL_CTX_MAX_ATTRIBS 16
-#define OGL_CTX_MAX_TEX_SLOTS 4
+#define OGL_MAX_ATTRIBS 16
+#define OGL_MAX_TEX_SLOTS 4
 
-typedef struct oglContext oglContext;
-struct oglContext {
-    GLuint vao;
-    b32 initialized;
-};
-b32 ogl_ctx_init(oglContext *ctx);
-b32 ogl_ctx_deinit(oglContext *ctx);
+b32 ogl_init(void);
+b32 ogl_deinit(void);
+// This can be called by the user between draw_arrays, to mitigate global state stuff a bit
+void ogl_clear_all_state();
+
 void ogl_set_viewport(f32 x, f32 y, f32 w, f32 h);
 void ogl_set_scissor(f32 x, f32 y, f32 w, f32 h);
-// This can be called by the user between draw_arrays, to mitigate global state stuff a bit
-void ogl_clear_all_state(oglContext *ctx);
 
 
 
@@ -80,7 +76,7 @@ struct oglShaderAttrib {
 typedef struct oglSP oglSP;
 struct oglSP {
     // TODO -- maybe attribs need to be managed somehow (dynamic array)
-    oglShaderAttrib attribs[OGL_CTX_MAX_ATTRIBS];
+    oglShaderAttrib attribs[OGL_MAX_ATTRIBS];
     u32 attrib_count;
 
     void *impl_state; // the shader program

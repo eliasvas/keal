@@ -1,26 +1,34 @@
 #ifndef SHADERS_INL
 #define SHADERS_INL
-// OpenGL ES 3.0 shaders
+#include "base/context.h"
 
-// TODO -- in the far future, we can use standard GLSL, and depending on 
-//backend (desktop/ES3/ES2/?) to transpile, shouldn't be hard 
+// Fixme -- On windows (where we use 430 compatibility profile, to be able to do ES3)
+// because RenderDoc DOESNT support compatibility profiles, if we use the '300 es'
+// header a bunch of info is missing (only in RenderDoc, functionality wise we're good)
+// so we need to do '430 core' currently on Windows, ref: https://renderdoc.org/docs/behind_scenes/opengl_support.html
+
+#if OS_WINDOWS
+    #define GLSL_HEADER "#version 430 core\n"
+#else
+    #define GLSL_HEADER "#version 300 es\n precision mediump float;\n"
+#endif
 
 static const char *fullscreen_col_vert= 
-"#version 300 es\n"
-"precision mediump float;\n"
+GLSL_HEADER
 "layout (location = 0) in vec2 in_pos; // NDC screen coords [-1,+1] \n"
 "uniform vec4 color;\n"
 "uniform float zoom_factor;\n"
 "out vec4 c;\n"
+"out vec2 tc;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(zoom_factor * in_pos.xy, 0.0, 1.0);\n"
 "   c = color;\n"
+"   tc = (in_pos.xy + 1.0)/2.0;\n"
 "}\n\0";
 
 static const char *fullscreen_col_frag= 
-"#version 300 es\n"
-"precision mediump float;\n"
+GLSL_HEADER
 "in vec4 c;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
@@ -28,13 +36,20 @@ static const char *fullscreen_col_frag=
 "   FragColor = c;\n"
 "}\n\0";
 
-
-
+static const char *fullscreen_tex_frag= 
+GLSL_HEADER
+"out vec4 FragColor;\n"
+"in vec2 tc;\n"
+"uniform sampler2D texture0;\n"
+"\n"
+"void main() {\n"
+"    vec4 col = texture(texture0, tc);\n"
+"    FragColor = vec4(col.xxx, 1.0);\n"
+"}\n\0";
 
 
 static const char *batch_vert= 
-"#version 300 es\n"
-"precision mediump float;\n"
+GLSL_HEADER
 "layout (location = 0) in vec2 in_pos;\n"
 "layout (location = 1) in vec2 in_texcoord;\n"
 "layout (location = 2) in vec4 in_color;\n"
@@ -50,8 +65,7 @@ static const char *batch_vert=
 "}\0";
 
 static const char *batch_frag= 
-"#version 300 es\n"
-"precision mediump float;\n"
+GLSL_HEADER
 "uniform sampler2D Tex;\n"
 "in vec2 tc;\n"
 "in vec4 color;\n"
@@ -65,8 +79,7 @@ static const char *batch_frag=
 
 
 static const char* gui_vs =
-"#version 300 es\n"
-"precision mediump float;\n"
+GLSL_HEADER
 "layout(location = 0) in vec2 inPos0;\n"
 "layout(location = 1) in vec2 inPos1;\n"
 "layout(location = 2) in vec2 inUV0;\n"
@@ -117,8 +130,7 @@ static const char* gui_vs =
 "}\n";
 
 static const char* gui_fs =
-"#version 300 es\n"
-"precision mediump float;\n"
+GLSL_HEADER
 "in vec2 fragUV;\n"
 "in vec2 fragDstPos;\n"
 "in vec2 fragDstCenter;\n"
