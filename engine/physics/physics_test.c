@@ -84,8 +84,6 @@ void physics_test_init_textures() {
         BC,BC,BC,BC,BC,WC,WC,WC,WC,WC,WC,BC,BC,BC,BC,BC,
     };
     ogl_tex_init(&circle_img, v2(16,16), (u8*)circle, OGL_TEX_FORMAT_RGBA8U);
-
-
 }
 
 void physics_test_init() {

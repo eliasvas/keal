@@ -517,7 +517,7 @@ b32 ogl_tex_init(oglTex *tex, vec2 dim, u8 *data, oglTexFormat format) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex->dim.x, tex->dim.y, 0, format, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex->dim.x, tex->dim.y, 0, tex_format, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
             break;
         case (OGL_TEX_FORMAT_R8U):
@@ -620,13 +620,17 @@ void ogl_rt_clear(oglRT *rt) {
     ogl_rt_bind(0);
 }
 
-// FIXME FIXME FIXME
-// BEFORE CALLING THIS WE HAVE TO BIND rt, BUT WE DONT WANT THAT
-// WE NEED TO GET THE PREVIOUS RT BIND THIS AND BIND AGAIN THE PREVIOUS 
 oglTex ogl_rt_get_attachment(oglRT *rt, u32 attachment) {
     oglTex tex = {0};
     tex.dim = rt->dim;
     tex.format = rt->format;
-    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, OGL_CAST_GLUINTPTR(tex.impl_state));
+
+    GLuint prev_fbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+    ogl_rt_bind(rt);
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, OGL_CAST_GLUINTPTR(tex.impl_state));
+    // Todo -- clean this up
+    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
+    // ---------------------
     return tex;
 }
