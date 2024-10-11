@@ -51,7 +51,7 @@ void nglobal_state_frame_begin() {
 
     // Then clear graphics state/screen
     ogl_clear_all_state();
-    ogl_image_clear(NULL);
+    ogl_rt_clear(NULL);
 }
 
 void nglobal_state_frame_end() {

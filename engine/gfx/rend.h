@@ -38,11 +38,11 @@ struct nBatch2DRenderer {
 
     oglSP sp;
     nWindow *win_ref;
-    oglImage *current_bound_image_ref;
+    oglTex *current_bound_image_ref;
 };
 
 void nbatch2d_rend_begin(nBatch2DRenderer *rend, nWindow *win);
-void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglImage *tex);
+void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglTex *tex);
 void nbatch2d_rend_end(nBatch2DRenderer *rend);
 void nbatch2d_rend_set_view_mat(nBatch2DRenderer *rend, mat4 view);
 

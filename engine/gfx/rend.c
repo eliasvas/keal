@@ -69,7 +69,7 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     // FIXME -- this is ULTRA hacky//////////
     ////////////////////////////////////////
 
-    ogl_bind_image_to_texture_slot(rend->current_bound_image_ref, 0, 0);
+    ogl_bind_tex_to_slot(rend->current_bound_image_ref, 0);
     vec2 dim = nwindow_get_dim(rend->win_ref);
     ogl_set_viewport(0,0,dim.x,dim.y);
     ogl_sp_set_uniform(&rend->sp, "view", OGL_SHADER_DATA_TYPE_MAT4, &rend->view);
@@ -89,7 +89,7 @@ void nbatch2d_rend_end(nBatch2DRenderer *rend) {
     nbatch2d_rend_flush(rend);
 }
 
-void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglImage *tex) {
+void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglTex *tex) {
     // TODO -- there should be some safety for when the current bound image is destroyed?? currently we should crash :(
     if (rend->current_bound_image_ref != NULL && tex->impl_state != rend->current_bound_image_ref->impl_state) {
         nbatch2d_rend_flush(rend);

@@ -115,7 +115,7 @@ struct guiInstanceData {
 
 oglSP sp = {0};
 oglBuf vbo = {0};
-oglImage atlas = {0};
+oglTex atlas = {0};
 
 void gui_impl_init() {
     guiState *gui_state = gui_state_init();
@@ -137,9 +137,7 @@ void gui_impl_init() {
 
     // create the gui Atlas texture
     gui_get_ui_state()->atlas.tex.data[0] = 0xFF;
-    assert(ogl_image_init(&atlas, &gui_get_ui_state()->atlas.tex.data[0], 1024, 1024, OGL_IMAGE_FORMAT_R8U));
-    //assert(ogl_image_init(&atlas, &gui_get_ui_state()->atlas.tex.data[0], 1, 1, OGL_IMAGE_FORMAT_R8U));
-
+    assert(ogl_tex_init(&atlas, v2(1024,1024), &gui_get_ui_state()->atlas.tex.data[0], OGL_TEX_FORMAT_R8U));
 }
 
 void gui_impl_update() {
@@ -193,7 +191,7 @@ void gui_impl_render() {
 
     vec2 windim = v2(gui_get_ui_state()->win_dim.x, gui_get_ui_state()->win_dim.y);
     ogl_sp_set_uniform(&sp, "winDim", OGL_SHADER_DATA_TYPE_VEC2, &windim);
-    ogl_bind_image_to_texture_slot(&atlas, 0, 0);
+    ogl_bind_tex_to_slot(&atlas, 0);
     ogl_set_viewport(0,0,gui_get_ui_state()->win_dim.x, gui_get_ui_state()->win_dim.y);
     ogl_draw_instanced(OGL_PRIM_TRIANGLE_STRIP, 0, 4, instance_count);
 }

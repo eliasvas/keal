@@ -18,8 +18,8 @@ struct GameState {
 
     // resources
     nBatch2DRenderer batch_rend;
-    oglImage atlas;
-    oglImage white;
+    oglTex atlas;
+    oglTex white;
     nDungeonCam dcam;
 
     // gameplay options (persistent)

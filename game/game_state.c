@@ -6,8 +6,8 @@
 #include "tileset4922.inl"
 
 
-oglImage game_load_rgba_image_from_disk(const char *path) {
-    oglImage img;
+oglTex game_load_rgba_image_from_disk(const char *path) {
+    oglTex tex;
     s32 w,h,comp;
     stbi_set_flip_vertically_on_load(1);
     unsigned char* image = stbi_load(path, &w, &h, &comp, STBI_rgb_alpha);
@@ -15,16 +15,16 @@ oglImage game_load_rgba_image_from_disk(const char *path) {
         NLOG_ERR("Failed reading image: %s\n", stbi_failure_reason());
     }
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    assert(ogl_image_init(&img, image, w, h, OGL_IMAGE_FORMAT_RGBA8U));
+    assert(ogl_tex_init(&tex, v2(w,h), image, OGL_TEX_FORMAT_RGBA8U));
     stbi_image_free(image);
-    return img;
+    return tex;
 }
 
 
 void game_state_init_images(GameState *gs) {
     gs->atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
     u32 white = 0xFFFF;
-    ogl_image_init(&gs->white, (u8*)(&white), 1, 1, OGL_IMAGE_FORMAT_R8U);
+    ogl_tex_init(&gs->white, v2(1,1), (u8*)(&white), OGL_TEX_FORMAT_R8U);
 }
 
 void game_state_init(GameState *gs) {

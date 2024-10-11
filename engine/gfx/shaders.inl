@@ -17,12 +17,11 @@ static const char *fullscreen_col_vert=
 GLSL_HEADER
 "layout (location = 0) in vec2 in_pos; // NDC screen coords [-1,+1] \n"
 "uniform vec4 color;\n"
-"uniform float zoom_factor;\n"
 "out vec4 c;\n"
 "out vec2 tc;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4(zoom_factor * in_pos.xy, 0.0, 1.0);\n"
+"   gl_Position = vec4(in_pos.xy, 0.0, 1.0);\n"
 "   c = color;\n"
 "   tc = (in_pos.xy + 1.0)/2.0;\n"
 "}\n\0";

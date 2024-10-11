@@ -10,12 +10,10 @@
     oglShaderAttrib - shader attrib description: describe whats inside your vertex buffer 
     oglShaderBindings - shader state: describes all the 'options' for rendering (sets them just before rendering)
     oglBuf - gpu buffer: your index/vertex/uniform buffer
-    oglImage - texture/fbo: any type of image, can be just a texture or a whole framebuffer!
+    oglTex - a texture
+    oglRT - A render targer, contains textures as attachments (4xCOL + 1xDS)
     oglPrimitive - rendering primitive: the primitive you wanna use to draw your drawcall
 */
-
-
-// for the bug with multiple pointers from framebuffer attachments and stuff https://stackoverflow.com/questions/15089703/how-to-get-the-textures-attached-to-a-framebuffer
 
 //#define NO_SDL_GLEXT
 #include <SDL2/SDL_opengl.h>
@@ -101,37 +99,33 @@ void ogl_draw(oglPrimitive prim, u32 first, u32 count);
 void ogl_draw_instanced(oglPrimitive prim, u32 first, s32 count, u32 instance_count);
 void ogl_draw_indexed(oglPrimitive prim, u32 count);
 
-typedef enum oglImageKind oglImageKind;
-enum oglImageKind {
-    OGL_IMAGE_KIND_TEXTURE,
-    OGL_IMAGE_KIND_RT,
+typedef enum oglTexFormat oglTexFormat;
+enum oglTexFormat {
+    OGL_TEX_FORMAT_R8U,
+    OGL_TEX_FORMAT_RGBA8U,
+    OGL_TEX_FORMAT_RGB8U,
+    OGL_TEX_FORMAT_RGBA32F,
 };
-
-typedef enum oglImageFormat oglImageFormat;
-enum oglImageFormat {
-    OGL_IMAGE_FORMAT_R8U,
-    OGL_IMAGE_FORMAT_RGBA8U,
-    OGL_IMAGE_FORMAT_RGB8U,
-    OGL_IMAGE_FORMAT_RGBA32F,
-};
-
-typedef struct oglImage oglImage;
-struct oglImage {
-    u32 width;
-    u32 height;
-    oglImageFormat format;
-    oglImageKind kind;
-
+typedef struct oglTex oglTex;
+struct oglTex {
+    vec2 dim;
+    oglTexFormat format;
     void *impl_state;
-    //optional: only configured for RTs (RT_COL -> colors) (RT_DS -> rbo)
-    GLuint attachments[4];
 };
+b32 ogl_tex_init(oglTex *tex, vec2 dim, u8 *data, oglTexFormat format);
+void ogl_tex_deinit(oglTex *tex);
+void ogl_bind_tex_to_slot(oglTex *tex, u32 slot);
 
-void ogl_rt_bind(oglImage *img);
-void ogl_image_clear(oglImage *img);
-b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt);
-void ogl_image_deinit(oglImage *img);
-void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment);
+typedef struct oglRT oglRT;
+struct oglRT {
+    vec2 dim;
+    oglTexFormat format; // for color attachments
+    void *impl_state;
+};
+b32 ogl_rt_init(oglRT *rt, vec2 dim, oglTexFormat format);
+void ogl_rt_bind(oglRT *rt);
+oglTex ogl_rt_get_attachment(oglRT *rt, u32 attachment);
+void ogl_rt_clear(oglRT *rt);
 
 void ogl_load_gl_functions(void *(*load_func)());
 

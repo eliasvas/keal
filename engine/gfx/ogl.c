@@ -61,6 +61,7 @@ GLFunc( ENABLEVERTEXATTRIBARRAY, glEnableVertexAttribArray);
 GLFunc( GENERATEMIPMAP, glGenerateMipmap);
 GLFunc( GENFRAMEBUFFERS, glGenFramebuffers);
 GLFunc( FRAMEBUFFERTEXTURE2D, glFramebufferTexture2D);
+GLFunc( GETFRAMEBUFFERATTACHMENTPARAMETERIV, glGetFramebufferAttachmentParameteriv);
 GLFunc( BINDFRAMEBUFFER, glBindFramebuffer);
 GLFunc( CHECKFRAMEBUFFERSTATUS, glCheckFramebufferStatus);
 GLFunc( BINDRENDERBUFFER, glBindRenderbuffer);
@@ -86,6 +87,7 @@ GLFunc( BUFFERSUBDATA, glBufferSubData);
 GLFunc( CLEARTEXIMAGE, glClearTexImage);
 GLFunc( DISPATCHCOMPUTE, glDispatchCompute);
 GLFunc( MEMORYBARRIER, glMemoryBarrier);
+
 void ogl_load_gl_functions(void *(*load_func)()) {
 
     glDrawBuffers = (PFNGLDRAWBUFFERSPROC)load_func("glDrawBuffers");
@@ -133,6 +135,7 @@ void ogl_load_gl_functions(void *(*load_func)()) {
     glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)load_func("glGenerateMipmap");
     glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)load_func("glGenFramebuffers");
     glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)load_func("glBindFramebuffer");
+    glGetFramebufferAttachmentParameteriv = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC)load_func("glGetFramebufferAttachmentParameteriv");
     glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)load_func("glFramebufferTexture2D");
     glBlendFuncSeparate = (PFNGLBLENDFUNCSEPARATEPROC)load_func("glBlendFuncSeparate");
     glBlendEquationSeparate = (PFNGLBLENDEQUATIONSEPARATEPROC)load_func("glBlendEquationSeparate");
@@ -494,60 +497,32 @@ void ogl_draw_indexed(oglPrimitive prim, u32 count) {
     glDrawElements(ogl_prim_to_gl_prim(prim), count, GL_UNSIGNED_INT, 0);
 }
 
-////////////////////////////////
-// OGL image API
-////////////////////////////////
+///////////////////////////////
+// ogl Textures
+///////////////////////////////
 
-void ogl_rt_bind(oglImage *img) {
-    if (img == NULL) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(img->impl_state));
-    }
-}
+b32 ogl_tex_init(oglTex *tex, vec2 dim, u8 *data, oglTexFormat format) {
+    M_ZERO_STRUCT(tex);
+    tex->dim = dim;
+    tex->format = format;
 
-//TODO: in case of RT, should we bind it first
-void ogl_image_clear(oglImage *img) {
-    ogl_rt_bind(img);
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    //glClearColor(0.2 * cos(get_current_timestamp()/4000.0),0.2 * sin(get_current_timestamp()/3000.0),0.3 * cos(get_current_timestamp()/1000.0),1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    ogl_rt_bind(NULL);
-}
-
-// Example usage to make a 2x2 image holding RED,GREEN,BLUE,WHITE colors
-// oglImage rgba_tex = {0};
-// u8 rgba_tex[] =
-//     {
-//         0xFF,0x00,0x00,0xFF,
-//         0x00,0xFF,0x00,0xFF,
-//         0x00,0x00,0xFF,0xFF,
-//         0xFF,0xFF,0xFF,0xFF,
-//     };
-//     ogl_image_init(&rgba_tex, (u8*)white, 2, 2, OGL_IMAGE_FORMAT_RGBA8U)
-b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFormat fmt) {
-    img->width = tex_w;
-    img->height = tex_h;
-    img->format = fmt;
-    GLuint tex_format;
-    switch (img->format) {
-        case (OGL_IMAGE_FORMAT_RGBA8U): // normal textures
-        case (OGL_IMAGE_FORMAT_RGB8U):
-            tex_format = (img->format == OGL_IMAGE_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
-            img->kind = OGL_IMAGE_KIND_TEXTURE;
-            glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
-            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
+    GLuint tex_format = 0;
+    switch (tex->format) {
+        case (OGL_TEX_FORMAT_RGBA8U): // normal textures
+        case (OGL_TEX_FORMAT_RGB8U):
+            tex_format = (tex->format == OGL_TEX_FORMAT_RGBA8U) ? GL_RGBA : GL_RGB;
+            glGenTextures(1, OGL_CAST_GLUINTPTR(tex->impl_state));
+            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(tex->impl_state));
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_w, tex_h, 0, tex_format, GL_UNSIGNED_BYTE, tex_data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex->dim.x, tex->dim.y, 0, format, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
             break;
-        case (OGL_IMAGE_FORMAT_R8U):
-            img->kind = OGL_IMAGE_KIND_TEXTURE;
-            glGenTextures(1, OGL_CAST_GLUINTPTR(img->impl_state));
-            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
+        case (OGL_TEX_FORMAT_R8U):
+            glGenTextures(1, OGL_CAST_GLUINTPTR(tex->impl_state));
+            glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(tex->impl_state));
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // NOTE: is this really needed? its used only for font rendering random access
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -555,39 +530,64 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex_w, tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data);
             #if ARCH_WASM64 || ARCH_WASM32
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, tex_w, tex_h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, tex_data);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, tex->dim.x, tex->dim.y, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
             #else
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex_w, tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex->dim.x, tex->dim.y, 0, GL_RED, GL_UNSIGNED_BYTE, data);
             #endif
             break;
-        case (OGL_IMAGE_FORMAT_RGBA32F): // framebuffers
-            img->kind = OGL_IMAGE_KIND_RT;
-            glGenFramebuffers(1, OGL_CAST_GLUINTPTR(img->impl_state));
-            glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(img->impl_state));
+        default:
+            assert(0);
+            break;
+    }
+    return (OGL_CAST_GLUINT(tex->impl_state) != 0);
+}
+
+void ogl_tex_deinit(oglTex *tex) {
+    glDeleteTextures(1,OGL_CAST_GLUINTPTR(tex->impl_state));
+}
+
+void ogl_bind_tex_to_slot(oglTex *tex, u32 slot) {
+    glActiveTexture_dl(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(tex->impl_state));
+}
+
+///////////////////////////////
+// ogl Render-Targets 
+///////////////////////////////
+
+b32 ogl_rt_init(oglRT *rt, vec2 dim, oglTexFormat format) {
+    rt->dim = dim;
+    rt->format = format;
+    GLuint tex_format = 0;
+    GLuint attachments[4] = {0};
+    switch (rt->format) {
+        case (OGL_TEX_FORMAT_RGBA32F):
+            glGenFramebuffers(1, OGL_CAST_GLUINTPTR(rt->impl_state));
+            glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(rt->impl_state));
 
             // - position color buffer
-            glGenTextures(1, &img->attachments[0]);
-            glBindTexture(GL_TEXTURE_2D, img->attachments[0]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glGenTextures(1, &attachments[0]);
+            glBindTexture(GL_TEXTURE_2D, attachments[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, rt->dim.x, rt->dim.y, 0, GL_RGBA, GL_FLOAT, NULL);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, img->attachments[0], 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, attachments[0], 0);
 
             // - normal color buffer
-            glGenTextures(1, &img->attachments[1]);
-            glBindTexture(GL_TEXTURE_2D, img->attachments[1]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glGenTextures(1, &attachments[1]);
+            glBindTexture(GL_TEXTURE_2D, attachments[1]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, rt->dim.x, rt->dim.y, 0, GL_RGBA, GL_FLOAT, NULL);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, img->attachments[1], 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, attachments[1], 0);
 
             // - color + specular color buffer
-            glGenTextures(1, &img->attachments[2]);
-            glBindTexture(GL_TEXTURE_2D, img->attachments[2]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glGenTextures(1, &attachments[2]);
+            glBindTexture(GL_TEXTURE_2D, attachments[2]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, rt->dim.x, rt->dim.y, 0, GL_RGBA, GL_FLOAT, NULL);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, img->attachments[2], 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, attachments[2], 0);
 
             u32 attachments_gl[3]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
             glDrawBuffers(3, &attachments_gl[0]);
@@ -595,33 +595,38 @@ b32 ogl_image_init(oglImage *img, u8 *tex_data, u32 tex_w, u32 tex_h, oglImageFo
             GLuint rbo;
             glGenRenderbuffers(1, &rbo);
             glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tex_w, tex_h);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, rt->dim.x, rt->dim.y);
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
             assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
             break;
         default:
             assert(0);
             break;
     }
-    return (OGL_CAST_GLUINT(img->impl_state) != 0);
+    return (OGL_CAST_GLUINT(rt->impl_state) != 0);
 }
 
-void ogl_image_deinit(oglImage *img) {
-    if (img->kind == OGL_IMAGE_KIND_RT){
-        glDeleteFramebuffers(1,OGL_CAST_GLUINTPTR(img->impl_state));
-    }else {
-        glDeleteTextures(1,OGL_CAST_GLUINTPTR(img->impl_state));
-    }
+void ogl_rt_bind(oglRT *rt) {
+    glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(rt ? rt->impl_state : 0));
 }
 
 
-void ogl_bind_image_to_texture_slot(oglImage *img, u32 tex_slot, u32 attachment) {
-    glActiveTexture_dl(GL_TEXTURE0 + tex_slot);
-    if (img->kind == OGL_IMAGE_KIND_RT) {
-        glBindTexture(GL_TEXTURE_2D, img->attachments[attachment]);
-    } else {
-        glBindTexture(GL_TEXTURE_2D, OGL_CAST_GLUINT(img->impl_state));
-    }
+
+void ogl_rt_clear(oglRT *rt) {
+    ogl_rt_bind(rt);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // stencil?
+    ogl_rt_bind(0);
+}
+
+// FIXME FIXME FIXME
+// BEFORE CALLING THIS WE HAVE TO BIND rt, BUT WE DONT WANT THAT
+// WE NEED TO GET THE PREVIOUS RT BIND THIS AND BIND AGAIN THE PREVIOUS 
+oglTex ogl_rt_get_attachment(oglRT *rt, u32 attachment) {
+    oglTex tex = {0};
+    tex.dim = rt->dim;
+    tex.format = rt->format;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, OGL_CAST_GLUINTPTR(tex.impl_state));
+    return tex;
 }

@@ -2,8 +2,8 @@
 nPhysicsBody b1;
 nPhysicsBody b2;
 nBatch2DRenderer rend;
-oglImage white_img;
-oglImage circle_img;
+oglTex white_img;
+oglTex circle_img;
 
 
 void rend_collider(nCollider *collider, vec4 color) {
@@ -63,7 +63,7 @@ void nphysics_world_far_away_delete_entities_func(nEntityMgr *em, void *ctx) {
 
 void physics_test_init_textures() {
     u8 white[] = { 0xFF,0xFF,0xFF,0xFF };
-    ogl_image_init(&white_img, (u8*)white, 1, 1, OGL_IMAGE_FORMAT_RGBA8U);
+    ogl_tex_init(&white_img, v2(1,1), (u8*)white, OGL_TEX_FORMAT_RGBA8U);
     #define WC 0xFF,0xFF,0xFF,0xFF
     #define BC 0x00,0x00,0x00,0x00
     u8 circle[] = {
@@ -83,7 +83,7 @@ void physics_test_init_textures() {
         BC,BC,BC,WC,WC,WC,WC,WC,WC,WC,WC,WC,WC,BC,BC,BC,
         BC,BC,BC,BC,BC,WC,WC,WC,WC,WC,WC,BC,BC,BC,BC,BC,
     };
-    ogl_image_init(&circle_img, (u8*)circle, 16, 16, OGL_IMAGE_FORMAT_RGBA8U);
+    ogl_tex_init(&circle_img, v2(16,16), (u8*)circle, OGL_TEX_FORMAT_RGBA8U);
 
 
 }
