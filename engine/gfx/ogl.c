@@ -246,20 +246,20 @@ GLenum gl_check_err(const char *file, int line) {
 ////////////////////////////////
 
 
-oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size) {
-    oglBuf buf;
-    buf.kind = kind;
-    buf.count = data_count;
-    buf.size = data_size * data_count;
+// Currently only vertex/index buffers are supported, TODO -- do uniform buffers as well
+b32 ogl_buf_init(oglBuf *buf, oglBufKind kind, void *data, u32 data_count, u32 data_size) {
+    buf->kind = kind;
+    buf->count = data_count;
+    buf->size = data_size * data_count;
 
     GLuint buffer_kind = (kind == OGL_BUF_KIND_VERTEX) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
 
-    glGenBuffers(1, OGL_CAST_GLUINTPTR(buf.impl_state));
-    glBindBuffer(buffer_kind, OGL_CAST_GLUINT(buf.impl_state));
-    ogl_buf_update(&buf, data,data_count,data_size);
+    glGenBuffers(1, OGL_CAST_GLUINTPTR(buf->impl_state));
+    glBindBuffer(buffer_kind, OGL_CAST_GLUINT(buf->impl_state));
+    ogl_buf_update(buf, data,data_count,data_size);
     glBindBuffer(buffer_kind, 0);
     ogl_check_error();
-    return buf;
+    return 1;
 }
 
 b32 ogl_buf_deinit(oglBuf *b) {
@@ -381,7 +381,7 @@ u32 ogl_get_component_num_for_data_type(oglShaderDataType type) {
     return comp_count;
 }
 
-oglShaderAttrib ogl_make_attrib(u32 vbo_idx, oglShaderDataType type, u32 stride, u32 offset, b32 instanced) {
+oglShaderAttrib ogl_attrib_make(u32 vbo_idx, oglShaderDataType type, u32 stride, u32 offset, b32 instanced) {
     oglShaderAttrib sa;
     sa.vbo_idx = vbo_idx;
     sa.stride = stride;
@@ -498,7 +498,7 @@ void ogl_draw_indexed(oglPrimitive prim, u32 count) {
 }
 
 ///////////////////////////////
-// ogl Textures
+// OGL textures 
 ///////////////////////////////
 
 b32 ogl_tex_init(oglTex *tex, vec2 dim, u8 *data, oglTexFormat format) {
@@ -552,7 +552,7 @@ void ogl_bind_tex_to_slot(oglTex *tex, u32 slot) {
 }
 
 ///////////////////////////////
-// ogl Render-Targets 
+// OGL render targets 
 ///////////////////////////////
 
 b32 ogl_rt_init(oglRT *rt, vec2 dim, oglTexFormat format) {
@@ -611,8 +611,6 @@ void ogl_rt_bind(oglRT *rt) {
     glBindFramebuffer(GL_FRAMEBUFFER, OGL_CAST_GLUINT(rt ? rt->impl_state : 0));
 }
 
-
-
 void ogl_rt_clear(oglRT *rt) {
     ogl_rt_bind(rt);
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -620,7 +618,7 @@ void ogl_rt_clear(oglRT *rt) {
     ogl_rt_bind(0);
 }
 
-oglTex ogl_rt_get_attachment(oglRT *rt, u32 attachment) {
+oglTex ogl_rt_get_attachment(oglRT *rt, oglRTAttachment attachment) {
     oglTex tex = {0};
     tex.dim = rt->dim;
     tex.format = rt->format;

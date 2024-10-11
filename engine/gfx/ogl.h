@@ -6,13 +6,12 @@
     ogl: this is a simple abstraction over OpenGLES3 that makes the API much more sane, no more global state.
     The library contains some primitive types for rendering. Namely:
 
-    oglSP - shader program: you use fragment+vertex shaders to create a shader program
-    oglShaderAttrib - shader attrib description: describe whats inside your vertex buffer 
-    oglShaderBindings - shader state: describes all the 'options' for rendering (sets them just before rendering)
-    oglBuf - gpu buffer: your index/vertex/uniform buffer
-    oglTex - a texture
-    oglRT - A render targer, contains textures as attachments (4xCOL + 1xDS)
-    oglPrimitive - rendering primitive: the primitive you wanna use to draw your drawcall
+    oglSP - shader program - you pass fragment+vertex shaders to create a shader program
+    oglShaderAttrib - shader attrib description - describe whats inside your vertex buffer
+    oglBuf - gpu buffer - your index/vertex/uniform buffer
+    oglTex - regular texture - you provide a data pointer + dimensions + internal format
+    oglRT - render target - contains textures as attachments (4xCOL + 1xDS)
+    oglPrimitive - rendering primitive - the primitive you wanna use to draw your draw-call
 */
 
 //#define NO_SDL_GLEXT
@@ -46,7 +45,7 @@ struct oglBuf {
 
     void *impl_state;
 };
-oglBuf ogl_buf_make(oglBufKind kind, void *data, u32 data_count, u32 data_size);
+b32 ogl_buf_init(oglBuf *buf, oglBufKind kind, void *data, u32 data_count, u32 data_size);
 void ogl_buf_update(oglBuf *buf, void *data, u32 data_count, u32 data_size);
 b32 ogl_buf_deinit(oglBuf *b);
 void ogl_bind_index_buffer(oglBuf *b);
@@ -73,13 +72,12 @@ struct oglShaderAttrib {
 };
 typedef struct oglSP oglSP;
 struct oglSP {
-    // TODO -- maybe attribs need to be managed somehow (dynamic array)
     oglShaderAttrib attribs[OGL_MAX_ATTRIBS];
     u32 attrib_count;
 
-    void *impl_state; // the shader program
+    void *impl_state;
 };
-oglShaderAttrib ogl_make_attrib(u32 vbo_idx, oglShaderDataType type, u32 stride, u32 offset, b32 instanced);
+oglShaderAttrib ogl_attrib_make(u32 vbo_idx, oglShaderDataType type, u32 stride, u32 offset, b32 instanced);
 void ogl_sp_add_attrib(oglSP *shader, oglShaderAttrib attrib);
 b32 ogl_sp_init(oglSP *shader, const char *vs_source, const char *fs_source);
 b32 ogl_sp_deinit(oglSP *shader);
@@ -116,6 +114,14 @@ b32 ogl_tex_init(oglTex *tex, vec2 dim, u8 *data, oglTexFormat format);
 void ogl_tex_deinit(oglTex *tex);
 void ogl_bind_tex_to_slot(oglTex *tex, u32 slot);
 
+typedef enum oglRTAttachment oglRTAttachment;
+enum oglRTAttachment {
+    OGL_RT_ATTACHMENT_0,
+    OGL_RT_ATTACHMENT_1,
+    OGL_RT_ATTACHMENT_2,
+    OGL_RT_ATTACHMENT_3,
+    OGL_RT_ATTACHMENT_DS,
+};
 typedef struct oglRT oglRT;
 struct oglRT {
     vec2 dim;
@@ -124,7 +130,7 @@ struct oglRT {
 };
 b32 ogl_rt_init(oglRT *rt, vec2 dim, oglTexFormat format);
 void ogl_rt_bind(oglRT *rt);
-oglTex ogl_rt_get_attachment(oglRT *rt, u32 attachment);
+oglTex ogl_rt_get_attachment(oglRT *rt, oglRTAttachment attachment);
 void ogl_rt_clear(oglRT *rt);
 
 void ogl_load_gl_functions(void *(*load_func)());

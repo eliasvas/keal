@@ -10,9 +10,9 @@ void nbatch2d_rend_begin(nBatch2DRenderer *rend, nWindow *win) {
     // initialize the Shader Program if its not already
     if (!rend->sp.impl_state) {
         ogl_sp_init(&rend->sp, batch_vert, batch_frag);
-        ogl_sp_add_attrib(&rend->sp, ogl_make_attrib(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, pos),0));
-        ogl_sp_add_attrib(&rend->sp, ogl_make_attrib(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, tc),0));
-        ogl_sp_add_attrib(&rend->sp, ogl_make_attrib(2,OGL_SHADER_DATA_TYPE_VEC4,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, col),0));
+        ogl_sp_add_attrib(&rend->sp, ogl_attrib_make(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, pos),0));
+        ogl_sp_add_attrib(&rend->sp, ogl_attrib_make(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, tc),0));
+        ogl_sp_add_attrib(&rend->sp, ogl_attrib_make(2,OGL_SHADER_DATA_TYPE_VEC4,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, col),0));
     }
 
 }
@@ -60,7 +60,8 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
 
     if (vertex_count == 0)return;
     // make an immediate vertex buffer
-    oglBuf vbo = ogl_buf_make(OGL_BUF_KIND_VERTEX, vertices, vertex_count, sizeof(nBatch2DVertex));
+    oglBuf vbo = {0};
+    ogl_buf_init(&vbo, OGL_BUF_KIND_VERTEX, vertices, vertex_count, sizeof(nBatch2DVertex));
 
     // render using the batch shader
     ogl_bind_vertex_buffer(&vbo);

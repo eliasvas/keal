@@ -123,17 +123,17 @@ void gui_impl_init() {
 
     // create the gui shader
     ogl_sp_init(&sp, gui_vert, gui_frag);
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, pos0),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, pos1),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(2,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, uv0),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(3,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, uv1),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(4,OGL_SHADER_DATA_TYPE_VEC4,sizeof(guiInstanceData),offsetof(guiInstanceData, color),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(5,OGL_SHADER_DATA_TYPE_FLOAT,sizeof(guiInstanceData),offsetof(guiInstanceData, corner_radius),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(6,OGL_SHADER_DATA_TYPE_FLOAT,sizeof(guiInstanceData),offsetof(guiInstanceData, edge_softness),1));
-    ogl_sp_add_attrib(&sp, ogl_make_attrib(7,OGL_SHADER_DATA_TYPE_FLOAT,sizeof(guiInstanceData),offsetof(guiInstanceData, border_thickness),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, pos0),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, pos1),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(2,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, uv0),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(3,OGL_SHADER_DATA_TYPE_VEC2,sizeof(guiInstanceData),offsetof(guiInstanceData, uv1),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(4,OGL_SHADER_DATA_TYPE_VEC4,sizeof(guiInstanceData),offsetof(guiInstanceData, color),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(5,OGL_SHADER_DATA_TYPE_FLOAT,sizeof(guiInstanceData),offsetof(guiInstanceData, corner_radius),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(6,OGL_SHADER_DATA_TYPE_FLOAT,sizeof(guiInstanceData),offsetof(guiInstanceData, edge_softness),1));
+    ogl_sp_add_attrib(&sp, ogl_attrib_make(7,OGL_SHADER_DATA_TYPE_FLOAT,sizeof(guiInstanceData),offsetof(guiInstanceData, border_thickness),1));
 
     // create the gui InstanceData VBO
-    vbo = ogl_buf_make(OGL_BUF_KIND_VERTEX, NULL, 0, sizeof(guiInstanceData));
+    ogl_buf_init(&vbo, OGL_BUF_KIND_VERTEX, NULL, 0, sizeof(guiInstanceData));
 
     // create the gui Atlas texture
     gui_get_ui_state()->atlas.tex.data[0] = 0xFF;
@@ -183,7 +183,6 @@ void gui_impl_render() {
     guiInstanceData *instance_data = (guiInstanceData*)gui_render_cmd_buf_get_array(&gui_get_ui_state()->rcmd_buf);
     u32 instance_count = gui_render_cmd_buf_get_count(&gui_get_ui_state()->rcmd_buf);
 
-    //vbo = ogl_buf_make(OGL_BUF_KIND_VERTEX, instance_data, instance_count, sizeof(guiInstanceData));
     ogl_buf_update(&vbo, instance_data, instance_count,sizeof(guiInstanceData));
 
     ogl_bind_vertex_buffer(&vbo);

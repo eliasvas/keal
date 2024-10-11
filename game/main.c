@@ -6,7 +6,7 @@
 void physics_test_init();
 void physics_test_update_and_render();
 
-//#define GRAPHICS_TEST 1
+#define GRAPHICS_TEST 1
 void gfx_test_init();
 void gfx_test_update_and_render();
 
