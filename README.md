@@ -1,21 +1,27 @@
 ### Description
-This is a roguelike game/engine project I've been working on. </br>
-### Gameplay
-TBA
+This is a roguelike game/engine *demo* based on the movie of similar name. </br>
+You are the Master of the Flying Kealotine, the most Gruesome weapon ever conceived! </br>
+Some [context](https://www.youtube.com/watch?v=RmdP1qTjGZY). </br>
+**I should add a GIF here**
+### How to play
+The gameplay loop is killing enemies with the Kealotine. </br>
+Move with WASD. </br>
+Dash with Space. </br>
+Unleash the Kealotine with LMB. </br>
 ### Tech
 Engine side, I want things as generic as possible so that I can copy-paste the engine for other projects. </br>
 To keep my sanity, currently we do OpenGL for graphics and SDL2 for everything else. </br>
 Only dependency other than these is a [gui](https://github.com/eliasvas/gui) library I'm developing separately. </br>
-For gameplay stuff I implemented a [bitset-based ECS](https://github.com/SanderMertens/ecs-faq?tab=readme-ov-file#bitset-based-ecs) </br>
+For gameplay stuff I implemented a [bitset-based ECS](https://github.com/SanderMertens/ecs-faq?tab=readme-ov-file#bitset-based-ecs). </br>
 ### FAQ
 - Why make a custom engine
     - because its fun, I love engine-dev.
 - Will this be released commercially some day
-    - probably not.
+    - Don't think so.
 - What about assets
-    - Currently placeholder art everywhere, we will think about polish later.
+    - Currently [placeholder art](https://kenney.nl/assets/1-bit-pack) everywhere.
 - How do I see the progress
-    - Open items are documented [here](Todo.md)
+    - Open items are documented [here](Todo.md).
 
 
 ### Platform support
@@ -24,7 +30,7 @@ For gameplay stuff I implemented a [bitset-based ECS](https://github.com/SanderM
 | ✅ | ✅ | ✅ |
 
 ### Building
-#### Linux
+#### Linux (Windows is similar)
 ```sh
 sudo apt-get install build-essential libsdl2-dev libsdl2-2.0-0 libasan6 libgles2-mesa-dev -y
 git clone https://github.com/eliasvas/engine
