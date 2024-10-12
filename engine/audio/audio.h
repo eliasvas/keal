@@ -18,7 +18,14 @@ struct nSoundPcmData{
     u8 *samples;
     u32 sample_count;
 };
-nSoundPcmData nsound_gen_sample_pcm_data();
+typedef enum nWaveformType nWaveformType;
+enum nWaveformType {
+    NWAVEFORM_SINE,
+    NWAVEFORM_SQUARE,
+    NWAVEFORM_TRIANGLE,
+    NWAVEFORM_SAWTOOTH
+};
+nSoundPcmData nsound_gen_sample_pcm_data(nWaveformType waveform, float frequency, float amplitude, float duration);
 void nsound_pcm_data_deinit(nSoundPcmData *pcm_data);
 
 #define NSOUND_MAX_NAME_SIZE 64

@@ -1,18 +1,15 @@
 ### Todo
 
-- Fix Rendering abstraction
-	- make it more like [sokol_gfx](https://floooh.github.io/2017/07/29/sokol-gfx-tour.html) (add shader_bindings)
-	- Find a good way to handle uniforms, currently not very good (we copy the BAD OpenGL API pretty much)
-
-- Look into Rope Physics (needed for guillotine mechanic)
-	- how can we implement this / what changes are needed in the physics engine
-
 - Physics Engine
-	- we might want to do some spatial partitioning (BSP?)
+	- also layers would be great (any layer only interactible with >= layers), better yet layer + layer_flags (static is 0?)
+	- Look into Rope Physics (needed for guillotine mechanic)
 
 - For some reason the counter of invincibility takes way longer than specified
 
-- Construct the engine's drawcall API (on top of *ogl*)
-	- Probably Command buffer [based](https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1)
-	- Material Systems
-	- Multithreading
+- Some steps to 'make' the game playable
+	- the GUI is fine, just add a boink sound when buttons are pressed
+	- instead of complex dungeons, each levels should be a square dungeon and have 0..4 enemies inside + closed door
+	- when enemies are defeated open the door and make a new level
+	- only weapon will be the guillotine (so ref. Rope Physics), it should bounce through walls
+	- more enemies, bats will be fast and always follow, skeletons slow
+	- there will be dash (maybe it will work through physics engine layers) that makes player invincible, reset via timer

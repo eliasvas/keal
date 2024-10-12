@@ -2,6 +2,7 @@
 #include "engine.h"
 #include "tileset4922.inl"
 
+nSound gui1;
 
 guiSignal gui_menu_panel_begin(char *panel_name, Axis2 axis, f32 width, f32 height) {
 	char box_name[128];
@@ -31,6 +32,7 @@ void do_start_menu_gui(GameState *gs) {
     gui_set_next_bg_color(gv4(0.23,0.35,0.65,1)); // #3b5ba5
     guiSignal play_sig = gui_button("Play");
     if (play_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
+        if (gs->effects_enabled){nsound_play(get_nactx(), &gui1);};
         // generate a new level
         game_state_generate_new_level(gs);
         // and start the game
@@ -39,19 +41,13 @@ void do_start_menu_gui(GameState *gs) {
     gui_set_next_bg_color(gv4(0.9,0.47,0.36,1)); // #e87a5d
     guiSignal options_sig = gui_button("Options");
     if (options_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
-        // Do Options menu (TBA)
-        // -- Comment this out for a sample sound to play (for testing purposes) --
-        // nSound *s = push_array(get_global_arena(), nSound, 1);
-        // nSoundPcmData sound_data = nsound_gen_sample_pcm_data();
-        // nsound_load_from_pcm_data(get_nactx(), s, &sound_data);
-        // nsound_load(get_nactx(), s, "assets/sound.wav");
-        // nsound_play(get_nactx(), s);
-        // nsound_pcm_data_deinit(&sound_data);
+        if (gs->effects_enabled){nsound_play(get_nactx(), &gui1);};
         game_state_status_set(gs, GAME_STATUS_OPTIONS_MENU);
     }
     gui_set_next_bg_color(gv4(0.95,0.72,0.25,1)); // #f3b941
     guiSignal quit_sig = gui_button("Quit");
     if (quit_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
+        if (gs->effects_enabled){nsound_play(get_nactx(), &gui1);};
         exit(1);
     }
     gui_menu_panel_end();
@@ -75,24 +71,28 @@ void do_options_menu_gui(GameState *gs) {
             // Music button
             gui_set_next_bg_color(gv4(0.25,0.72,0.25,1)); // #f3b941
             guiSignal music_sig = gui_checkbox("Music", &gs->music_enabled);
+            if (gs->effects_enabled && music_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
             // Effects button
             gui_set_next_bg_color(gv4(0.25,0.22,0.55,1)); // #f3b941
             guiSignal effects_sig = gui_checkbox("Effects", &gs->effects_enabled);
+            if (gs->effects_enabled && effects_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
             // Fullscreen button
             gui_set_next_bg_color(gv4(0.23,0.35,0.65,1)); // #3b5ba5
             guiSignal fullscreen_sig = gui_checkbox("FullScreen", &gs->fullscreen_enabled);
+            if (gs->effects_enabled && fullscreen_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
             // HUD button
             gui_set_next_bg_color(gv4(0.26,0.26,0.3,1)); // #adadc9
             guiSignal hud_sig = gui_checkbox("HUD", &gs->hud_enabled);
+            if (gs->effects_enabled && hud_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
             // Endless button
             gui_set_next_bg_color(gv4(0.9,0.47,0.36,1)); // #e87a5d
             guiSignal endless_sig = gui_checkbox("Endless", &gs->endless_mode_enabled);
+            if (gs->effects_enabled && endless_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
             // Back button
             gui_set_next_bg_color(gv4(1,0.34,0.2,1)); // #ff5733
             guiSignal back_sig = gui_button("Back");
-            if (back_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) {
-                game_state_status_set(gs, GAME_STATUS_START_MENU);
-            }
+            if (gs->effects_enabled && back_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
+            if (back_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { game_state_status_set(gs, GAME_STATUS_START_MENU); }
             gui_pop_pref_width();
         }
         gui_scroll_list_end();
@@ -105,6 +105,11 @@ void do_ingame_gui(GameState *gs) {
 }
 
 void do_game_gui(GameState *gs) {
+    if (get_global_frame_count() == 0) {
+        nSoundPcmData data1 = nsound_gen_sample_pcm_data(NWAVEFORM_SAWTOOTH, 440, 127, 0.50);
+        nsound_load_from_pcm_data(get_nactx(), &gui1, &data1);
+        nsound_pcm_data_deinit(&data1);
+    }
     gui_build_begin();
 
     if (game_state_status_match(gs, GAME_STATUS_START_MENU)) {

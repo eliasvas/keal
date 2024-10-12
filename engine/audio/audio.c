@@ -33,31 +33,38 @@ void naudio_context_deinit(nAudioContext *actx) {
     naudio_impl_context_deinit(actx);
 }
 
-
 #define SAMPLE_RATE 44100
-#define FREQUENCY 440
-#define AMPLITUDE 127
-#define DURATION 2 // in seconds
 
-nSoundPcmData nsound_gen_sample_pcm_data() {
+nSoundPcmData nsound_gen_sample_pcm_data(nWaveformType waveform, float frequency, float amplitude, float duration) {
     nSoundPcmData data = {0};
-    int num_samples = SAMPLE_RATE * DURATION;
-    int wave_period = SAMPLE_RATE / FREQUENCY;
+    u32 num_samples = (u32)(SAMPLE_RATE * duration);
     data.sample_count = num_samples;
     u8* buffer = (u8*)ALLOC(num_samples * sizeof(u8));
 
-    // Fill the buffer with a square wave
-    for (int i = 0; i < num_samples; ++i) {
-        if ((i / wave_period) % 2 == 0) {
-            buffer[i] = AMPLITUDE;
-        } else {
-            buffer[i] = 0;
+    for (u32 i = 0; i < num_samples; i+=1) {
+        f32 phase = (2.0f * PI * frequency * i) / SAMPLE_RATE;
+        f32 sample_value = 0;
+        switch (waveform) {
+            case NWAVEFORM_SINE:
+                sample_value = sin(phase);
+                break;
+            case NWAVEFORM_SQUARE:
+                sample_value = (sin(phase) >= 0) ? 1.0f : -1.0f;
+                break;
+            case NWAVEFORM_TRIANGLE:
+                sample_value = (2.0f / PI) * asin(sin(phase));
+                break;
+            case NWAVEFORM_SAWTOOTH:
+                sample_value = 2.0f * (phase / (2.0f * PI) - floor(phase / (2.0f * PI) + 0.5f));
+                break;
         }
+        // [-1, 1] -> [0, AMPLITUDE] for 8-bit audio
+        buffer[i] = (u8)((amplitude / 2.0f) * (sample_value + 1.0f));
     }
     data.samples = buffer;
-
     return data;
 }
+
 
 void nsound_pcm_data_deinit(nSoundPcmData *pcm_data) {
     if (pcm_data->sample_count) {

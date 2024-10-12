@@ -46,7 +46,7 @@ void game_state_init(GameState *gs) {
 
     gs->panel_dim = iv2(200,200);
     gs->music_enabled = 1;
-    gs->effects_enabled = 1;
+    gs->effects_enabled = 0;
     gs->fullscreen_enabled = 0;
     gs->endless_mode_enabled = 1;
     gs->hud_enabled = 1;
