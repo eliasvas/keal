@@ -187,6 +187,7 @@ void gui_impl_render() {
 
     ogl_bind_vertex_buffer(&vbo);
     ogl_bind_sp(&sp);
+    ogl_sp_set_dyn_state(&sp, OGL_BLEND_STATE);
 
     vec2 windim = v2(gui_get_ui_state()->win_dim.x, gui_get_ui_state()->win_dim.y);
     ogl_sp_set_uniform(&sp, "winDim", OGL_SHADER_DATA_TYPE_VEC2, &windim);

@@ -85,6 +85,17 @@ void ogl_sp_set_uniform(oglSP *sp, const char *uniform_name, oglShaderDataType t
 void ogl_bind_sp(oglSP *sp);
 
 
+typedef enum oglDynState oglDynState;
+enum oglDynState {
+    OGL_DEPTH_STATE,
+    OGL_CULL_STATE,
+    OGL_STENCIL_STATE,
+    OGL_BLEND_STATE,
+};
+// Todo -- this is kinda bullshit, we need finer grade control, like glBlendFunc(..) and stuff
+void ogl_sp_set_dyn_state(oglSP *shader, oglDynState state);
+
+
 typedef enum oglPrimitive oglPrimitive;
 enum oglPrimitive {
     OGL_PRIM_TRIANGLES,

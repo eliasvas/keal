@@ -197,22 +197,11 @@ void ogl_clear_all_state() {
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    //...
-    //...
-    //...
     glBindVertexArray(ogl_ctx.vao);
-    //glEnable(GL_DEPTH_TEST);
     glDisable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-
-    // This is Fine ONLY for the UI i think
-    //maybe we just need to write UI to non-glEnable(GL_FRAMEBUFFER_SRGB);
-    //glDisable(GL_BLEND);
-    glEnable(GL_BLEND);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
 }
 
 GLenum gl_check_err(const char *file, int line) {
@@ -631,4 +620,55 @@ oglTex ogl_rt_get_attachment(oglRT *rt, oglRTAttachment attachment) {
     glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
     // ---------------------
     return tex;
+}
+
+///////////////////////////////
+// OGL dynamic state
+///////////////////////////////
+
+GLuint ogl_dyn_state_to_gl_state(oglDynState state) {
+    GLuint gl_state = 0;
+    switch (state) {
+        case OGL_DEPTH_STATE:
+            gl_state = GL_DEPTH_TEST;
+            break;
+        case OGL_CULL_STATE:
+            gl_state = GL_CULL_FACE;
+            break;
+        case OGL_STENCIL_STATE:
+            gl_state = GL_STENCIL_TEST;
+            break;
+        case OGL_BLEND_STATE:
+            gl_state = GL_BLEND;
+            break;
+        default:
+            gl_state = GL_DEPTH_TEST;
+            break;
+    }
+    return gl_state;
+}
+
+
+void ogl_sp_set_dyn_state(oglSP *shader, oglDynState state) {
+    GLuint gl_state = ogl_dyn_state_to_gl_state(state);
+    glEnable(gl_state);
+    switch (state) {
+        case OGL_DEPTH_STATE:
+            glDepthFunc(GL_LESS);
+            break;
+        case OGL_CULL_STATE:
+            glCullFace(GL_BACK);
+            break;
+        case OGL_STENCIL_STATE:
+            glStencilFunc(GL_EQUAL, 1, 0xFF);
+            break;
+        case OGL_BLEND_STATE:
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            break;
+        default:
+            break;
+    }
+
 }

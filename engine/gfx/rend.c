@@ -66,6 +66,7 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     // render using the batch shader
     ogl_bind_vertex_buffer(&vbo);
     ogl_bind_sp(&rend->sp);
+    ogl_sp_set_dyn_state(&rend->sp, OGL_BLEND_STATE);
 
     // FIXME -- this is ULTRA hacky//////////
     ////////////////////////////////////////
