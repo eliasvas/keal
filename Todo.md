@@ -6,8 +6,6 @@
 
 - For some reason the counter of invincibility takes way longer than specified
 
-- a good fade in/out effect
-
 - add a screen shake on collision
 
 - Some steps to 'make' the game playable

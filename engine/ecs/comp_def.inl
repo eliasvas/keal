@@ -15,8 +15,9 @@ REGISTER_TYPE(nAIComponent)
 typedef enum NENTITY_TAG NENTITY_TAG; 
 enum NENTITY_TAG{
     NENTITY_TAG_PLAYER = (1 << 0),
-    NENTITY_TAG_ENEMY = (1 << 1),
-    NENTITY_TAG_MAP = (1 << 2),
+    NENTITY_TAG_ENEMY  = (1 << 1),
+    NENTITY_TAG_DOOR   = (1 << 2),
+    NENTITY_TAG_MAP    = (1 << 3),
 };
 
 typedef enum nEntityEventKind nEntityEventKind;

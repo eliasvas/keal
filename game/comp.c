@@ -31,6 +31,7 @@ nAIComponent nai_component_default(void) {
         .timestamp= get_current_timestamp_sec(),
         .invinsibility_sec = 0.0,
         .dead = 0,
+        .won = 0,
     };
     return ai;
 }
@@ -81,6 +82,24 @@ void ai_component_player_update(nEntityMgr *em, nEntityID player) {
     NLOG_ERR("invin: %f dt: %f", ai->invinsibility_sec, dt);
 }
 
+void render_dir_arrow(GameState *gs) {
+    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nPhysicsBody);
+    nBatch2DQuad q = {0};
+    vec2 mp = ninput_get_mouse_pos(get_nim());
+    mp = ndungeon_cam_screen_to_world(&gs->dcam, mp);
+    mp = vec2_sub(mp, b->position);
+    mp = vec2_norm(mp);
+    f32 dist = 0.5;
+    f32 x_off = dist * mp.x;
+    f32 y_off = dist * mp.y;
+    q.color = v4(1,1,1,0.5);
+    q.pos = vec2_add(vec2_sub(b->position, v2(0.25,0.0)), v2(x_off,y_off));
+    vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
+    q.dim = sprite_dim;
+    q.tc = TILESET_RARROW_TILE;
+    q.angle_rad = atan2(y_off, x_off);
+    nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+}
 void game_ai_system(nEntityMgr *em, void *ctx) {
     GameState *gs = (GameState*)ctx;
     // do default game AI
@@ -176,6 +195,11 @@ void render_sprites_system(nEntityMgr *em, void *ctx) {
         }
 #endif
     }
+
+    nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nAIComponent);
+    if (!ai->won) {
+        render_dir_arrow(gs);
+    }
     nbatch2d_rend_end(&gs->batch_rend);
 }
 
@@ -214,7 +238,30 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
                     ai->dead = 1;
                 }
             }
-      }
+        }
+        // swap entity places for player to be entity_a
+        if (tag_b == NENTITY_TAG_PLAYER && tag_a == NENTITY_TAG_DOOR) {
+            nEntityID temp = en->e.entity_a;
+            en->e.entity_a = en->e.entity_b;
+            en->e.entity_b = temp;
+            tag_a = *(NENTITY_MANAGER_GET_COMPONENT(em, en->e.entity_a, nEntityTag));
+            tag_b = *(NENTITY_MANAGER_GET_COMPONENT(em, en->e.entity_b, nEntityTag));
+        }
+        // player collides with enemy
+        if (tag_a == NENTITY_TAG_PLAYER && tag_b == NENTITY_TAG_DOOR) {
+            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nSprite);
+            nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nAIComponent);
+            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nPhysicsBody);
+            b->mass = F32_MAX;
+            b->inv_mass = 0;
+            b->velocity = v2(0,0);
+            b->force= v2(0,0);
+            b->collider_off= 1;
+            // win
+            ai->won = 1;
+            ai->dead = 1;
+            s->color = v4(0,0,0,0);
+        }
     }
 }
 
@@ -224,9 +271,11 @@ void fade_system(nEntityMgr *em, void *ctx) {
     nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nAIComponent);
     nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nSprite);
     f32 dt = nglobal_state_get_dt_sec();
-    gs->fade_timer = (ai->dead) ? minimum(gs->fade_timer+dt, 1.0) : maximum(gs->fade_timer-dt, 0.0);
-    if (ai->dead) {
+    gs->fade_timer = (ai->dead || ai->won) ? minimum(gs->fade_timer+dt, 1.0) : maximum(gs->fade_timer-dt, 0.0);
+    if (ai->won) {
         gs->fade_color = s->color;
+    }else {
+        gs->fade_color = v4(0,0,0,1);
     }
     vec4 color = vec4_multf(gs->fade_color, gs->fade_timer);
     ogl_clear_all_state();

@@ -37,6 +37,7 @@ struct nMap {
 
     // FIXE -- WHY is this god forsaken thing here???!!
     vec2 player_start_pos;
+    vec2 door_start_pos;
 
     ivec2 last_center;
 };

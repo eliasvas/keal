@@ -18,6 +18,7 @@ struct nAIComponent {
     u64 timestamp;
     f32 invinsibility_sec;
     b32 dead;
+    b32 won;
 };
 #define NAI_COMPONENT_DEFAULT 0
 

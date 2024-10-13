@@ -20,24 +20,6 @@ oglTex game_load_rgba_image_from_disk(const char *path) {
     return tex;
 }
 
-void game_state_render_dir_arrow(GameState *gs) {
-    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nPhysicsBody);
-    nBatch2DQuad q = {0};
-    vec2 mp = ninput_get_mouse_pos(get_nim());
-    mp = ndungeon_cam_screen_to_world(&gs->dcam, mp);
-    mp = vec2_sub(mp, b->position);
-    mp = vec2_norm(mp);
-    f32 dist = 0.5;
-    f32 x_off = dist * mp.x;
-    f32 y_off = dist * mp.y;
-    q.color = v4(1,1,1,0.5);
-    q.pos = vec2_add(vec2_sub(b->position, v2(0.25,0.0)), v2(x_off,y_off));
-    vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
-    q.dim = sprite_dim;
-    q.tc = TILESET_RARROW_TILE;
-    q.angle_rad = atan2(y_off, x_off);
-    nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
-}
 
 void game_state_init_images(GameState *gs) {
     gs->atlas = game_load_rgba_image_from_disk("assets/tileset4922.png");
@@ -71,7 +53,7 @@ void game_state_init(GameState *gs) {
     gs->hud_enabled = 1;
 
     gs->fade_timer = 0.0;
-    gs->fade_color = v4(0,0,0,0);
+    gs->fade_color = v4(0,0,0,1);
     ogl_sp_init(&gs->fade_sp, fullscreen_col_vert, fullscreen_col_frag);
     ogl_sp_add_attrib(&gs->fade_sp, ogl_attrib_make(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(vec2),offsetof(vec2, x),0));
     vec2 vdata[4] = { [0] = v2(+1.0,-1.0), [1] = v2(+1.0,+1.0), [2] = v2(-1.0,+1.0), [3] = v2(-1.0,-1.0), };
@@ -100,12 +82,6 @@ void game_state_update_and_render(GameState *gs) {
         ndungeon_cam_update(&gs->dcam, v2(player_pos.x, player_pos.y));
         // ----
         nem_update(get_em(), gs);
-
-        // render the directional arrow
-        nbatch2d_rend_begin(&gs->batch_rend, get_nwin());
-        game_state_render_dir_arrow(gs);
-        nbatch2d_rend_end(&gs->batch_rend);
-
     }
 
     

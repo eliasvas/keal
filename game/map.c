@@ -1,6 +1,20 @@
 #include "map.h"
 #include "game_state.h"
 
+void nmap_spawn_door(vec2 pos) {
+    nEntityID enemy = nem_make(get_em());
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_DOOR_TILE, 0, 0, v4(0.4,0.4,0.4,1));
+    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
+    *b = nphysics_body_aabb(v2(0.5,0.5), F32_MAX);
+    b->position = pos;
+    b->gravity_scale = 0;
+    nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
+    *tag = NENTITY_TAG_DOOR;
+}
+
 
 void nmap_spawn_enemy(vec2 pos) {
     nEntityID enemy = nem_make(get_em());
@@ -12,8 +26,8 @@ void nmap_spawn_enemy(vec2 pos) {
     *b = nphysics_body_circle(0.5, 20);
     b->position = pos;
     b->gravity_scale = 0;
-    nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
-    *player_tag = NENTITY_TAG_ENEMY;
+    nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
+    *tag = NENTITY_TAG_ENEMY;
 }
 
 void nmap_clear(nMap *map) {
@@ -276,14 +290,14 @@ void nmap_gen_rooms(nMap *map, nDungeonSubdivision *p) {
                 child->center = iv2(child->x + child->w/2.0, child->y + child->h/2.0);
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_GROUND);
 
-                if (gen_rand01() < 0.5) {
-                    nmap_spawn_enemy(v2(child->x*1, child->y*1));
-                }else {
-                    // nPhysicsBody *pb = NENTITY_MANAGER_GET_COMPONENT(get_em(), get_ggs()->player, nPhysicsBody);
-                    // pb->position = v2(child->x*1, child->y*1);
-                    map->player_start_pos = v2(child->x*1, child->y*1);
+                u32 enemy_count = gen_rand01() * 3 + 1;
+                for (u32 i = 0; i < enemy_count; i+=1) {
+                    f32 enemy_distance = 3.0;
+                    f32 height = floor(gen_rand01() * 3 + 1)*child->h/4.0;
+                    nmap_spawn_enemy(v2(child->x + child->w/2 - enemy_distance*(enemy_count/2) + enemy_distance*i, child->y + height));
                 }
-
+                map->player_start_pos = v2(child->x*1 + 1, child->y*1);
+                map->door_start_pos = v2(child->x + child->w-1, child->y + child->h - 1);
             }else {
                 nmap_dig_region(map, child->x, child->y, child->x + child->w, child->y + child->h, NTILE_KIND_WALL);
             }
@@ -321,4 +335,5 @@ void nmap_generate(nMap *map) {
     nmap_subdivide(map, dungeon);
     nmap_gen_rooms(map, dungeon);
     nmap_gen_corridors(map, dungeon);
+    nmap_spawn_door(map->door_start_pos);
 }
