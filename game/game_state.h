@@ -22,6 +22,12 @@ struct GameState {
     oglTex white;
     nDungeonCam dcam;
 
+    // scene transition stuff
+    f32 fade_timer;
+    vec4 fade_color;
+    oglSP fade_sp;
+    oglBuf full_vbo;
+
     // gameplay options (persistent)
     ivec2 panel_dim; // for all menus, TODO -- we should make this configurable to screen width/height?
     b32 music_enabled;

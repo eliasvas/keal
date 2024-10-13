@@ -59,6 +59,7 @@ void game_state_init(GameState *gs) {
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), resolve_collision_events, 2);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), game_ai_system, 3);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), render_sprites_system, 4);
+    NENTITY_MANAGER_ADD_SYSTEM(get_em(), fade_system, 5);
 
     game_state_status_set(gs, GAME_STATUS_START_MENU);
 
@@ -68,6 +69,13 @@ void game_state_init(GameState *gs) {
     gs->fullscreen_enabled = 0;
     gs->endless_mode_enabled = 1;
     gs->hud_enabled = 1;
+
+    gs->fade_timer = 0.0;
+    gs->fade_color = v4(0,0,0,0);
+    ogl_sp_init(&gs->fade_sp, fullscreen_col_vert, fullscreen_col_frag);
+    ogl_sp_add_attrib(&gs->fade_sp, ogl_attrib_make(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(vec2),offsetof(vec2, x),0));
+    vec2 vdata[4] = { [0] = v2(+1.0,-1.0), [1] = v2(+1.0,+1.0), [2] = v2(-1.0,+1.0), [3] = v2(-1.0,-1.0), };
+    ogl_buf_init(&gs->full_vbo, OGL_BUF_KIND_VERTEX, vdata, 4, sizeof(vec2));
 }
 
 void game_state_deinit(GameState *gs) {
@@ -98,8 +106,6 @@ void game_state_update_and_render(GameState *gs) {
         game_state_render_dir_arrow(gs);
         nbatch2d_rend_end(&gs->batch_rend);
 
-        // if the player is dead, we zoom towards him, fade to red (player color)
-        // and when level is ready, zoom out
     }
 
     

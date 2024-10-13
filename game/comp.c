@@ -217,3 +217,28 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
       }
     }
 }
+
+void fade_system(nEntityMgr *em, void *ctx) {
+    GameState *gs = (GameState*)ctx;
+    // do Fade if needed
+    nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nAIComponent);
+    nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nSprite);
+    f32 dt = nglobal_state_get_dt_sec();
+    gs->fade_timer = (ai->dead) ? minimum(gs->fade_timer+dt, 1.0) : maximum(gs->fade_timer-dt, 0.0);
+    if (ai->dead) {
+        gs->fade_color = s->color;
+    }
+    vec4 color = vec4_multf(gs->fade_color, gs->fade_timer);
+    ogl_clear_all_state();
+    ogl_rt_bind(0);
+    ogl_bind_vertex_buffer(&gs->full_vbo);
+    ogl_bind_sp(&gs->fade_sp);
+    ogl_sp_set_uniform(&gs->fade_sp, "color", OGL_SHADER_DATA_TYPE_VEC4, &color);
+    ogl_set_viewport(0,0,get_nwin()->ww, get_nwin()->wh);
+    ogl_sp_set_dyn_state(&gs->fade_sp, OGL_BLEND_STATE);
+    ogl_draw(OGL_PRIM_TRIANGLE_FAN, 0, 4);
+    if (gs->fade_timer == 1.0) {
+        game_state_generate_new_level(gs);
+    }
+}
+
