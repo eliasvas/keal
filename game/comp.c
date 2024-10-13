@@ -52,14 +52,15 @@ void ai_component_enemy_update(nEntityMgr *em, GameState *gs, nEntityID enemy) {
 void ai_component_player_update(nEntityMgr *em, nEntityID player) {
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, player, nPhysicsBody);
     nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, player, nSprite);
+    nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), player, nAIComponent);
     f32 dt = nglobal_state_get_dt_sec();
     f32 player_speed = 50.0;
     b32 face_right = 1;
     b32 hmov = 0;
-    if (ninput_key_down(get_nim(),NKEY_SCANCODE_RIGHT)) { b->velocity.x+=player_speed*dt; face_right = 1; hmov=1; }
-    if (ninput_key_down(get_nim(),NKEY_SCANCODE_LEFT))  { b->velocity.x-=player_speed*dt; face_right = 0; hmov=1; }
-    if (ninput_key_down(get_nim(),NKEY_SCANCODE_UP))    { b->velocity.y-=player_speed*dt; }
-    if (ninput_key_down(get_nim(),NKEY_SCANCODE_DOWN))  { b->velocity.y+=player_speed*dt; }
+    if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_D)) { b->velocity.x+=player_speed*dt; face_right = 1; hmov=1; }
+    if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_A))  { b->velocity.x-=player_speed*dt; face_right = 0; hmov=1; }
+    if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_W))    { b->velocity.y-=player_speed*dt; }
+    if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_S))  { b->velocity.y+=player_speed*dt; }
     if (hmov) { s->vflip = !face_right; }
     if (equalf(b->velocity.x,0.0,0.05) && equalf(b->velocity.y,0.0,0.05)){
         s->repeat=0;
@@ -68,8 +69,16 @@ void ai_component_player_update(nEntityMgr *em, nEntityID player) {
             s->repeat=1;
         }
     }
-    nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), player, nAIComponent);
+    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
+        //b->velocity = vec2_add(b->velocity, vec2_multf(vec2_norm(b->velocity), 10*player_speed*dt));
+        if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_D)) { b->velocity.x+=player_speed*dt*20;}
+        else if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_A))  { b->velocity.x-=player_speed*dt*20;}
+        else if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_W))    { b->velocity.y-=player_speed*dt*20;}
+        else if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_S))  { b->velocity.y+=player_speed*dt*20;}
+        // counter stuff
+    }
     ai->invinsibility_sec = maximum(0.0, ai->invinsibility_sec - dt);
+    NLOG_ERR("invin: %f dt: %f", ai->invinsibility_sec, dt);
 }
 
 void game_ai_system(nEntityMgr *em, void *ctx) {
@@ -189,7 +198,7 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
             nHealthComponent *h = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nHealthComponent);
             nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nAIComponent);
             if (ai->invinsibility_sec == 0.0) {
-                ai->invinsibility_sec = 200.0;
+                ai->invinsibility_sec = 1.0;
                 nhealth_component_dec(h);
                 if (!nhealth_component_alive(h)) {
                     // set sprite so that death animation will play
@@ -201,6 +210,8 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
                     b->mass = F32_MAX;
                     b->inv_mass = 0;
                     b->velocity = v2(0,0);
+                    b->force= v2(0,0);
+                    ai->dead = 1;
                 }
             }
       }

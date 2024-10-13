@@ -77,6 +77,7 @@ b32 nwindow_init(nWindow *win, const char *name, f32 ww, f32 wh, nWindowOptions 
 b32 nwindow_deinit(nWindow *win);
 vec2 nwindow_get_dim(nWindow *win);
 void nwindow_swap(nWindow *win);
+void nwindow_toggle_fullscreen(nWindow *win);
 nWindowEventNode* nwindow_capture_events(nWindow *win);
 
 #endif

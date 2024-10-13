@@ -6,6 +6,7 @@ extern b32 nwindow_impl_create(nWindow *win);
 extern b32 nwindow_impl_destroy(nWindow *win);
 extern void nwindow_impl_swap(nWindow *win);
 extern void nwindow_impl_update_size(nWindow *win);
+extern void nwindow_impl_toggle_fullscreen(nWindow *win);
 extern nWindowEventNode* nwindow_impl_capture_events(nWindow *win);
 
 vec2 nwindow_get_dim(nWindow *win) {
@@ -30,6 +31,10 @@ b32 nwindow_deinit(nWindow *win) {
 
 void nwindow_swap(nWindow *win) {
     nwindow_impl_swap(win);
+}
+
+void nwindow_toggle_fullscreen(nWindow *win) {
+    nwindow_impl_toggle_fullscreen(win);
 }
 
 

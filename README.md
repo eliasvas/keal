@@ -33,7 +33,7 @@ For gameplay stuff I implemented a [bitset-based ECS](https://github.com/SanderM
 #### Linux (Windows is similar)
 ```sh
 sudo apt-get install build-essential libsdl2-dev libsdl2-2.0-0 libasan6 libgles2-mesa-dev -y
-git clone https://github.com/eliasvas/engine
+git clone https://github.com/eliasvas/motfk
 cd engine && git submodule update --init --recursive && mkdir build
 cd build && cmake .. && make --build . -j10
 ```
@@ -41,7 +41,7 @@ cd build && cmake .. && make --build . -j10
 ```sh
 sudo apt-get install build-essential libsdl2-dev libsdl2-2.0-0 libasan6 libgles2-mesa-dev -y
 sudo apt install clang emscripten -y
-git clone https://github.com/eliasvas/engine
+git clone https://github.com/eliasvas/motfk
 cd engine && git submodule update --init --recursive && mkdir -p build/web
 set EMCC_DEBUG=1
 emcmake cmake ../..

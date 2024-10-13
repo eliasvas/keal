@@ -131,3 +131,9 @@ nWindowEventNode* nwindow_impl_capture_events(nWindow *win) {
 
     return first;
 }
+
+void nwindow_impl_toggle_fullscreen(nWindow *win) {
+    u64 flag = SDL_GetWindowFlags(win->impl_state);
+	u64 is_fullscreen  = flag & SDL_WINDOW_FULLSCREEN_DESKTOP;
+    SDL_SetWindowFullscreen(win->impl_state, is_fullscreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+}

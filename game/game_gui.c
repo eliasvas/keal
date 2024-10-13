@@ -80,6 +80,7 @@ void do_options_menu_gui(GameState *gs) {
             gui_set_next_bg_color(gv4(0.23,0.35,0.65,1)); // #3b5ba5
             guiSignal fullscreen_sig = gui_checkbox("FullScreen", &gs->fullscreen_enabled);
             if (gs->effects_enabled && fullscreen_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
+            if (fullscreen_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nwindow_toggle_fullscreen(get_nwin()); }
             // HUD button
             gui_set_next_bg_color(gv4(0.26,0.26,0.3,1)); // #adadc9
             guiSignal hud_sig = gui_checkbox("HUD", &gs->hud_enabled);

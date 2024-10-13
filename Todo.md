@@ -6,6 +6,10 @@
 
 - For some reason the counter of invincibility takes way longer than specified
 
+- a good fade in/out effect
+
+- add a screen shake on collision
+
 - Some steps to 'make' the game playable
 	- the GUI is fine, just add a boink sound when buttons are pressed
 	- instead of complex dungeons, each levels should be a square dungeon and have 0..4 enemies inside + closed door

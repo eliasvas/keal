@@ -16,7 +16,7 @@ typedef struct nAIComponent nAIComponent;
 struct nAIComponent {
     u32 state;
     u64 timestamp;
-    u64 invinsibility_sec;
+    f32 invinsibility_sec;
     b32 dead;
 };
 #define NAI_COMPONENT_DEFAULT 0
