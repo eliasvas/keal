@@ -20,7 +20,7 @@ void nphysics_world_broadphase(nEntityMgr *em, nPhysicsWorld *world) {
                 .a = &world->bodies[i],
                 .b = &world->bodies[j],
             };
-            if (m.a->collider_off || m.b->collider_off)continue;
+            if (!(m.a->mask & (1 << (m.b->layer-1))))continue;
             if (m.a->inv_mass == 0.0 && m.b->inv_mass == 0.0)continue;
             // broadphase narrow-down 
             {

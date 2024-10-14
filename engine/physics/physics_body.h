@@ -30,8 +30,9 @@ struct nPhysicsBody {
     vec2 force;
     f32 gravity_scale;
 
-    // HACKY
-    b32 collider_off;
+    // collision layer/mask
+    u32 layer; // e.g a PhysicsBody is 'of' layer 3
+    u32 mask;  // e.g a PhysicsBody collides with layers 0, 1, 3 -> 0b00001011
 };
 nPhysicsBody nphysics_body_default(void);
 nPhysicsBody nphysics_body_aabb(vec2 hdim, f32 m);

@@ -17,6 +17,7 @@ struct nAIComponent {
     u32 state;
     u64 timestamp;
     f32 invinsibility_sec;
+    f32 dash_sec;
     b32 dead;
     b32 won;
 };

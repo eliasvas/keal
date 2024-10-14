@@ -70,16 +70,21 @@ void ai_component_player_update(nEntityMgr *em, nEntityID player) {
             s->repeat=1;
         }
     }
-    if (ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
+    if (ai->invinsibility_sec == 0.0 && ninput_key_pressed(get_nim(), NKEY_SCANCODE_SPACE)) {
         //b->velocity = vec2_add(b->velocity, vec2_multf(vec2_norm(b->velocity), 10*player_speed*dt));
-        if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_D)) { b->velocity.x+=player_speed*dt*20;}
-        else if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_A))  { b->velocity.x-=player_speed*dt*20;}
-        else if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_W))    { b->velocity.y-=player_speed*dt*20;}
-        else if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_S))  { b->velocity.y+=player_speed*dt*20;}
-        // counter stuff
+        vec2 dash_vec = v2(0.0,0.0);
+        if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_D)) { dash_vec.x += 1;}
+        if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_A))  { dash_vec.x -= 1;}
+        if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_W))    { dash_vec.y -= 1;}
+        if (!ai->dead && ninput_key_down(get_nim(),NKEY_SCANCODE_S))  { dash_vec.y += 1;}
+        if (!(dash_vec.x == 0.0f && dash_vec.y == 0.0f)){
+            dash_vec = vec2_norm(dash_vec);
+            ai->dash_sec = 0.5;
+            b->velocity = vec2_add(b->velocity, vec2_multf(dash_vec, player_speed*dt*20));
+        }
     }
     ai->invinsibility_sec = maximum(0.0, ai->invinsibility_sec - dt);
-    NLOG_ERR("invin: %f dt: %f", ai->invinsibility_sec, dt);
+    ai->dash_sec = maximum(0.0, ai->dash_sec - dt);
 }
 
 void render_dir_arrow(GameState *gs) {
@@ -130,76 +135,88 @@ void render_sprites_system(nEntityMgr *em, void *ctx) {
     nbatch2d_rend_begin(&gs->batch_rend, get_nwin());
     mat4 view = ndungeon_cam_get_view_mat(&gs->dcam);
     nbatch2d_rend_set_view_mat(&gs->batch_rend, view);
-    for (s64 i = em->comp_array_len; i>=0; i-=1) {
-        nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i);
-
-        // render the sprites with physics body
-        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
-            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nsprite_update(s, nglobal_state_get_dt_sec());
-            vec4 tc = nsprite_get_current_tc(s);
-            nBatch2DQuad q = {0};
-            q.color = s->color;
-            // we convert our collider to a bounding box (which is used for rendering dimensions)
-            q.tc = tc;
-            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
-            sprite_dim = vec2_multf(sprite_dim, 2);
-            q.pos.x = b->position.x - sprite_dim.x/2.0;
-            q.pos.y = b->position.y - sprite_dim.y/2.0;
-            q.dim.x = sprite_dim.x;
-            q.dim.y = sprite_dim.y;
-            q.angle_rad = 0;
-            nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
-            // if entity has health, draw that as well
-            if (NENTITY_MANAGER_HAS_COMPONENT(em,entity, nHealthComponent)) {
-                nHealthComponent *h = NENTITY_MANAGER_GET_COMPONENT(em, entity, nHealthComponent);
-                u32 heart_count = h->hlt;
-                f32 heart_sprite_dim = (sprite_dim.x/2.0);
-                f32 total_width = heart_sprite_dim * heart_count;
-                f32 start_y = q.pos.y - heart_sprite_dim;
-                f32 start_x = b->position.x - total_width/2.0;
-                for (u32 heart = 0; heart < heart_count; heart+=1) {
-                    nBatch2DQuad q = {0};
-                    q.color = s->color;
-                    q.tc = TILESET_HEART_TILE;
-                    q.pos.x = start_x + heart*heart_sprite_dim;
-                    q.pos.y = start_y;
-                    q.dim.x = heart_sprite_dim;
-                    q.dim.y = heart_sprite_dim;
-                    q.angle_rad = 0;
-                    nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+    for (u32 layer = 0; layer <= 4; ++layer) {
+        for (s64 i = em->comp_array_len; i>=0; i-=1) {
+            nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i);
+            // render the sprites with physics body
+            if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
+                nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
+                nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+                if (b->layer != layer)continue;
+                nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(em, entity, nAIComponent);
+                nsprite_update(s, nglobal_state_get_dt_sec());
+                vec4 tc = nsprite_get_current_tc(s);
+                nBatch2DQuad q = {0};
+                q.color = s->color;
+                if (ai && ai->invinsibility_sec > 0.0) {
+                    q.color = vec4_multf(q.color, 0.7 +0.3 * (sin(10*get_current_timestamp_sec())+1/2));
+                    b->mask |= (0b100);
+                } else if (ai && ai->dash_sec > 0.0) {
+                    q.color = vec4_multf(q.color, 0.7);
+                    b->mask &= ~(0b100);
+                } else {
+                    b->mask |= (0b100);
+                }
+                // we convert our collider to a bounding box (which is used for rendering dimensions)
+                q.tc = tc;
+                vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
+                sprite_dim = vec2_multf(sprite_dim, 2);
+                q.pos.x = b->position.x - sprite_dim.x/2.0;
+                q.pos.y = b->position.y - sprite_dim.y/2.0;
+                q.dim.x = sprite_dim.x;
+                q.dim.y = sprite_dim.y;
+                q.angle_rad = 0;
+                nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+                // if entity has health, draw that as well
+                if (NENTITY_MANAGER_HAS_COMPONENT(em,entity, nHealthComponent)) {
+                    nHealthComponent *h = NENTITY_MANAGER_GET_COMPONENT(em, entity, nHealthComponent);
+                    u32 heart_count = h->hlt;
+                    f32 heart_sprite_dim = (sprite_dim.x/2.0);
+                    f32 total_width = heart_sprite_dim * heart_count;
+                    f32 start_y = q.pos.y - heart_sprite_dim;
+                    f32 start_x = b->position.x - total_width/2.0;
+                    for (u32 heart = 0; heart < heart_count; heart+=1) {
+                        nBatch2DQuad q = {0};
+                        q.color = s->color;
+                        q.tc = TILESET_HEART_TILE;
+                        q.pos.x = start_x + heart*heart_sprite_dim;
+                        q.pos.y = start_y;
+                        q.dim.x = heart_sprite_dim;
+                        q.dim.y = heart_sprite_dim;
+                        q.angle_rad = 0;
+                        nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+                    }
                 }
             }
-        }
 
-#if COLLIDER_VISUALIZATION
-        // render the stuff
-        if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
-            if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->collider_off)continue;
-            nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-            nsprite_update(s, nglobal_state_get_dt_sec());
-            vec4 tc = nsprite_get_current_tc(s);
-            nBatch2DQuad q = {0};
-            q.color = v4(1,0,0,0.3);
-            q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
-            vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
-            sprite_dim = vec2_multf(sprite_dim, 2);
-            q.pos.x = b->position.x - sprite_dim.x/2.0;
-            q.pos.y = b->position.y - sprite_dim.y/2.0;
-            q.dim.x = sprite_dim.x;
-            q.dim.y = sprite_dim.y;
-            q.angle_rad = 0;
-            nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+    #if COLLIDER_VISUALIZATION
+            // render the stuff
+            if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
+                if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->layer == 0)continue;
+                nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
+                nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+                nsprite_update(s, nglobal_state_get_dt_sec());
+                vec4 tc = nsprite_get_current_tc(s);
+                nBatch2DQuad q = {0};
+                q.color = v4(1,0,0,0.3);
+                q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
+                vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
+                sprite_dim = vec2_multf(sprite_dim, 2);
+                q.pos.x = b->position.x - sprite_dim.x/2.0;
+                q.pos.y = b->position.y - sprite_dim.y/2.0;
+                q.dim.x = sprite_dim.x;
+                q.dim.y = sprite_dim.y;
+                q.angle_rad = 0;
+                nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+            }
+    #endif
         }
-#endif
     }
-
     nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nAIComponent);
     if (!ai->won) {
         render_dir_arrow(gs);
     }
+
     nbatch2d_rend_end(&gs->batch_rend);
 }
 
@@ -256,11 +273,11 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
             b->inv_mass = 0;
             b->velocity = v2(0,0);
             b->force= v2(0,0);
-            b->collider_off= 1;
+            b->layer= 0;
             // win
             ai->won = 1;
             ai->dead = 1;
-            s->color = v4(0,0,0,0);
+            s->color = v4(0.0,0.0,0.0,0.0);
         }
     }
 }
@@ -272,11 +289,6 @@ void fade_system(nEntityMgr *em, void *ctx) {
     nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nSprite);
     f32 dt = nglobal_state_get_dt_sec();
     gs->fade_timer = (ai->dead || ai->won) ? minimum(gs->fade_timer+dt, 1.0) : maximum(gs->fade_timer-dt, 0.0);
-    if (ai->won) {
-        gs->fade_color = s->color;
-    }else {
-        gs->fade_color = v4(0,0,0,1);
-    }
     vec4 color = vec4_multf(gs->fade_color, gs->fade_timer);
     ogl_clear_all_state();
     ogl_rt_bind(0);
@@ -288,6 +300,7 @@ void fade_system(nEntityMgr *em, void *ctx) {
     ogl_draw(OGL_PRIM_TRIANGLE_FAN, 0, 4);
     if (gs->fade_timer == 1.0) {
         game_state_generate_new_level(gs);
+        game_state_status_set(gs, GAME_STATUS_RUNNING);
     }
 }
 

@@ -11,6 +11,8 @@ void nmap_spawn_door(vec2 pos) {
     *b = nphysics_body_aabb(v2(0.5,0.5), F32_MAX);
     b->position = pos;
     b->gravity_scale = 0;
+    b->layer = 4;
+    b->mask = 0b10;
     nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
     *tag = NENTITY_TAG_DOOR;
 }
@@ -26,6 +28,8 @@ void nmap_spawn_enemy(vec2 pos) {
     *b = nphysics_body_circle(0.5, 20);
     b->position = pos;
     b->gravity_scale = 0;
+    b->layer = 3;
+    b->mask = 0b11;
     nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
     *tag = NENTITY_TAG_ENEMY;
 }
@@ -236,8 +240,8 @@ void nmap_add_tiles_as_entities(nMap *map) {
             nEntityTag *tile_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(),tile, nEntityTag);
             *tile_tag= NENTITY_TAG_MAP;
             if (!nmap_tile_is_wall(map, x, y)) {
-                b->collider_off = 1;
-                // enable collisions
+                b->layer = 0;
+                b->mask = 0;
             }
         }
 

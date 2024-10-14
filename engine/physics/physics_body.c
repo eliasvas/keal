@@ -13,6 +13,8 @@ nPhysicsBody nphysics_body_default(void) {
         .velocity = v2(0,0),
         .force = v2(0,0),
         .gravity_scale = 10,
+        .layer = 1,
+        .mask = U32_MAX,
     };
     return b;
 }

@@ -98,6 +98,7 @@ struct nEntityMgr {
     nComponentArray components[NMAX_COMPONENTS];
     nComponentMask  *bitset; // indicates whether nEntityID i has component j
     nEntityID *entity; // current active entity for that ID
+    u32 entity_count;
     u32 comp_array_len;
     u32 comp_array_cap;
     // for entity index reuse
@@ -123,6 +124,7 @@ b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
 
 #define NENTITY_MANAGER_INIT(em) \
     do { \
+        (em)->entity_count = 0; \
         (em)->comp_array_len = 0; \
         (em)->comp_array_cap = NMAX_ENTITIES; \
         (em)->bitset = push_array(get_global_arena(), u32, NMAX_ENTITIES); \
@@ -131,6 +133,7 @@ b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
 
 #define NENTITY_MANAGER_CLEAR(em) \
     do { \
+        (em)->entity_count = 0; \
         for (u64 i = 0; i < (em)->comp_array_len; i+=1) { \
             nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,i); \
             nem_del(em, entity); \
@@ -166,7 +169,7 @@ b32 nem_entity_valid(nEntityMgr *em, nEntityID entity);
             assert(0 && "invalid entity id"); \
         } \
         if (NENTITY_MANAGER_HAS_COMPONENT(em,entity,comp_type)) { \
-            NLOG_ERR("Component <%s> already set for entity %d", #comp_type, entity); \
+            NLOG_ERR("Component <%s> already set for entity %ld", #comp_type, entity); \
         } else { \
             void *dest = (char *)(em)->components[index].data + NENTITY_GET_INDEX(entity) * (em)->components[index].elem_size; \
             memset(dest, 0, (em)->components[index].elem_size); \

@@ -113,6 +113,8 @@ void game_state_generate_new_level(GameState *gs) {
     *b = nphysics_body_circle(0.5, 20);
     b->position = v2(0,0);
     b->gravity_scale = 0;
+    b->layer = 2;
+    b->mask = 0b1101;
     nEntityTag *player_tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nEntityTag);
     *player_tag = NENTITY_TAG_PLAYER;
 

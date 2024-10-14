@@ -25,21 +25,20 @@ nEntityFreeSlotNode* nem_get_free_entity_slot(nEntityMgr *em) {
 
 // Create an entity, we first try to get an empty slot, if not found we make a new one
 nEntityID nem_make(nEntityMgr *em) {
-    static int entity_count = 0;
     // reuse an entity slot if possible
-    nEntityFreeSlotNode *slot = nem_get_available_entity_slot(em);
-    if (slot) {
-        nEntityID id = slot->id;
-        M_ZERO_STRUCT(slot);
-        sll_stack_push(em->free_slots, slot);
-        //NLOG_ERR("entity %llu created/reused", id);
-        em->entity[NENTITY_GET_INDEX(id)] = id;
-        return id;
-    }
-    //NLOG_ERR("entity %llu created", entity_count);
-    em->entity[entity_count] = entity_count;
-    em->comp_array_len = entity_count+1;
-    return entity_count++;
+    // nEntityFreeSlotNode *slot = nem_get_available_entity_slot(em);
+    // if (slot) {
+    //     nEntityID id = slot->id;
+    //     M_ZERO_STRUCT(slot);
+    //     sll_stack_push(em->free_slots, slot);
+    //     //NLOG_ERR("entity %llu created/reused", id);
+    //     em->entity[NENTITY_GET_INDEX(id)] = id;
+    //     return id;
+    // }
+    //NLOG_ERR("entity %llu created", em->entity_count);
+    em->entity[em->entity_count] = em->entity_count;
+    em->comp_array_len = em->entity_count+1;
+    return em->entity_count++;
 }
 
 // Delete an entity, we insert the ID as a free slot so we can reuse it later
@@ -86,7 +85,7 @@ void nentity_event_mgr_add(nEntityEventMgr *ev_mgr, nEntityEvent e) {
 
 void update_first(nEntityMgr *em, void *ctx) {
     // for every entity
-    for (u32 i = 0; i < em->comp_array_len; i+=1) {
+    for (u64 i = 0; i < em->comp_array_len; i+=1) {
         nEntityID entity = i;
         if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite)) {
             NLOG_INFO("Entity <%d> has Sprite component!", entity);
