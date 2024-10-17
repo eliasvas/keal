@@ -29,7 +29,7 @@ void nmap_spawn_enemy(vec2 pos) {
     b->position = pos;
     b->gravity_scale = 0;
     b->layer = 3;
-    b->mask = 0b11;
+    b->mask = 0b10011;
     nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
     *tag = NENTITY_TAG_ENEMY;
 }

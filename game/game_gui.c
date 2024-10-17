@@ -83,8 +83,8 @@ void do_options_menu_gui(GameState *gs) {
             if (fullscreen_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nwindow_toggle_fullscreen(get_nwin()); }
             // HUD button
             gui_set_next_bg_color(gv4(0.26,0.26,0.3,1)); // #adadc9
-            guiSignal hud_sig = gui_checkbox("HUD", &gs->hud_enabled);
-            if (gs->effects_enabled && hud_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
+            guiSignal col_vis_sig = gui_checkbox("ColVis", &gs->col_vis);
+            if (gs->effects_enabled && col_vis_sig.flags & GUI_SIGNAL_FLAG_LMB_RELEASED) { nsound_play(get_nactx(), &gui1); }
             // Endless button
             gui_set_next_bg_color(gv4(0.9,0.47,0.36,1)); // #e87a5d
             guiSignal endless_sig = gui_checkbox("Endless", &gs->endless_mode_enabled);

@@ -51,6 +51,7 @@ void game_state_init(GameState *gs) {
     gs->fullscreen_enabled = 0;
     gs->endless_mode_enabled = 1;
     gs->hud_enabled = 1;
+    gs->col_vis = 0;
 
     gs->fade_timer = 0.0;
     gs->fade_color = v4(0,0,0,1);

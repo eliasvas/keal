@@ -14,10 +14,11 @@ REGISTER_TYPE(nAIComponent)
 // Should these be here?? Maybe we should use this just in gameplay code
 typedef enum NENTITY_TAG NENTITY_TAG; 
 enum NENTITY_TAG{
-    NENTITY_TAG_PLAYER = (1 << 0),
-    NENTITY_TAG_ENEMY  = (1 << 1),
-    NENTITY_TAG_DOOR   = (1 << 2),
-    NENTITY_TAG_MAP    = (1 << 3),
+    NENTITY_TAG_PLAYER    = (1 << 0),
+    NENTITY_TAG_ENEMY     = (1 << 1),
+    NENTITY_TAG_DOOR      = (1 << 2),
+    NENTITY_TAG_MAP       = (1 << 3),
+    NENTITY_TAG_KEALOTINE = (1 << 4),
 };
 
 typedef enum nEntityEventKind nEntityEventKind;

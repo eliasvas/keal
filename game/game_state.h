@@ -35,6 +35,7 @@ struct GameState {
     b32 fullscreen_enabled;
     b32 endless_mode_enabled;
     b32 hud_enabled;
+    b32 col_vis;
 
     // cached player entity
     nEntityID player;
