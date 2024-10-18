@@ -4,6 +4,12 @@
 
 void ndungeon_cam_update(nDungeonCam *cam, vec2 player_pos) {
     cam->pos = player_pos;
+    if (cam->shake_sec > 0.0) {
+        NLOG_ERR("shaking, rem=%f", cam->shake_sec);
+        vec2 rand_in_unit_circle = vec2_norm(v2(gen_rand01()*2-1,gen_rand01()*2-1));
+        cam->pos = vec2_add(cam->pos, vec2_multf(rand_in_unit_circle, cam->shake_amount));
+    }
+    cam->shake_sec = maximum(cam->shake_sec - nglobal_state_get_dt_sec(), 0.0);
     // if (player_pos.x - cam->pos.x > cam->max_off.x) {cam->pos.x +=0.5;}
     // if (player_pos.x + cam->max_off.x < cam->pos.x) cam->pos.x -=0.5;
     // if (player_pos.y - cam->pos.y > cam->max_off.y) cam->pos.y +=0.5;
@@ -13,6 +19,11 @@ void ndungeon_cam_set(nDungeonCam *cam, vec2 pos, vec2 max_off, f32 zoom) {
     cam->pos = pos;
     cam->max_off = max_off;
     cam->zoom = zoom;
+}
+
+void ndungeon_cam_start_shake(nDungeonCam *cam, f32 shake_amount, f32 shake_sec) {
+    cam->shake_amount = shake_amount;
+    cam->shake_sec = shake_sec;
 }
 
 mat4 ndungeon_cam_get_view_mat(nDungeonCam *cam) {

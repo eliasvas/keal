@@ -14,7 +14,7 @@ void nmap_spawn_kealotine(vec2 pos, vec2 dir) {
     b->gravity_scale = 0;
     b->layer = 5;
     b->mask = 0b101;
-    b->velocity = vec2_multf(dir, 30);
+    b->velocity = vec2_multf(dir, 10);
     nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
     *tag = NENTITY_TAG_KEALOTINE;
 }
@@ -78,7 +78,7 @@ void ai_component_player_update(nEntityMgr *em, nEntityID player, GameState *gs)
     mp = ndungeon_cam_screen_to_world(&gs->dcam, mp);
     mp = vec2_sub(mp, b->position);
     keal_dir = vec2_norm(mp);
-    if (!ai->dead && ninput_mkey_down(get_nim(),NKEY_LMB)) {nmap_spawn_kealotine(b->position, keal_dir);}
+    if (!ai->dead && ninput_mkey_pressed(get_nim(),NKEY_LMB)) {nmap_spawn_kealotine(b->position, keal_dir);}
     f32 dt = nglobal_state_get_dt_sec();
     f32 player_speed = 50.0;
     b32 face_right = 1;
@@ -145,7 +145,12 @@ void game_ai_system(nEntityMgr *em, void *ctx) {
             case NENTITY_TAG_ENEMY: 
                 ai_component_enemy_update(em, gs, entity);
                 break;
-            // case NENTITY_TAG_PROJECTILE: 
+            case NENTITY_TAG_KEALOTINE: 
+                {
+                    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+                    b->velocity = vec2_multf(vec2_norm(b->velocity), 10);
+                    break;
+                }
             // case NENTITY_TAG_DOOR: 
             default:
                 break;
@@ -257,6 +262,7 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
             nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nAIComponent);
             if (ai->invinsibility_sec == 0.0) {
                 ai->invinsibility_sec = 1.0;
+                ndungeon_cam_start_shake(&gs->dcam, 0.1, 0.5);
                 nhealth_component_dec(h);
                 if (!nhealth_component_alive(h)) {
                     // set sprite so that death animation will play
