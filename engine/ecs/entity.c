@@ -65,7 +65,7 @@ void nem_update(nEntityMgr *em, void *ctx) {
 }
 
 b32 nem_entity_valid(nEntityMgr *em, nEntityID entity) {
-    return (NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,entity) == entity);
+    return ((entity != NENTITY_INVALID_ID) && (NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em,entity) == entity));
 }
 
 void nentity_event_mgr_clear(nEntityEventMgr *ev_mgr) {

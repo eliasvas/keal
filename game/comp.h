@@ -2,6 +2,11 @@
 #define COMPONENTS_H 
 #include "engine.h"
 
+typedef struct nKealotineData nKealotineData;
+struct nKealotineData {
+    nEntityID ref;
+};
+
 typedef struct nHealthComponent nHealthComponent;
 struct nHealthComponent {
     s32 hlt;

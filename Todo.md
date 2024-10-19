@@ -1,3 +1,2 @@
 - make the kealotine gameplay
-- make physics engine output TWO collision events for two objects colliding (AB and BA)
 - add it will KEAL audio? (maybe not)

@@ -5,7 +5,6 @@
 void ndungeon_cam_update(nDungeonCam *cam, vec2 player_pos) {
     cam->pos = player_pos;
     if (cam->shake_sec > 0.0) {
-        NLOG_ERR("shaking, rem=%f", cam->shake_sec);
         vec2 rand_in_unit_circle = vec2_norm(v2(gen_rand01()*2-1,gen_rand01()*2-1));
         cam->pos = vec2_add(cam->pos, vec2_multf(rand_in_unit_circle, cam->shake_amount));
     }

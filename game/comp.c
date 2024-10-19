@@ -3,19 +3,22 @@
 #include "tileset4922.inl"
 
 void nmap_spawn_kealotine(vec2 pos, vec2 dir) {
-    nEntityID enemy = nem_make(get_em());
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nPhysicsBody);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nSprite);
-    NENTITY_MANAGER_ADD_COMPONENT(get_em(), enemy, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
-    *NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nSprite) = nsprite_make(TILESET_KEALOTINE_OPEN_TILE, 0, 0, v4(0.7,0.3,0.4,1));
-    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nPhysicsBody);
+    nEntityID keal = nem_make(get_em());
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), keal, nPhysicsBody);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), keal, nSprite);
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), keal, nEntityTag); // Maybe tag should be instantiated in nem_make(em)
+    NENTITY_MANAGER_ADD_COMPONENT(get_em(), keal, nKealotineData);
+    nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nKealotineData);
+    kd->ref = NENTITY_INVALID_ID;
+    *NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nSprite) = nsprite_make(TILESET_KEALOTINE_OPEN_TILE, 0, 0, v4(0.9,0.1,0.2,1));
+    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nPhysicsBody);
     *b = nphysics_body_circle(0.5, 20);
     b->position = pos;
     b->gravity_scale = 0;
     b->layer = 5;
     b->mask = 0b101;
     b->velocity = vec2_multf(dir, 10);
-    nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), enemy, nEntityTag);
+    nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nEntityTag);
     *tag = NENTITY_TAG_KEALOTINE;
 }
 
@@ -51,6 +54,44 @@ nAIComponent nai_component_default(void) {
         .won = 0,
     };
     return ai;
+}
+
+// HERE
+void ai_component_kealotine_update(nEntityMgr *em, GameState *gs, nEntityID kealotine) {
+    nEntityID player = gs->player;
+    nPhysicsBody *b= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nPhysicsBody);
+    nSprite *sp= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nSprite);
+    nAIComponent *kai= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nAIComponent);
+    nKealotineData *kd= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nKealotineData);
+    b->velocity = vec2_multf(vec2_norm(b->velocity), 10);
+    sp->color = v4(0.4,0.2,0.2,1);
+    if (nem_entity_valid(em, kd->ref)) {
+        nPhysicsBody *b_enemy= NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nPhysicsBody);
+        b->position = b_enemy->position;
+        sp->start_tc = TILESET_KEALOTINE_CLOSED_TILE;
+        if (!kai->dead) {
+            sp->color = v4(0.7,0.1,0.1,1);
+            if (ninput_mkey_pressed(get_nim(),NKEY_RMB)){
+                nAIComponent *be_ai= NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nAIComponent);
+                if (!be_ai->dead) {
+                    nPhysicsBody *be= NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nPhysicsBody);
+                    nSprite *be_sp= NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nSprite);
+                    be->mass = F32_MAX;
+                    be->inv_mass = 0;
+                    be->velocity = v2(0,0);
+                    be->force= v2(0,0);
+                    be->layer= 0;
+                    be_ai->dead = 1;
+                    be_sp->start_tc = TILESET_SKULL_TILE;
+                    ndungeon_cam_start_shake(&gs->dcam, 0.05, 0.5);
+                }
+            }
+        }else {
+            sp->color = v4(0.9,0.1,0.1,1);
+        }
+ 
+    }
+    if (kai->dead)return;
 }
 
 void ai_component_enemy_update(nEntityMgr *em, GameState *gs, nEntityID enemy) {
@@ -146,11 +187,8 @@ void game_ai_system(nEntityMgr *em, void *ctx) {
                 ai_component_enemy_update(em, gs, entity);
                 break;
             case NENTITY_TAG_KEALOTINE: 
-                {
-                    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-                    b->velocity = vec2_multf(vec2_norm(b->velocity), 10);
-                    break;
-                }
+                ai_component_kealotine_update(em, gs, entity);
+                break;
             // case NENTITY_TAG_DOOR: 
             default:
                 break;
@@ -298,13 +336,9 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
             nSprite *s = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nSprite);
             nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nAIComponent);
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nPhysicsBody);
-            b->mass = F32_MAX;
-            b->inv_mass = 0;
-            b->velocity = v2(0,0);
-            b->force= v2(0,0);
-            b->layer= 0;
-            ai->dead = 1;
-            s->start_tc = TILESET_SKULL_TILE;
+            nPhysicsBody *kb = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_b, nPhysicsBody);
+            nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_b, nKealotineData);
+            kd->ref = en->e.entity_a; 
         }
     }
 }

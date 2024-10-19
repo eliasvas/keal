@@ -37,6 +37,7 @@ void game_state_init(GameState *gs) {
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nSprite);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nHealthComponent);
     NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nAIComponent);
+    NENTITY_MANAGER_COMPONENT_REGISTER(get_em(), nKealotineData);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), nphysics_world_update_func, 1);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), resolve_collision_events, 2);
     NENTITY_MANAGER_ADD_SYSTEM(get_em(), game_ai_system, 3);

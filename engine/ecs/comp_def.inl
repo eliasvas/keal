@@ -9,6 +9,8 @@ typedef struct nHealthComponent nHealthComponent;
 REGISTER_TYPE(nHealthComponent)
 typedef struct nAIComponent nAIComponent;
 REGISTER_TYPE(nAIComponent)
+typedef struct nKealotineData nKealotineData;
+REGISTER_TYPE(nKealotineData)
 
 
 // Should these be here?? Maybe we should use this just in gameplay code

@@ -36,14 +36,21 @@ void nphysics_world_broadphase(nEntityMgr *em, nPhysicsWorld *world) {
                 node->m = m;
                 sll_stack_push(world->manifolds, node);
 
-                nEntityEvent e = {
-                    // TODO -- make an api to get entity from 'index'
+                nEntityEvent e1 = {
                     .entity_a = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, i),
                     .entity_b = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, j),
                     .flags = NENTITY_EVENT_KIND_COLLISION,
                     .extra_flags = 0,
                 };
-                nentity_event_mgr_add(&em->event_mgr, e);
+                nentity_event_mgr_add(&em->event_mgr, e1);
+                // we need to add both AB and BA events for correct logic
+                nEntityEvent e2 = {
+                    .entity_a = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, j),
+                    .entity_b = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(em, i),
+                    .flags = NENTITY_EVENT_KIND_COLLISION,
+                    .extra_flags = 0,
+                };
+                nentity_event_mgr_add(&em->event_mgr, e2);
             }
         }
     }
