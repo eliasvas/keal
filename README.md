@@ -12,6 +12,7 @@ Some [context](https://www.youtube.com/watch?v=RmdP1qTjGZY). </br>
     <td><img src="gifs/menu.gif" alt="Menu GIF" width="100%"></td>
   </tr>
 </table>
+
 ### How to play
 The gameplay loop is killing enemies with the Kealotine. </br>
 - Move with WASD. </br>
