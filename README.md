@@ -22,8 +22,9 @@ The gameplay loop is killing enemies with the Kealotine. </br>
 ### Tech
 Engine side, I want things as generic as possible so that I can copy-paste the engine for other projects. </br>
 To keep my sanity, currently we do OpenGL for graphics and SDL2 for everything else. </br>
-Only dependency other than these is a [gui](https://github.com/eliasvas/gui) library I'm developing separately. </br>
 For gameplay stuff I implemented a [bitset-based ECS](https://github.com/SanderMertens/ecs-faq?tab=readme-ov-file#bitset-based-ecs). </br>
+It is a clean and minimal codebase, can be used as reference for game programming self-study. </br>
+Its got all the basics, physics, signals, rendering, entities, audio etc. </bt>
 ### FAQ
 - Why make a custom engine
     - because its fun, I love engine-dev.
