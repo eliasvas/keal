@@ -202,6 +202,7 @@ void ogl_clear_all_state() {
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
+    glLineWidth(4);
 }
 
 GLenum gl_check_err(const char *file, int line) {

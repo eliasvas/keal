@@ -6,6 +6,8 @@ typedef struct nKealotineData nKealotineData;
 struct nKealotineData {
     nEntityID ref;
     u64 spawn_ts_sec;
+    vec2 pp[10];
+    u32 pp_count;
 };
 
 typedef struct nHealthComponent nHealthComponent;

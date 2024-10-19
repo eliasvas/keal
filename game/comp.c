@@ -10,6 +10,7 @@ void nmap_spawn_kealotine(vec2 pos, vec2 dir) {
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), keal, nKealotineData);
     nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nKealotineData);
     kd->ref = NENTITY_INVALID_ID;
+    kd->pp_count = 0;
     kd->spawn_ts_sec = get_current_timestamp_sec();
     *NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nSprite) = nsprite_make(TILESET_KEALOTINE_OPEN_TILE, 0, 0, v4(0.9,0.1,0.2,1));
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nPhysicsBody);
@@ -301,15 +302,24 @@ void render_sprites_system(nEntityMgr *em, void *ctx) {
 
                 if (*tag == NENTITY_TAG_KEALOTINE) {
                     nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(em, entity, nKealotineData);
-                    if (!nem_entity_valid(em, kd->ref))continue;
-                    nAIComponent *enemy_ref_ai = NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nAIComponent);
-                    if (enemy_ref_ai->dead)continue;
+                    if (nem_entity_valid(em, kd->ref)) {
+                        nAIComponent *enemy_ref_ai = NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nAIComponent);
+                        if (enemy_ref_ai->dead)continue;
+                    }
                     nBatch2DQuad q = {0};
+                    vec2 start_pos = player_pos;
                     q.color = v4(1,0,0,0.3);
                     q.tc = v4(0,0,0,0);
-                    q.pos = player_pos;
-                    q.dim = vec2_multf(vec2_sub(player_pos, b->position), -1);
+                    q.pos = start_pos;
                     q.angle_rad = 0;
+                    for (u32 i = 0; i < kd->pp_count; ++i) {
+                        q.pos = start_pos;
+                        q.dim = vec2_multf(vec2_sub(start_pos, kd->pp[i]), -1);
+                        nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->white);
+                        start_pos = kd->pp[i];
+                    }
+                    q.pos = start_pos;
+                    q.dim = vec2_multf(vec2_sub(start_pos, b->position), -1);
                     nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->white);
                 }
             }
@@ -378,6 +388,14 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
             if (!ai->dead) {
                 kd->ref = en->e.entity_a; 
             }
+        }
+        if (tag_a == NENTITY_TAG_MAP && tag_b == NENTITY_TAG_KEALOTINE) {
+            nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nPhysicsBody);
+            nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_b, nKealotineData);
+            if (nem_entity_valid(em, kd->ref))continue;
+            if (kd->pp_count > 9 || get_current_timestamp_sec() - kd->spawn_ts_sec < 0.5)continue;
+            kd->pp[kd->pp_count++] = b->position;
+            kd->spawn_ts_sec = get_current_timestamp_sec();
         }
     }
 }
