@@ -2,12 +2,16 @@
 This is a roguelike game/engine *demo* based on the movie of similar name. </br>
 You are the Master of the Flying Kealotine, the most Gruesome weapon ever conceived! </br>
 Some [context](https://www.youtube.com/watch?v=RmdP1qTjGZY). </br>
-<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0px;">
-  <img src="gifs/dash_die.gif" alt="Dash Die GIF" width="100%">
-  <img src="gifs/good_fight.gif" alt="Good Fight GIF" width="100%">
-  <img src="gifs/epic_fight.gif" alt="Epic Fight GIF" width="100%">
-  <img src="gifs/menu.gif" alt="Menu GIF" width="100%">
-</div>
+<table>
+  <tr>
+    <td><img src="gifs/dash_die.gif" alt="Dash Die GIF" width="100%"></td>
+    <td><img src="gifs/good_fight.gif" alt="Good Fight GIF" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="gifs/epic_fight.gif" alt="Epic Fight GIF" width="100%"></td>
+    <td><img src="gifs/menu.gif" alt="Menu GIF" width="100%"></td>
+  </tr>
+</table>
 ### How to play
 The gameplay loop is killing enemies with the Kealotine. </br>
 - Move with WASD. </br>
