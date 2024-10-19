@@ -13,6 +13,7 @@ void nbatch2d_rend_begin(nBatch2DRenderer *rend, nWindow *win) {
         ogl_sp_add_attrib(&rend->sp, ogl_attrib_make(0,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, pos),0));
         ogl_sp_add_attrib(&rend->sp, ogl_attrib_make(1,OGL_SHADER_DATA_TYPE_VEC2,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, tc),0));
         ogl_sp_add_attrib(&rend->sp, ogl_attrib_make(2,OGL_SHADER_DATA_TYPE_VEC4,sizeof(nBatch2DVertex),offsetof(nBatch2DVertex, col),0));
+        rend->prim = OGL_PRIM_TRIANGLES;
     }
 
 }
@@ -40,7 +41,7 @@ void nbatch2d_rend_set_view_mat(nBatch2DRenderer *rend, mat4 view) {
 void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     // alloc the vertex array
     u32 quad_count = nbatch2d_rend_count_quads(rend);
-    u32 vertex_count = quad_count * 6;
+    u32 vertex_count = (rend->prim == OGL_PRIM_LINES) ? quad_count * 2 : quad_count * 6;
     nBatch2DVertex *vertices = push_array_nz(get_frame_arena(), nBatch2DVertex, vertex_count);
 
     // fill the vertex array
@@ -49,12 +50,17 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
         vec2 pos[4] = {0};
         nBatch2DQuad *quad = &node->quad;
         nbatch2d_calc_rotated_positions(quad->pos, quad->dim, quad->angle_rad, pos);
-        vertices[quad_index * 6 + 0] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
-        vertices[quad_index * 6 + 1] = (nBatch2DVertex){pos[1],v2(quad->tc.x, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 2] = (nBatch2DVertex){pos[3],v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 3] = (nBatch2DVertex){pos[3],v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
-        vertices[quad_index * 6 + 4] = (nBatch2DVertex){pos[2],v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
-        vertices[quad_index * 6 + 5] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
+        if (rend->prim == OGL_PRIM_LINES) {
+            vertices[quad_index * 2 + 0] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
+            vertices[quad_index * 2 + 1] = (nBatch2DVertex){pos[3],v2(quad->tc.x, quad->tc.y),quad->color};
+        } else {
+            vertices[quad_index * 6 + 0] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
+            vertices[quad_index * 6 + 1] = (nBatch2DVertex){pos[1],v2(quad->tc.x, quad->tc.y + quad->tc.w),quad->color};
+            vertices[quad_index * 6 + 2] = (nBatch2DVertex){pos[3],v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
+            vertices[quad_index * 6 + 3] = (nBatch2DVertex){pos[3],v2(quad->tc.x + quad->tc.z, quad->tc.y + quad->tc.w),quad->color};
+            vertices[quad_index * 6 + 4] = (nBatch2DVertex){pos[2],v2(quad->tc.x + quad->tc.z, quad->tc.y),quad->color};
+            vertices[quad_index * 6 + 5] = (nBatch2DVertex){pos[0],v2(quad->tc.x, quad->tc.y),quad->color};
+        }
         quad_index += 1;
     }
 
@@ -78,7 +84,7 @@ void nbatch2d_rend_flush(nBatch2DRenderer *rend) {
     mat4 proj = mat4_ortho(0,dim.x,dim.y,0,-1.0,1.0);
     ogl_sp_set_uniform(&rend->sp, "proj", OGL_SHADER_DATA_TYPE_MAT4, &proj);
 
-    ogl_draw(OGL_PRIM_TRIANGLES, 0, vertex_count); 
+    ogl_draw(rend->prim, 0, vertex_count); 
 
     // delete resources
     ogl_buf_deinit(&vbo);
@@ -100,4 +106,11 @@ void nbatch2d_rend_add_quad(nBatch2DRenderer *rend, nBatch2DQuad quad, oglTex *t
     node->quad = quad;
     sll_queue_push(rend->first, rend->last, node);
     rend->current_bound_image_ref = tex;
+}
+
+void nbatch2d_rend_set_prim(nBatch2DRenderer *rend, oglPrimitive prim) {
+    if (prim != rend->prim) {
+        nbatch2d_rend_flush(rend);
+        rend->prim = prim;
+    }
 }

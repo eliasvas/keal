@@ -10,6 +10,7 @@ void nmap_spawn_kealotine(vec2 pos, vec2 dir) {
     NENTITY_MANAGER_ADD_COMPONENT(get_em(), keal, nKealotineData);
     nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nKealotineData);
     kd->ref = NENTITY_INVALID_ID;
+    kd->spawn_ts_sec = get_current_timestamp_sec();
     *NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nSprite) = nsprite_make(TILESET_KEALOTINE_OPEN_TILE, 0, 0, v4(0.9,0.1,0.2,1));
     nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), keal, nPhysicsBody);
     *b = nphysics_body_circle(0.5, 20);
@@ -63,8 +64,12 @@ void ai_component_kealotine_update(nEntityMgr *em, GameState *gs, nEntityID keal
     nSprite *sp= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nSprite);
     nAIComponent *kai= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nAIComponent);
     nKealotineData *kd= NENTITY_MANAGER_GET_COMPONENT(em, kealotine, nKealotineData);
+    if (kd->spawn_ts_sec + 5.0 < get_current_timestamp_sec()){
+        nem_del(em, kealotine);
+        return;
+    }
     b->velocity = vec2_multf(vec2_norm(b->velocity), 10);
-    sp->color = v4(0.4,0.2,0.2,1);
+    sp->color = v4(0.7,0.4,0.4,1);
     if (nem_entity_valid(em, kd->ref)) {
         nPhysicsBody *b_enemy= NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nPhysicsBody);
         b->position = b_enemy->position;
@@ -87,7 +92,7 @@ void ai_component_kealotine_update(nEntityMgr *em, GameState *gs, nEntityID keal
                 }
             }
         }else {
-            sp->color = v4(0.9,0.1,0.1,1);
+            sp->color = v4(0.99,0.1,0.1,1);
         }
  
     }
@@ -200,6 +205,7 @@ void game_ai_system(nEntityMgr *em, void *ctx) {
 void render_sprites_system(nEntityMgr *em, void *ctx) {
     GameState *gs = (GameState*)ctx;
 
+    nbatch2d_rend_set_prim(&gs->batch_rend, OGL_PRIM_TRIANGLES);
     nbatch2d_rend_begin(&gs->batch_rend, get_nwin());
     mat4 view = ndungeon_cam_get_view_mat(&gs->dcam);
     nbatch2d_rend_set_view_mat(&gs->batch_rend, view);
@@ -258,28 +264,59 @@ void render_sprites_system(nEntityMgr *em, void *ctx) {
             }
 
             if (gs->col_vis) {
-                    // render the stuff
-                    if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
-                        if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->layer == 0)continue;
-                        nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
-                        nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
-                        nsprite_update(s, nglobal_state_get_dt_sec());
-                        vec4 tc = nsprite_get_current_tc(s);
-                        nBatch2DQuad q = {0};
-                        q.color = v4(1,0,0,0.3);
-                        q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
-                        vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
-                        sprite_dim = vec2_multf(sprite_dim, 2);
-                        q.pos.x = b->position.x - sprite_dim.x/2.0;
-                        q.pos.y = b->position.y - sprite_dim.y/2.0;
-                        q.dim.x = sprite_dim.x;
-                        q.dim.y = sprite_dim.y;
-                        q.angle_rad = 0;
-                        nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
-                    }
+                // render the stuff
+                if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
+                    if (((nPhysicsBody*)NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody))->layer == 0)continue;
+                    nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
+                    nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+                    nsprite_update(s, nglobal_state_get_dt_sec());
+                    vec4 tc = nsprite_get_current_tc(s);
+                    nBatch2DQuad q = {0};
+                    q.color = v4(1,0,0,0.3);
+                    q.tc = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? TILESET_CIRCLE_TILE : TILESET_SOLID_TILE;
+                    vec2 sprite_dim = (b->c_kind == NCOLLIDER_KIND_CIRCLE) ? v2(b->radius, b->radius) : b->hdim;
+                    sprite_dim = vec2_multf(sprite_dim, 2);
+                    q.pos.x = b->position.x - sprite_dim.x/2.0;
+                    q.pos.y = b->position.y - sprite_dim.y/2.0;
+                    q.dim.x = sprite_dim.x;
+                    q.dim.y = sprite_dim.y;
+                    q.angle_rad = 0;
+                    nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->atlas);
+                }
             }
         }
     }
+
+    nbatch2d_rend_set_prim(&gs->batch_rend, OGL_PRIM_LINES);
+    for (u32 layer = 0; layer <= 5; ++layer) {
+        for (s64 i = em->comp_array_len; i>=0; i-=1) {
+            nEntityID entity = NENTITY_MANAGER_GET_ENTITY_FOR_INDEX(get_em(), i);
+            // render the sprites with physics body
+            if (NENTITY_MANAGER_HAS_COMPONENT(em, entity, nSprite) && NENTITY_MANAGER_HAS_COMPONENT(em, entity, nPhysicsBody)) {
+                nSprite *s = NENTITY_MANAGER_GET_COMPONENT(em, entity, nSprite);
+                nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(em, entity, nPhysicsBody);
+                nEntityTag *tag = NENTITY_MANAGER_GET_COMPONENT(em, entity, nEntityTag);
+                nPhysicsBody *b_player = NENTITY_MANAGER_GET_COMPONENT(em, gs->player, nPhysicsBody);
+                vec2 player_pos = b_player->position;
+
+                if (*tag == NENTITY_TAG_KEALOTINE) {
+                    nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(em, entity, nKealotineData);
+                    if (!nem_entity_valid(em, kd->ref))continue;
+                    nAIComponent *enemy_ref_ai = NENTITY_MANAGER_GET_COMPONENT(em, kd->ref, nAIComponent);
+                    if (enemy_ref_ai->dead)continue;
+                    nBatch2DQuad q = {0};
+                    q.color = v4(1,0,0,0.3);
+                    q.tc = v4(0,0,0,0);
+                    q.pos = player_pos;
+                    q.dim = vec2_multf(vec2_sub(player_pos, b->position), -1);
+                    q.angle_rad = 0;
+                    nbatch2d_rend_add_quad(&gs->batch_rend, q, &gs->white);
+                }
+            }
+        }
+    }
+    nbatch2d_rend_set_prim(&gs->batch_rend, OGL_PRIM_TRIANGLES);
+ 
     nAIComponent *ai = NENTITY_MANAGER_GET_COMPONENT(get_em(), gs->player, nAIComponent);
     if (!ai->won) {
         render_dir_arrow(gs);
@@ -338,7 +375,9 @@ void resolve_collision_events(nEntityMgr *em, void *ctx) {
             nPhysicsBody *b = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_a, nPhysicsBody);
             nPhysicsBody *kb = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_b, nPhysicsBody);
             nKealotineData *kd = NENTITY_MANAGER_GET_COMPONENT(get_em(), en->e.entity_b, nKealotineData);
-            kd->ref = en->e.entity_a; 
+            if (!ai->dead) {
+                kd->ref = en->e.entity_a; 
+            }
         }
     }
 }
