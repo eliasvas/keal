@@ -35,7 +35,7 @@ void nglobal_state_init() {
     // Init random generator
     rand_init();
 
-    nwindow_init(&global_state.win, "Engine Window", 540, 540, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
+    nwindow_init(&global_state.win, "motfk", 1024, 768, N_WINDOW_OPT_RESIZABLE | N_WINDOW_OPT_BORDERLESS);
     nglobal_state_set_target_fps(60.0);
     ogl_init();
     naudio_context_init(&global_state.actx);

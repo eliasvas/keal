@@ -11,7 +11,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 # prevent installing to system directories.
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE INTERNAL "")
 
-option(USE_OPENGL "Build with OpenGL support" ON)
+option(USE_OPENGL "Build with OpenGL support" OFF)
 option(USE_D3D11 "Build with Direct3D 11 support" OFF)
 option(USE_SDL_GPU "Build with SDL_gpu support" OFF)
 
